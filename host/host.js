@@ -17,7 +17,7 @@ const log = false;
         return;
     }
 
-    const DEJAVU_HOST_VERSION = "2026.06.25-r32";
+    const DEJAVU_HOST_VERSION = "2026.06.25-r33";
     const sessionRefs = [];
     const sessionIds = [];
     const openedDejavuSessionIds = new Set();
@@ -53,6 +53,40 @@ const log = false;
             }
         } catch (error) {}
         return entry.nativePath || entry.fullName || entry.name || "";
+    };
+
+    const withRecentFilesSuppressed = async (work) => {
+        const key = "Application/RecentFileCount";
+        const prefs = app && app.preferences;
+        let originalCount = null;
+        let shouldRestore = false;
+
+        try {
+            if (
+                prefs &&
+                typeof prefs.getIntegerPreference === "function" &&
+                typeof prefs.setIntegerPreference === "function"
+            ) {
+                originalCount = await prefs.getIntegerPreference(key);
+                await prefs.setIntegerPreference(key, 0);
+                shouldRestore = true;
+            }
+        } catch {}
+
+        try {
+            return await work();
+        } finally {
+            if (shouldRestore) {
+                try {
+                    await prefs.setIntegerPreference(key, originalCount);
+                } catch {}
+            }
+        }
+    };
+
+    const openEntrySilently = async (entry) => {
+        if (!app || typeof app.open !== "function") return null;
+        return withRecentFilesSuppressed(() => app.open(entry));
     };
 
     const fileUrlFromPath = (value) => {
@@ -704,9 +738,7 @@ const log = false;
     const dejavu_openPath = async (path) => {
         try {
             const entry = await entryFromPath(path);
-            const doc = app && typeof app.open === "function"
-                ? await app.open(entry)
-                : null;
+            const doc = await openEntrySilently(entry);
             if (doc) openedDejavuSessionIds.add(getDocumentSessionId(doc));
             return ok({ path, openedDejavu: !!doc });
         } catch (error) {

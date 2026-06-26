@@ -140,7 +140,7 @@ body.token-input-dragging * {
 }
 
 .folder-field--ok #folderInput:not(:focus):not(:hover) {
-    border-color: var(--border-soft);
+    /* border-color: var(--border-soft); */
 }
 
 /* ---------------------------------------------------------------- */

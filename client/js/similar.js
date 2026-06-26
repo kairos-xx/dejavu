@@ -1,7 +1,7 @@
 /*
  * DejaVu — Similarity drawer controller.
  *
- * Wraps the bundled SVG similarity engine (../similarity/js/*) in a panel
+ * Wraps the bundled SVG similarity engine (client/js/similarity/*) in a panel
  * drawer: pick a folder (validated like the save-folder field), optionally
  * recurse, tune every config.json setting inline, then rank the folder's
  * vector files against the active Illustrator document. Results render in a
@@ -68,8 +68,53 @@
                 ? "Scanning…"
                 : folderValid
                     ? "Compare this folder against the active document"
-                    : "Pick a folder that exists first"
+                : "Pick a folder that exists first"
         );
+    };
+
+    const resetProgress = (hidden) => {
+        if (!ui.progress) return;
+        ui.progress.hidden = hidden !== false;
+        if (ui.progressBar) ui.progressBar.style.width = "0%";
+        if (ui.progressCount) ui.progressCount.textContent = "0 / 0";
+        if (ui.progressLabel) ui.progressLabel.textContent = "Preparing scan…";
+        if (ui.progressTrack) {
+            ui.progressTrack.setAttribute("aria-valuenow", "0");
+            ui.progressTrack.setAttribute("aria-valuetext", "Preparing scan");
+        }
+    };
+
+    const progressText = (stage) => {
+        switch (stage) {
+        case "listing": return "Counting files…";
+        case "listed": return "Files counted";
+        case "cached": return "Reading cache";
+        case "skipped": return "Skipping oversized files";
+        case "converting": return "Converting files";
+        case "fingerprinting": return "Fingerprinting files";
+        case "indexed": return "Indexing files";
+        case "error": return "Skipping unreadable files";
+        case "done": return "Scan complete";
+        default: return "Scanning files";
+        }
+    };
+
+    const updateProgress = (p) => {
+        if (!ui.progress || !p) return;
+        const total = Math.max(0, Number(p.total) || 0);
+        const done = Math.min(total, Math.max(0, Number(p.done) || 0));
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        ui.progress.hidden = false;
+        if (ui.progressBar) ui.progressBar.style.width = `${pct}%`;
+        if (ui.progressCount) ui.progressCount.textContent = `${done} / ${total}`;
+        if (ui.progressLabel) ui.progressLabel.textContent = progressText(p.stage);
+        if (ui.progressTrack) {
+            ui.progressTrack.setAttribute("aria-valuenow", String(pct));
+            ui.progressTrack.setAttribute(
+                "aria-valuetext",
+                total > 0 ? `${done} of ${total} files` : progressText(p.stage)
+            );
+        }
     };
 
     // ---- small storage helpers --------------------------------------------
@@ -206,16 +251,20 @@
             key: "thresholds",
             label: "Thresholds",
             hint: "Score cut-offs used to label each match."
-        },
-        {
-            key: "ui",
-            label: "Engine report",
-            hint: "Flags passed to the engine’s own report — this panel renders its own view."
         }
     ];
 
     // Settings handled elsewhere in the UI, so they are hidden from the form.
-    const SKIP = new Set(["index.recursive"]);
+    const SKIP = new Set([
+        "index.recursive",
+        "engine.includeHidden",
+        "index.externalConverters.enabled"
+    ]);
+    const ROW_PAIRS = {
+        "engine.samplesPerElement": "engine.maxSamples",
+        "index.allowedExtensions": "index.maxFileSizeBytes"
+    };
+    const ROW_PAIR_ENDS = new Set(Object.values(ROW_PAIRS));
 
     // Friendly label + support text per config path. Anything missing falls
     // back to a humanized key (and, for weights, an auto-generated hint).
@@ -243,10 +292,6 @@
         "engine.mirrorInvariant": {
             label: "Match mirrored shapes",
             hint: "Treat a flipped or mirrored copy as the same shape."
-        },
-        "engine.includeHidden": {
-            label: "Include hidden elements",
-            hint: "Also compare elements that are hidden in the artwork."
         },
         "engine.compareTextAsGeometry": {
             label: "Compare text as outlines",
@@ -347,37 +392,9 @@
             hint: "Folders never scanned. Type a name and press Enter, or add one from disk."
         },
 
-        "index.externalConverters.enabled": {
-            label: "Use external converters",
-            hint: "Let Inkscape / MuPDF / Ghostscript / Illustrator read non-SVG files."
-        },
         "index.externalConverters.prefer": {
             label: "Converter order",
             hint: "Converters are tried in this order. Drag to reorder; add or remove from the fixed set."
-        },
-        "index.externalConverters.inkscapePath": {
-            label: "Inkscape path",
-            hint: "Command or full path to the Inkscape executable."
-        },
-        "index.externalConverters.mutoolPath": {
-            label: "MuPDF (mutool) path",
-            hint: "Command or full path to the mutool executable."
-        },
-        "index.externalConverters.ghostscriptPath": {
-            label: "Ghostscript path",
-            hint: "Command or full path to the Ghostscript executable."
-        },
-        "index.externalConverters.allowIllustratorFallback": {
-            label: "Allow Illustrator fallback",
-            hint: "Use Illustrator to convert when the other converters fail."
-        },
-        "index.externalConverters.avoidIllustrator": {
-            label: "Avoid Illustrator",
-            hint: "Never use Illustrator for conversion, even as a fallback."
-        },
-        "index.externalConverters.tryMutoolForEPS": {
-            label: "Use mutool for EPS",
-            hint: "Try mutool when converting EPS files."
         },
 
         "thresholds.nearDuplicate": {
@@ -436,27 +453,12 @@
         "index.allowedExtensions":
             [".svg", ".svgz", ".pdf", ".ai", ".eps"],
         "index.externalConverters.prefer":
-            ["embeddedSVG", "mutool", "inkscape", "ghostscript", "illustrator"]
+            ["embeddedSVG", "illustrator"]
     };
 
     // Settings that are only meaningful while another (boolean) setting is on.
     // When the controller is off, the dependents are disabled.
-    const DEPENDS = {
-        "index.externalConverters.prefer":
-            "index.externalConverters.enabled",
-        "index.externalConverters.inkscapePath":
-            "index.externalConverters.enabled",
-        "index.externalConverters.mutoolPath":
-            "index.externalConverters.enabled",
-        "index.externalConverters.ghostscriptPath":
-            "index.externalConverters.enabled",
-        "index.externalConverters.allowIllustratorFallback":
-            "index.externalConverters.enabled",
-        "index.externalConverters.avoidIllustrator":
-            "index.externalConverters.enabled",
-        "index.externalConverters.tryMutoolForEPS":
-            "index.externalConverters.enabled"
-    };
+    const DEPENDS = {};
     const CONTROLLERS = new Set(Object.values(DEPENDS));
 
     // Stepping for spin-box number inputs, by config path / section.
@@ -478,9 +480,14 @@
         const base = (typeof SVGSimilarityConfig !== "undefined")
             ? SVGSimilarityConfig.defaults()
             : {};
-        return (typeof SVGSimilarityConfig !== "undefined")
+        const cfg = (typeof SVGSimilarityConfig !== "undefined")
             ? SVGSimilarityConfig.fromObject(mergeDeep(base, overrides()))
             : base;
+        if (cfg.engine) cfg.engine.includeHidden = true;
+        if (cfg.index && cfg.index.externalConverters) {
+            cfg.index.externalConverters.enabled = true;
+        }
+        return cfg;
     };
 
     const mergeDeep = (base, over) => {
@@ -513,20 +520,18 @@
         if (CONTROLLERS.has(path)) applyDependencies();
     };
 
-    const tooltipFor = (path, def) => {
+    const tooltipFor = (path, def, hint) => {
         const shown = Array.isArray(def)
             ? def.join(", ")
             : def == null ? "—" : String(def);
-        return `${path}  ·  default: ${shown}`;
+        const parts = [];
+        if (hint) parts.push(hint);
+        parts.push(path);
+        parts.push(`default: ${shown}`);
+        return parts.join("  ·  ");
     };
 
-    const addHint = (section, hint) => {
-        if (!hint) return;
-        const p = document.createElement("p");
-        p.className = "field-hint";
-        p.textContent = hint;
-        section.appendChild(p);
-    };
+    const addHint = () => {};
 
     // Boolean → an Advanced-style checkbox row with a support hint.
     const makeBoolRow = (path, label, hint, value, tip) => {
@@ -691,7 +696,7 @@
         const selected = new Set(value || []);
 
         const ms = document.createElement("div");
-        ms.className = "ms";
+        ms.className = "select-wrapper ms";
 
         const trigger = document.createElement("button");
         trigger.type = "button";
@@ -700,7 +705,7 @@
         const summary = document.createElement("span");
         summary.className = "ms__summary";
         const chev = document.createElement("span");
-        chev.className = "ms__chev";
+        chev.className = "select-chevron";
         chev.innerHTML = "<svg viewBox=\"0 0 16 16\" fill=\"none\" " +
             "stroke=\"currentColor\" stroke-width=\"2.5\" " +
             "stroke-linecap=\"round\" stroke-linejoin=\"round\">" +
@@ -764,44 +769,43 @@
         return section;
     };
 
-    // ---- numeric value with seconds / minutes / hours unit selector ------
-    const TIME_UNITS = [
-        { id: "seconds", factor: 1 },
-        { id: "minutes", factor: 60 },
-        { id: "hours", factor: 3600 }
+    // ---- byte size with a KB / MB / GB unit selector ---------------------
+    const BYTE_UNITS = [
+        { id: "KB", factor: 1024 },
+        { id: "MB", factor: 1048576 },
+        { id: "GB", factor: 1073741824 }
     ];
-    const LS_TIME_UNIT = "dejavu.similarity.maxsize.timeunit.v1";
+    const LS_SIZE_UNIT = "dejavu.similarity.maxsize.unit.v1";
     const trimNum = (n) => Math.round(n * 1e6) / 1e6;
-    const timeUnitById = (id) =>
-        TIME_UNITS.filter((u) => u.id === id)[0] || null;
-    const bestTimeUnit = (seconds) => {
-        for (let i = TIME_UNITS.length - 1; i >= 0; i--) {
-            if (seconds >= TIME_UNITS[i].factor &&
-                seconds % TIME_UNITS[i].factor === 0) {
-                return TIME_UNITS[i];
-            }
+    const trimSizeNum = (n) => (Math.round(n * 100) / 100).toFixed(2);
+    const byteUnitById = (id) =>
+        BYTE_UNITS.filter((u) => u.id === id)[0] || null;
+    const bestByteUnit = (bytes) => {
+        for (let i = BYTE_UNITS.length - 1; i >= 0; i--) {
+            if (bytes >= BYTE_UNITS[i].factor) return BYTE_UNITS[i];
         }
-        return TIME_UNITS[0];
+        return BYTE_UNITS[1];
     };
 
-    const makeTimeUnitRow = (path, label, hint, value, tip) => {
+    const makeByteSizeRow = (path, label, hint, value, tip) => {
         const section = valueRowSection();
         const lab = fieldLabel(label, tip);
-        let unit = timeUnitById(window.localStorage.getItem(LS_TIME_UNIT)) ||
-            bestTimeUnit(Number(value) || 0);
+        let unit = byteUnitById(window.localStorage.getItem(LS_SIZE_UNIT)) ||
+            bestByteUnit(Number(value) || 0);
 
         const pills = document.createElement("div");
-        pills.className = "settings-row__pills";
+        pills.className = "settings-row__pills bytesize";
 
         const built = makeSpinbox(
-            trimNum((Number(value) || 0) / unit.factor), { min: 0, step: 1 });
+            trimSizeNum((Number(value) || 0) / unit.factor),
+            { min: 0, step: 0.01 });
         const input = built.input;
 
         const selWrap = document.createElement("div");
         selWrap.className = "select-wrapper";
         const sel = document.createElement("select");
         sel.className = "unit-select";
-        TIME_UNITS.forEach((u) => {
+        BYTE_UNITS.forEach((u) => {
             const o = document.createElement("option");
             o.value = u.id;
             o.textContent = u.id;
@@ -811,15 +815,15 @@
         selWrap.appendChild(sel);
 
         input.addEventListener("change", () => {
-            const seconds = Math.round(
+            const bytes = Math.round(
                 (parseFloat(input.value) || 0) * unit.factor);
-            onSettingChange(path, seconds, "number");
+            onSettingChange(path, bytes, "number");
         });
         sel.addEventListener("change", () => {
-            const seconds = (parseFloat(input.value) || 0) * unit.factor;
-            unit = timeUnitById(sel.value) || unit;
-            window.localStorage.setItem(LS_TIME_UNIT, unit.id);
-            input.value = String(trimNum(seconds / unit.factor));
+            const bytes = (parseFloat(input.value) || 0) * unit.factor;
+            unit = byteUnitById(sel.value) || unit;
+            window.localStorage.setItem(LS_SIZE_UNIT, unit.id);
+            input.value = String(trimSizeNum(bytes / unit.factor));
         });
 
         pills.appendChild(built.group);
@@ -827,6 +831,177 @@
         lab.appendChild(pills);
         section.appendChild(lab);
         addHint(section, hint);
+        return section;
+    };
+
+    const CONVERTER_TRIGGER = "\u200b";
+
+    const converterPartsFromValues = (values) =>
+        (values || []).map((v) => ({
+            type: "token",
+            trigger: CONVERTER_TRIGGER,
+            path: [v]
+        }));
+
+    const converterValuesFromParts = (parts, options) => {
+        const out = [];
+        const add = (v) => {
+            const match = options.filter((opt) =>
+                opt.toLowerCase() === String(v || "").toLowerCase())[0];
+            if (match && out.indexOf(match) < 0) out.push(match);
+        };
+        (parts || []).forEach((part) => {
+            if (part.type === "token") add(part.pathText || part.label);
+            else String(part.value || "")
+                .split(/[\s,]+/)
+                .map((s) => s.trim())
+                .filter(Boolean)
+                .forEach(add);
+        });
+        return out;
+    };
+
+    const converterTextTokens = (value) =>
+        String(value || "")
+            .split(/[\s,]+/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+
+    const converterTextState = (parts, options) => {
+        const values = converterValuesFromParts(parts, options);
+        let hasText = false;
+        let hasInvalid = false;
+        let hasExactText = false;
+        let hasPartial = false;
+        (parts || []).forEach((part) => {
+            if (part.type !== "text") return;
+            converterTextTokens(part.value).forEach((token) => {
+                hasText = true;
+                if (options.some((opt) =>
+                    opt.toLowerCase() === token.toLowerCase())) {
+                    hasExactText = true;
+                    return;
+                }
+                const lower = token.toLowerCase();
+                if (options.some((opt) => opt.toLowerCase().startsWith(lower))) {
+                    hasPartial = true;
+                } else {
+                    hasInvalid = true;
+                }
+            });
+        });
+        return { values, hasText, hasInvalid, hasExactText, hasPartial };
+    };
+
+    const makeConverterSystems = (options) => [{
+        trigger: CONVERTER_TRIGGER,
+        id: "converter",
+        name: "converter",
+        icon: "",
+        items: options.map((opt) => ({
+            key: opt,
+            label: opt,
+            description: "Converter",
+            singleUse: true
+        }))
+    }];
+
+    const makeFixedTokenRow = (path, label, hint, value, tip, options) => {
+        const section = valueRowSection();
+        section.classList.add("similar-cfg__token-field");
+
+        const labelId = `${path.replace(/[^a-z0-9]+/gi, "-")}-label`;
+        const lab = document.createElement("label");
+        lab.className = "field-label";
+        lab.id = labelId;
+        lab.setAttribute("data-tooltip", tip);
+        lab.textContent = label;
+
+        const editor = document.createElement("div");
+        editor.className = "similar-token-editor";
+        editor.id = `${labelId}-editor`;
+        editor.setAttribute("aria-labelledby", labelId);
+        const pool = document.createElement("div");
+        pool.className = "tokens similar-token-pool";
+
+        let tokenInput = null;
+        let syncing = false;
+        const renderPool = () => {
+            const picked = tokenInput
+                ? converterValuesFromParts(tokenInput.getParts(), options)
+                : (value || []);
+            pool.innerHTML = "";
+            options.forEach((opt) => {
+                const used = picked.indexOf(opt) >= 0;
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "token";
+                btn.disabled = used;
+                btn.classList.toggle("token--used", used);
+                btn.textContent = opt;
+                btn.addEventListener("click", () => addToken(opt));
+                pool.appendChild(btn);
+            });
+        };
+
+        const normalizeConverterEditor = (mode) => {
+            if (!tokenInput || syncing) return;
+            const state = converterTextState(tokenInput.getParts(), options);
+            if (mode !== "final" && state.hasPartial &&
+                !state.hasInvalid && !state.hasExactText) {
+                return;
+            }
+            if (mode !== "final" && !state.hasText && !state.hasInvalid) return;
+            syncing = true;
+            tokenInput.setParts(converterPartsFromValues(state.values));
+            onSettingChange(path, state.values, "array");
+            renderPool();
+            syncing = false;
+        };
+
+        const addToken = (raw) => {
+            if (!tokenInput) return;
+            tokenInput.insertItemAtCaret(CONVERTER_TRIGGER, [raw]);
+        };
+
+        section.appendChild(lab);
+        section.appendChild(editor);
+        section.appendChild(pool);
+        addHint(section, hint);
+        if (window.TokenInput) {
+            tokenInput = window.TokenInput.attach(editor, {
+                placeholder: "Converter order — type converter names",
+                autoTokenizeExactOnSpace: true,
+                hideUsedSingleTokens: true,
+                systems: makeConverterSystems(options),
+                initialParts: converterPartsFromValues(value),
+                dropdown: { maxItems: options.length, emptyHtml: "No matching converter." },
+                onChange: (parts) => {
+                    if (syncing) return;
+                    onSettingChange(
+                        path,
+                        converterValuesFromParts(parts, options),
+                        "array"
+                    );
+                    renderPool();
+                }
+            });
+            editor.addEventListener("keydown", (evt) => {
+                if (evt.key === " " || evt.key === "Enter" ||
+                    evt.key === "," || evt.key === "Tab") {
+                    window.setTimeout(() => normalizeConverterEditor("final"), 0);
+                }
+            });
+            editor.addEventListener("input", () => {
+                window.setTimeout(() => normalizeConverterEditor("typing"), 0);
+            });
+            editor.addEventListener("blur",
+                () => normalizeConverterEditor("final"));
+            editor.addEventListener("paste", () => {
+                window.setTimeout(() => normalizeConverterEditor("final"), 0);
+            });
+        }
+        renderPool();
         return section;
     };
 
@@ -838,12 +1013,11 @@
     const makeTokenRow = (path, label, hint, value, tip, opts) => {
         opts = opts || {};
         const fixed = opts.fixed || null;
-        const reorder = !!opts.reorder;
+        if (fixed) return makeFixedTokenRow(path, label, hint, value, tip, fixed);
         const section = valueRowSection();
         const lab = fieldLabel(label, tip);
 
         let tokens = (value || []).slice();
-        let dragIndex = -1;
         const persist = () => onSettingChange(path, tokens.slice(), "array");
 
         const tok = document.createElement("div");
@@ -851,78 +1025,43 @@
         const chips = document.createElement("div");
         chips.className = "tok__chips";
 
-        let textInput = null;
-        if (!fixed) {
-            textInput = document.createElement("input");
-            textInput.type = "text";
-            textInput.className = "tok__input";
-            textInput.placeholder = "Type a name, Enter to add…";
-        }
+        const textInput = document.createElement("input");
+        textInput.type = "text";
+        textInput.className = "tok__input";
+        textInput.placeholder = "Type a name, Enter to add…";
 
-        // Available pool (fixed sets): the tokens not currently chosen.
-        let avail = null;
-        const renderAvail = () => {
-            if (!avail) return;
-            const remaining = fixed.filter((f) => tokens.indexOf(f) < 0);
-            avail.innerHTML = "";
-            avail.hidden = remaining.length === 0;
-            if (!remaining.length) return;
-            const cap = document.createElement("span");
-            cap.className = "tok__avail-label";
-            cap.textContent = "Available";
-            avail.appendChild(cap);
-            remaining.forEach((opt) => {
-                const chip = document.createElement("button");
-                chip.type = "button";
-                chip.className = "tok__add-chip";
-                chip.textContent = `+ ${opt}`;
-                chip.addEventListener("click", () => addToken(opt));
-                avail.appendChild(chip);
+        const makeAddFolderChip = () => {
+            const addBtn = document.createElement("button");
+            addBtn.type = "button";
+            addBtn.className = "template-token tok__chip tok__add";
+            addBtn.textContent = "Add folder…";
+            addBtn.addEventListener("click", () => {
+                Promise.resolve(callHost("dejavu_chooseFolder", [""]))
+                    .then((r) => {
+                        if (r && r.ok && r.path) addToken(r.path);
+                    });
             });
+            return addBtn;
         };
+
+        const folderTokenKey = (raw) =>
+            String(raw || "").trim().replace(/[\\\/]+$/g, "").toLowerCase();
 
         const addToken = (raw) => {
             const v = String(raw || "").trim();
             if (!v) return;
-            if (fixed && fixed.indexOf(v) < 0) return;
-            if (tokens.indexOf(v) >= 0) return;
+            const key = folderTokenKey(v);
+            if (tokens.some((x) => folderTokenKey(x) === key)) return;
             tokens.push(v);
             renderChips();
-            renderAvail();
             persist();
         };
 
         function renderChips() {
             chips.innerHTML = "";
-            tokens.forEach((t, i) => {
+            tokens.forEach((t) => {
                 const chip = document.createElement("span");
                 chip.className = "template-token tok__chip";
-                if (reorder) {
-                    chip.draggable = true;
-                    chip.classList.add("tok__chip--draggable");
-                    chip.addEventListener("dragstart", (e) => {
-                        dragIndex = i;
-                        chip.classList.add("is-dragging");
-                        if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
-                    });
-                    chip.addEventListener("dragend", () => {
-                        dragIndex = -1;
-                        chip.classList.remove("is-dragging");
-                    });
-                    chip.addEventListener("dragover", (e) => {
-                        e.preventDefault();
-                        if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-                    });
-                    chip.addEventListener("drop", (e) => {
-                        e.preventDefault();
-                        if (dragIndex < 0 || dragIndex === i) return;
-                        const moved = tokens.splice(dragIndex, 1)[0];
-                        tokens.splice(i, 0, moved);
-                        dragIndex = -1;
-                        renderChips();
-                        persist();
-                    });
-                }
                 const text = document.createElement("span");
                 text.className = "template-token__label";
                 text.textContent = t;
@@ -930,18 +1069,25 @@
                 const rm = document.createElement("button");
                 rm.type = "button";
                 rm.className = "template-token__remove";
-                rm.textContent = "×";
                 rm.title = "Remove";
+                rm.setAttribute("aria-label", "Remove");
+                rm.innerHTML = `
+                    <svg viewBox="0 0 16 16" fill="none"
+                        stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="M4 4l8 8M12 4l-8 8"></path>
+                    </svg>`;
                 rm.addEventListener("click", () => {
                     tokens = tokens.filter((x) => x !== t);
                     renderChips();
-                    renderAvail();
                     persist();
                 });
                 chip.appendChild(rm);
                 chips.appendChild(chip);
             });
-            if (textInput) chips.appendChild(textInput);
+            chips.appendChild(textInput);
+            chips.appendChild(makeAddFolderChip());
         }
 
         if (textInput) {
@@ -969,37 +1115,14 @@
 
         tok.appendChild(chips);
 
-        if (fixed) {
-            avail = document.createElement("div");
-            avail.className = "tok__avail";
-            tok.appendChild(avail);
-        } else {
-            const addRow = document.createElement("div");
-            addRow.className = "tok__add-row";
-            const addBtn = document.createElement("button");
-            addBtn.type = "button";
-            addBtn.className = "btn btn--ghost btn--micro tok__add";
-            addBtn.textContent = "Add folder…";
-            addBtn.addEventListener("click", () => {
-                Promise.resolve(callHost("dejavu_chooseFolder", [""]))
-                    .then((r) => {
-                        if (r && r.ok && r.path) addToken(r.path);
-                    });
-            });
-            addRow.appendChild(addBtn);
-            tok.appendChild(addRow);
-        }
-
         renderChips();
-        renderAvail();
         lab.appendChild(tok);
         section.appendChild(lab);
         addHint(section, hint);
         return section;
     };
 
-    // Disable rows whose controlling checkbox is off (e.g. converter
-    // options when "Use external converters" is unchecked).
+    // Disable rows whose controlling checkbox is off.
     const applyDependencies = () => {
         if (!ui.settings) return;
         const cfg = buildConfig();
@@ -1025,17 +1148,37 @@
             if (!node || typeof node !== "object") return;
             const group = document.createElement("div");
             group.className = "similar-cfg__group";
+            group.dataset.section = section.key;
+            if (section.key === "engine.weights" ||
+                section.key === "engine" ||
+                section.key === "index" ||
+                section.key === "thresholds") {
+                group.classList.add("similar-cfg__group--weights");
+            }
             const title = document.createElement("div");
             title.className = "similar-cfg__group-title";
             title.textContent = section.label;
+            if (section.hint) title.setAttribute("data-tooltip", section.hint);
             group.appendChild(title);
-            if (section.hint) {
-                const gh = document.createElement("p");
-                gh.className = "similar-cfg__group-hint";
-                gh.textContent = section.hint;
-                group.appendChild(gh);
-            }
+            const useGrid = group.classList.contains("similar-cfg__group--weights");
+            let grid = null;
+            const ensureGrid = () => {
+                if (!useGrid) return group;
+                if (grid) return grid;
+                grid = document.createElement("div");
+                grid.className = "similar-cfg__group-grid";
+                group.appendChild(grid);
+                return grid;
+            };
+            const appendSettingRow = (row) => {
+                ensureGrid().appendChild(row);
+            };
+            const appendStandaloneRow = (row) => {
+                group.appendChild(row);
+                grid = null;
+            };
             const isWeights = section.key === "engine.weights";
+            let pendingRowPair = null;
             Object.keys(node).forEach((k) => {
                 const v = node[k];
                 if (v && typeof v === "object" && !Array.isArray(v)) return;
@@ -1046,15 +1189,14 @@
                 const meta = metaFor(path, k);
                 let hint = meta.hint;
                 if (!hint && isWeights) {
-                    hint = `Relative weight of ${meta.label.toLowerCase()} ` +
-                        `in the similarity score.`;
+                    hint = "";
                 }
-                const tip = tooltipFor(path, getPath(defs, path));
+                const tip = tooltipFor(path, getPath(defs, path), hint);
                 let row;
                 if (typeof v === "boolean") {
                     row = makeBoolRow(path, meta.label, hint, v, tip);
                 } else if (path === "index.maxFileSizeBytes") {
-                    row = makeTimeUnitRow(path, meta.label, hint, v, tip);
+                    row = makeByteSizeRow(path, meta.label, hint, v, tip);
                 } else if (path === "index.skipFolders") {
                     row = makeTokenRow(path, meta.label, hint, v, tip,
                         { allowFinder: true });
@@ -1069,11 +1211,41 @@
                         path, meta.label, hint, v, tip, section.key);
                 }
                 row.dataset.path = path;
+                if (path === "index.cacheFileName" ||
+                    path === "index.skipFolders" ||
+                    path === "index.externalConverters.prefer") {
+                    row.classList.add("similar-cfg__field--wide");
+                }
                 if (DEPENDS[path]) row.dataset.depOn = DEPENDS[path];
-                group.appendChild(row);
+                if (ROW_PAIRS[path]) {
+                    pendingRowPair = {
+                        end: ROW_PAIRS[path],
+                        wrap: document.createElement("div")
+                    };
+                    pendingRowPair.wrap.className = "similar-cfg__row-pair";
+                    pendingRowPair.wrap.appendChild(row);
+                    appendStandaloneRow(pendingRowPair.wrap);
+                    return;
+                }
+                if (pendingRowPair && pendingRowPair.end === path) {
+                    pendingRowPair.wrap.appendChild(row);
+                    pendingRowPair = null;
+                    return;
+                }
+                if (path === "index.skipFolders") {
+                    appendStandaloneRow(row);
+                    return;
+                }
+                if (ROW_PAIR_ENDS.has(path)) {
+                    row.classList.add("similar-cfg__field--wide");
+                }
+                appendSettingRow(row);
             });
             ui.settings.appendChild(group);
         });
+        if (typeof window.dejavuEnhanceSelects === "function") {
+            window.dejavuEnhanceSelects(ui.settings);
+        }
         applyDependencies();
     };
 
@@ -1115,6 +1287,54 @@
         return span;
     };
 
+    // Compact colored count for the always-visible row line.
+    const miniCount = (cls, n, label, title) => {
+        const span = document.createElement("span");
+        span.className = `similar-mini similar-mini--${cls}`;
+        span.title = title || "";
+        span.innerHTML = `<strong>${n}</strong> ${label}`;
+        return span;
+    };
+
+    // Per-aspect contribution to the score. result.parts holds deltas
+    // (0 = identical → 100% similar); we surface the most meaningful ones.
+    const ASPECTS = [
+        ["Shape", "geometryNormalized"],
+        ["Geometry", "geometryRaw"],
+        ["Structure", "structure"],
+        ["Element mix", "elementTypes"],
+        ["Fill colors", "fill"],
+        ["Stroke colors", "stroke"],
+        ["Bounds", "bbox"],
+        ["Paths", "pathCommands"],
+        ["Canvas", "canvas"]
+    ];
+
+    const aspectRow = (label, part) => {
+        const clamped = Math.max(0, Math.min(1, Number(part) || 0));
+        const sim = Math.round((1 - clamped) * 100);
+        const row = document.createElement("div");
+        row.className = "sim-aspect";
+        const name = document.createElement("span");
+        name.className = "sim-aspect__label";
+        name.textContent = label;
+        const track = document.createElement("span");
+        track.className = "sim-aspect__track";
+        const fill = document.createElement("span");
+        fill.className = "sim-aspect__fill";
+        fill.style.width = `${sim}%`;
+        if (sim >= 80) fill.classList.add("is-high");
+        else if (sim < 45) fill.classList.add("is-low");
+        track.appendChild(fill);
+        const val = document.createElement("span");
+        val.className = "sim-aspect__val";
+        val.textContent = `${sim}%`;
+        row.appendChild(name);
+        row.appendChild(track);
+        row.appendChild(val);
+        return row;
+    };
+
     const makeRow = (result) => {
         const doc = (result.report && result.report.documents &&
             result.report.documents.b) || {};
@@ -1148,20 +1368,60 @@
             date.textContent = "—";
         }
 
-        head.appendChild(nm);
-        head.appendChild(score);
-        head.appendChild(date);
+        const top = document.createElement("div");
+        top.className = "similar-row__top";
+        top.appendChild(nm);
+        top.appendChild(score);
+        top.appendChild(date);
+        head.appendChild(top);
+
+        // Always-visible match summary: common / changed / added / removed.
+        const common = counts.similar + counts.changed;
+        const mini = document.createElement("div");
+        mini.className = "similar-row__mini";
+        mini.appendChild(miniCount("similar", common, "common",
+            "Elements present in both documents"));
+        mini.appendChild(miniCount("changed", counts.changed, "changed",
+            "Common elements that were modified"));
+        mini.appendChild(miniCount("new", counts.added, "added",
+            "Elements only in this file"));
+        mini.appendChild(miniCount("removed", counts.removed, "removed",
+            "Elements only in your document"));
+        head.appendChild(mini);
 
         const detail = document.createElement("div");
         detail.className = "similar-row__detail";
 
-        const pills = document.createElement("div");
-        pills.className = "similar-row__counts";
-        pills.appendChild(pill("similar", counts.similar, "similar"));
-        pills.appendChild(pill("changed", counts.changed, "changed"));
-        pills.appendChild(pill("new", counts.added, "new"));
-        pills.appendChild(pill("removed", counts.removed, "removed"));
-        detail.appendChild(pills);
+        const em = (result.report && result.report.elementMatching) || {};
+        const matched = counts.similar + counts.changed;
+        const avgSim = em.avgMatchedSimilarity != null
+            ? Math.round(em.avgMatchedSimilarity * 100)
+            : null;
+
+        // Quick element-count comparison + average match quality.
+        const stats = document.createElement("div");
+        stats.className = "similar-row__stats";
+        const statBits = [];
+        if (em.totalA != null) statBits.push(`Your doc: ${em.totalA} el`);
+        if (em.totalB != null) statBits.push(`This file: ${em.totalB} el`);
+        if (matched) statBits.push(`${matched} matched`);
+        if (avgSim != null && matched) statBits.push(`avg match ${avgSim}%`);
+        if (statBits.length) {
+            stats.textContent = statBits.join("  ·  ");
+            detail.appendChild(stats);
+        }
+
+        // Per-aspect similarity breakdown.
+        if (result.parts) {
+            const breakdown = document.createElement("div");
+            breakdown.className = "sim-breakdown";
+            ASPECTS.forEach((aspect) => {
+                if (result.parts[aspect[1]] == null) return;
+                breakdown.appendChild(
+                    aspectRow(aspect[0], result.parts[aspect[1]]));
+            });
+            if (breakdown.children.length) detail.appendChild(breakdown);
+        }
 
         const meta = document.createElement("div");
         meta.className = "similar-row__meta";
@@ -1269,6 +1529,8 @@
         busy = true;
         updateRunEnabled();
         setHint("Scanning for similar files…");
+        resetProgress(false);
+        updateProgress({ stage: "listing", done: 0, total: 0 });
 
         let index;
         try {
@@ -1278,6 +1540,7 @@
                     if (p && p.stage === "listed") {
                         setHint(`Comparing ${p.total} files…`);
                     }
+                    updateProgress(p);
                 }
             });
         } catch (e) {
@@ -1305,6 +1568,7 @@
             );
         }).then(() => {
             busy = false;
+            resetProgress(true);
             updateRunEnabled();
         });
     };
@@ -1323,6 +1587,13 @@
         ui.range = document.getElementById("similarityRangeSelect");
         ui.list = document.getElementById("similarityList");
         ui.count = document.getElementById("similarityCount");
+        ui.progress = document.getElementById("similarityProgress");
+        ui.progressLabel = document.getElementById("similarityProgressLabel");
+        ui.progressCount = document.getElementById("similarityProgressCount");
+        ui.progressBar = document.getElementById("similarityProgressBar");
+        ui.progressTrack = ui.progress
+            ? ui.progress.querySelector(".similar-progress__track")
+            : null;
         if (!ui.folder || !ui.run) return;
 
         // Restore persisted state.
@@ -1372,12 +1643,9 @@
         }
         // Collapse open multi-selects / token "Add" menus on outside click.
         document.addEventListener("click", (evt) => {
-            if (!evt.target.closest(".ms")) closeAllMultiselects();
-            if (!evt.target.closest(".tok__add-row")) {
-                (ui.settings || document)
-                    .querySelectorAll(".tok__add-menu").forEach((m) => {
-                        m.hidden = true;
-                    });
+            if (!evt.target.closest(".ms") &&
+                !evt.target.closest(".ms__menu")) {
+                closeAllMultiselects();
             }
         });
         window.addEventListener("resize", () => {

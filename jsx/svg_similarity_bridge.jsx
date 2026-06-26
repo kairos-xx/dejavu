@@ -1,3 +1,7 @@
+function SVGSim_bridgeVersion() {
+    return 2;
+}
+
 function SVGSim_escapeJSONString(value) {
     return String(value)
         .replace(/\\/g, "\\\\")
@@ -100,6 +104,74 @@ function SVGSim_closeDocumentNoSave(doc) {
     } catch (ignored) {}
 }
 
+// Return an already-open document whose path matches, or null. Used so the
+// scan never re-opens (and then closes) a file the user already has open.
+function SVGSim_findOpenDocByPath(path) {
+    try {
+        if (!path || !app.documents.length) return null;
+        for (var i = 0; i < app.documents.length; i += 1) {
+            var d = app.documents[i];
+            if (String(SVGSim_documentToken(d)) === String(path)) return d;
+        }
+    } catch (ignored) {}
+    return null;
+}
+
+function SVGSim_closeActiveDocumentIfPath(path, protectedDoc) {
+    try {
+        if (!path || !app.documents.length) return false;
+        var active = app.activeDocument;
+        // Never close the user's own document. After exportFile() some
+        // Illustrator versions report the active document's fullName as the
+        // export target, which previously matched the temp path and closed
+        // the real open document. Guard by object identity.
+        if (protectedDoc && active === protectedDoc) return false;
+        var token = SVGSim_documentToken(active);
+        if (token && String(token) === String(path)) {
+            SVGSim_closeDocumentNoSave(active);
+            return true;
+        }
+    } catch (ignored) {}
+    return false;
+}
+
+function SVGSim_withRecentFilesSuppressed(work) {
+    var key = "Application/RecentFileCount";
+    var originalCount = null;
+    var shouldRestore = false;
+
+    try {
+        if (app.preferences &&
+                app.preferences.getIntegerPreference &&
+                app.preferences.setIntegerPreference) {
+            originalCount = app.preferences.getIntegerPreference(key);
+            app.preferences.setIntegerPreference(key, 0);
+            shouldRestore = true;
+        }
+    } catch (ignoredPreference) {
+        shouldRestore = false;
+    }
+
+    try {
+        return work();
+    } finally {
+        if (shouldRestore) {
+            try {
+                app.preferences.setIntegerPreference(key, originalCount);
+            } catch (ignoredRestore) {}
+        }
+    }
+}
+
+function SVGSim_openFileSilently(fileRefOrPath) {
+    return SVGSim_withRecentFilesSuppressed(function () {
+        var fileRef = fileRefOrPath;
+        if (!fileRef || !fileRef.exists) fileRef = new File(fileRefOrPath);
+        if (fileRef.exists) return app.open(fileRef);
+        return null;
+    });
+}
+
 function SVGSim_removeFile(path) {
     try {
         if (!path) return false;
@@ -132,10 +204,27 @@ function SVGSim_exportDocumentToFile(doc, outFile) {
 }
 
 function SVGSim_exportCurrentDocumentAsTempSVG() {
+    var previousInteraction = app.userInteractionLevel;
+    var originalDoc = null;
+    var originalToken = "";
+    var out = null;
+
     try {
         if (!app.documents.length) return "ERROR: No active document.";
-        return SVGSim_exportDocumentToFile(app.activeDocument, SVGSim_tempSVGFile("svgsim_current"));
+        originalDoc = app.activeDocument;
+        originalToken = SVGSim_documentToken(originalDoc);
+        out = SVGSim_tempSVGFile("svgsim_current");
+        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
+        SVGSim_exportDocumentToFile(originalDoc, out);
+        // Exporting writes a file; it never opens a document, so there is
+        // nothing to close here. The user's document stays open.
+        SVGSim_restoreOriginalDocument(originalDoc, originalToken);
+        app.userInteractionLevel = previousInteraction;
+        return out.fsName;
     } catch (error) {
+        try { SVGSim_restoreOriginalDocument(originalDoc, originalToken); } catch (ignoredRestore) {}
+        try { app.userInteractionLevel = previousInteraction; } catch (ignoredInteraction) {}
+        try { if (out && out.exists) out.remove(); } catch (ignoredRemove) {}
         return "ERROR: " + error;
     }
 }
@@ -144,7 +233,7 @@ function SVGSim_convertFileToTempSVG(filePath) {
     var previousInteraction = app.userInteractionLevel;
     var originalDoc = null;
     var originalToken = "";
-    var opened = null;
+    var target = null;
     var out = null;
 
     try {
@@ -156,24 +245,30 @@ function SVGSim_convertFileToTempSVG(filePath) {
         var input = new File(filePath);
         if (!input.exists) return "ERROR: File not found: " + filePath;
 
-        if (originalDoc && originalToken && String(input.fsName) === String(originalToken)) {
-            out = SVGSim_tempSVGFile("svgsim_convert_current");
-            SVGSim_exportDocumentToFile(originalDoc, out);
-            SVGSim_restoreOriginalDocument(originalDoc, originalToken);
-            return out.fsName;
-        }
-
         app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
-        opened = app.open(input);
+        // Reuse the document if it is already open, otherwise open it.
+        target = SVGSim_findOpenDocByPath(input.fsName) ||
+            SVGSim_openFileSilently(input);
+        if (!target) return "ERROR: Could not open file: " + filePath;
         out = SVGSim_tempSVGFile("svgsim_convert");
-        SVGSim_exportDocumentToFile(opened, out);
-        SVGSim_closeDocumentNoSave(opened);
-        opened = null;
+        SVGSim_exportDocumentToFile(target, out);
+        // Any document that is part of the search is closed afterward. The
+        // active/origin document is excluded from the candidate list upstream
+        // and guarded here by path so it is never closed.
+        if (String(SVGSim_documentToken(target)) !== String(originalToken)) {
+            SVGSim_closeDocumentNoSave(target);
+        }
+        target = null;
         SVGSim_restoreOriginalDocument(originalDoc, originalToken);
         app.userInteractionLevel = previousInteraction;
         return out.fsName;
     } catch (error) {
-        try { SVGSim_closeDocumentNoSave(opened); } catch (ignoredClose) {}
+        try {
+            if (target && String(SVGSim_documentToken(target)) !==
+                    String(originalToken)) {
+                SVGSim_closeDocumentNoSave(target);
+            }
+        } catch (ignoredClose) {}
         try { SVGSim_restoreOriginalDocument(originalDoc, originalToken); } catch (ignoredRestore) {}
         try { app.userInteractionLevel = previousInteraction; } catch (ignoredInteraction) {}
         try { if (out && out.exists) out.remove(); } catch (ignoredRemove) {}

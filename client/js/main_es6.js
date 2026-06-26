@@ -177,8 +177,8 @@ const FORCE_HOST_RELOAD = true;
 // Must match DEJAVU_HOST_VERSION in host/host.jsx. After load the panel
 // reads the host's version back; a mismatch means an OLD host.jsx
 // is still resident in Illustrator's ExtendScript engine.
-const EXPECTED_HOST_VERSION = "2026.06.25-r32";
-const EXPECTED_UXP_HOST_VERSION = "2026.06.25-r32";
+const EXPECTED_HOST_VERSION = "2026.06.25-r33";
+const EXPECTED_UXP_HOST_VERSION = "2026.06.25-r33";
 
 // Some host panel sessions can stay alive when their tabs are hidden.
 // Reload once when a previously-hidden panel becomes visible so the

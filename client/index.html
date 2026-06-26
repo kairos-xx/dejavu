@@ -969,7 +969,7 @@
                             title="Cache health warnings"
                             hidden
                         ></div>
-                        <div class="mini-grid mini-grid--three">
+                        <div class="settings-grid settings-grid--three">
                             <label class="mini-field" title="Warn when free disk space drops below this value">
                                 <span>Low disk MB</span>
                                 <div class="number-input-group">
@@ -1223,6 +1223,30 @@
                                 class="btn btn--primary"
                                 id="similarityRunBtn"
                             >Find similar</button>
+                        </div>
+                        <div
+                            class="similar-progress"
+                            id="similarityProgress"
+                            hidden
+                        >
+                            <div class="similar-progress__labels">
+                                <span id="similarityProgressLabel"
+                                    >Preparing scan…</span
+                                >
+                                <span id="similarityProgressCount">0 / 0</span>
+                            </div>
+                            <div
+                                class="similar-progress__track"
+                                role="progressbar"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                aria-valuenow="0"
+                            >
+                                <div
+                                    class="similar-progress__bar"
+                                    id="similarityProgressBar"
+                                ></div>
+                            </div>
                         </div>
                     </section>
 
@@ -1483,7 +1507,7 @@
                     <section
                         class="field-group field-group--embedded field-group--compact"
                     >
-                        <div class="mini-grid mini-grid--three">
+                        <div class="settings-grid settings-grid--three">
                             <label class="mini-field">
                                 <span>Keep</span>
                                 <div class="number-input-group">
@@ -1924,12 +1948,12 @@
                     "./js/bottom.js",
                     "./js/timeline.js",
                     "./js/advanced.js",
-                    "../similarity/js/svg-similarity-config.js",
-                    "../similarity/js/svg-similarity-engine.js",
-                    "../similarity/js/svg-similarity-current-document.js",
-                    "../similarity/js/svg-similarity-adapters.js",
-                    "../similarity/js/svg-similarity-env.js",
-                    "../similarity/js/svg-similarity-index.js",
+                    "./js/similarity/svg-similarity-config.js",
+                    "./js/similarity/svg-similarity-engine.js",
+                    "./js/similarity/svg-similarity-current-document.js",
+                    "./js/similarity/svg-similarity-adapters.js",
+                    "./js/similarity/svg-similarity-env.js",
+                    "./js/similarity/svg-similarity-index.js",
                     "./js/main.js",
                     "./js/similar.js",
                     "./js/update-check.js",

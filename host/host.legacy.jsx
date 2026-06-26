@@ -17,7 +17,7 @@
 // warns if it doesn't match, which makes a *stale* host — one left in
 // Illustrator's persistent ExtendScript engine from before a fix —
 // visible instead of silently producing old behaviour.
-var DEJAVU_HOST_VERSION = "2026.06.24-r31";
+var DEJAVU_HOST_VERSION = "2026.06.25-r33";
 
 // Persist across $.evalFile reloads so reopening the CEP panel does not make
 // an already-open unsaved document look like a new document session.
@@ -80,6 +80,43 @@ function markDocumentAsOpenedDejavu(doc) {
 function isDocumentOpenedDejavu(doc) {
     var id = getDocumentSessionId(doc);
     return openedDejavuSessionExists(id);
+}
+
+function withRecentFilesSuppressed(work) {
+    var key = "Application/RecentFileCount";
+    var originalCount = null;
+    var shouldRestore = false;
+
+    try {
+        if (app.preferences &&
+                app.preferences.getIntegerPreference &&
+                app.preferences.setIntegerPreference) {
+            originalCount = app.preferences.getIntegerPreference(key);
+            app.preferences.setIntegerPreference(key, 0);
+            shouldRestore = true;
+        }
+    } catch (ignoredPreference) {
+        shouldRestore = false;
+    }
+
+    try {
+        return work();
+    } finally {
+        if (shouldRestore) {
+            try {
+                app.preferences.setIntegerPreference(key, originalCount);
+            } catch (ignoredRestore) {}
+        }
+    }
+}
+
+function openFileSilently(fileRefOrPath) {
+    return withRecentFilesSuppressed(function () {
+        var fileRef = fileRefOrPath;
+        if (!fileRef || !fileRef.exists) fileRef = new File(fileRefOrPath);
+        if (fileRef.exists) return app.open(fileRef);
+        return null;
+    });
 }
 
 function openedDejavuSessionExists(id) {
@@ -1385,7 +1422,10 @@ function dejavu_openPath(path) {
     try {
         var file = new File(path);
         if (!file.exists) return JSON.stringify({ ok: false, error: "File not found." });
-        var openedDoc = app.open(file);
+        var openedDoc = openFileSilently(file);
+        if (!openedDoc) {
+            return JSON.stringify({ ok: false, error: "Could not open file." });
+        }
         var openedSessionId = markDocumentAsOpenedDejavu(openedDoc);
         dejavuLog("Opened dejavu " + file.fsName);
         return JSON.stringify({

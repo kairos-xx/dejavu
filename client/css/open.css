@@ -237,7 +237,7 @@
 
 .open-doc__bulk-save-main {
     flex: 0 0 auto;
-    height: var(--bulk-control-h);
+    /* height: var(--bulk-control-h); */
     min-height: var(--bulk-control-h);
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -250,14 +250,14 @@
 
 .open-doc__bulk-save-arrow {
     flex: 0 0 var(--dimension-14);
-    width: var(--dimension-14);
-    height: var(--bulk-control-h);
-    min-height: var(--bulk-control-h);
+    /* width: var(--dimension-14); */
+    /* height: var(--bulk-control-h); */
+    /* min-height: var(--bulk-control-h); */
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: var(--dimension-14);
-    padding: 0;
+    /* min-width: var(--dimension-14); */
+    /* padding-left: 0; */
     margin-left: calc(var(--dimension-1) * -1);
     border-color: var(--border);
     border-left: var(--dimension-1) solid var(--border);

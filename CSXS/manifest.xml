@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionManifest Version="11.0" ExtensionBundleId="com.joaodev.dejavu"
-    ExtensionBundleVersion="1.17.0"
+    ExtensionBundleVersion="1.18.0"
     ExtensionBundleName="DejaVu">
     <ExtensionList>
-        <Extension Id="com.joaodev.dejavu.panel" Version="1.17.0" />
+        <Extension Id="com.joaodev.dejavu.panel" Version="1.18.0" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
@@ -40,7 +40,7 @@
                         </Size>
                         <MinSize>
                             <Height>480</Height>
-                            <Width>450</Width>
+                            <Width>500</Width>
                         </MinSize>
                         <MaxSize>
                             <Height>1000</Height>

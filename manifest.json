@@ -4,7 +4,7 @@
   "name": {
     "default": "DejaVu"
   },
-  "version": "1.17.0",
+  "version": "1.18.0",
   "main": "client/index.html",
   "dejavu": {
     "_comment": "DejaVu runtime config, read by the panel at startup.",
@@ -33,7 +33,7 @@
         "default": "DejaVu"
       },
       "minimumSize": {
-        "width": 450,
+        "width": 500,
         "height": 480
       },
       "preferredDockedSize": {
