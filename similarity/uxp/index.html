@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SVG Similarity Finder</title>
+  <link rel="stylesheet" href="../css/similar-files.css">
+</head>
+<body>
+  <main class="similarity-panel">
+    <h1>SVG Similarity Finder</h1>
+    <p class="muted">UXP fallback UI. Direct SVG comparison works here; AI/PDF/EPS conversion is routed through host-specific adapters when available.</p>
+    <button id="pick-target">Pick target SVG</button>
+    <button id="pick-folder">Pick search folder</button>
+    <div id="similar-results"></div>
+  </main>
+  <script src="../js/svg-similarity-engine.js"></script>
+  <script src="../lib/CSInterface.js"></script>
+  <script src="../js/svg-similarity-config.js"></script>
+  <script src="../js/svg-similarity-current-document.js"></script>
+  <script src="../js/svg-similarity-adapters.js"></script>
+  <script src="../js/svg-similarity-env.js"></script>
+  <script src="../js/svg-similarity-index.js"></script>
+  <script src="../js/uxp-similarity-fallback.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SVG Similarity Extended Demo</title>
+  <link rel="stylesheet" href="../css/similar-files.css">
+</head>
+<body class="similar-panel">
+  <h3>Similar Vector Files</h3>
+  <div class="similar-row">
+    <input id="search-folder" placeholder="Folder path for CEP, or use UXP picker in UXP build">
+    <button id="find-similar-button">Find similar to current document</button>
+  </div>
+  <details>
+    <summary>Weights config</summary>
+    <textarea id="weights-json"></textarea>
+  </details>
+  <div id="similar-status">Ready.</div>
+  <div id="similar-results"></div>
+
+  <script src="../lib/CSInterface.js"></script>
+  <script src="../js/svg-similarity-config.js"></script>
+  <script src="../js/svg-similarity-engine.js"></script>
+  <script src="../js/svg-similarity-current-document.js"></script>
+  <script src="../js/svg-similarity-adapters.js"></script>
+  <script src="../js/svg-similarity-env.js"></script>
+  <script src="../js/svg-similarity-index.js"></script>
+  <script src="../js/similar-files-panel.js"></script>
+  <script>createSimilarityApp('../config.json');</script>
+</body>
+</html>

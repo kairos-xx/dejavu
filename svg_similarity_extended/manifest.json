@@ -1,0 +1,126 @@
+{
+  "manifestVersion": 5,
+  "id": "com.joaolopes.svgsimilarity.uxp",
+  "name": "SVG Similarity Finder",
+  "version": "1.0.0",
+  "main": "uxp/index.html",
+  "host": [
+    {
+      "app": "ILST",
+      "minVersion": "28.0.0"
+    }
+  ],
+  "requiredPermissions": {
+    "localFileSystem": "request"
+  },
+  "icons": [
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/icon-23.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "lightest",
+        "light",
+        "medium"
+      ]
+    },
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/icon-23-dark.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "dark",
+        "darkest"
+      ]
+    },
+    {
+      "width": 48,
+      "height": 48,
+      "path": "icons/icon-48.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "lightest",
+        "light",
+        "medium"
+      ]
+    },
+    {
+      "width": 48,
+      "height": 48,
+      "path": "icons/icon-48-dark.png",
+      "scale": [
+        1,
+        2
+      ],
+      "theme": [
+        "dark",
+        "darkest"
+      ]
+    }
+  ],
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "similarityPanel",
+      "label": {
+        "default": "SVG Similarity Finder"
+      },
+      "minimumSize": {
+        "width": 320,
+        "height": 360
+      },
+      "maximumSize": {
+        "width": 1200,
+        "height": 1600
+      },
+      "preferredDockedSize": {
+        "width": 420,
+        "height": 560
+      },
+      "preferredFloatingSize": {
+        "width": 420,
+        "height": 560
+      },
+      "icons": [
+        {
+          "width": 23,
+          "height": 23,
+          "path": "icons/icon-23.png",
+          "scale": [
+            1,
+            2
+          ],
+          "theme": [
+            "lightest",
+            "light",
+            "medium"
+          ]
+        },
+        {
+          "width": 23,
+          "height": 23,
+          "path": "icons/icon-23-dark.png",
+          "scale": [
+            1,
+            2
+          ],
+          "theme": [
+            "dark",
+            "darkest"
+          ]
+        }
+      ]
+    }
+  ]
+}

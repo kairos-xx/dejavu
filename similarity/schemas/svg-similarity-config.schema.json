@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SVG Similarity Config",
+  "type": "object",
+  "required": [
+    "version",
+    "engine",
+    "index"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer"
+    },
+    "engine": {
+      "type": "object",
+      "properties": {
+        "samplesPerElement": {
+          "type": "integer",
+          "minimum": 8
+        },
+        "maxSamples": {
+          "type": "integer",
+          "minimum": 64
+        },
+        "rotationInvariant": {
+          "type": "boolean"
+        },
+        "scaleInvariant": {
+          "type": "boolean"
+        },
+        "translationInvariant": {
+          "type": "boolean"
+        },
+        "mirrorInvariant": {
+          "type": "boolean"
+        },
+        "includeHidden": {
+          "type": "boolean"
+        },
+        "compareTextAsGeometry": {
+          "type": "boolean"
+        },
+        "compareRasterImagesByBBox": {
+          "type": "boolean"
+        },
+        "weights": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "elementMatchThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reportSampleLimit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pathSampleMinDistance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pathSampleRoundToNearest": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "index": {
+      "type": "object",
+      "properties": {
+        "allowedExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recursive": {
+          "type": "boolean"
+        },
+        "ioConcurrency": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "conversionConcurrency": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fingerprintConcurrency": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cacheFileName": {
+          "type": "string"
+        },
+        "maxFileSizeBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shortlistLimit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "externalConverters": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "prefer": { "type": "array", "items": { "type": "string" } },
+            "allowIllustratorFallback": { "type": "boolean" },
+            "avoidIllustrator": { "type": "boolean" },
+            "tryMutoolForEPS": { "type": "boolean" },
+            "inkscapePath": { "type": "string" },
+            "mutoolPath": { "type": "string" },
+            "ghostscriptPath": { "type": "string" }
+          }
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "defaultSearchFolderFromCurrentDocument": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

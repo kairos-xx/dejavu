@@ -434,6 +434,14 @@ html, body {
     overflow: hidden;
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
+    /* Prevent any browser/panel zoom or text-size adjustments. */
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -ms-content-zooming: none;
+    -ms-touch-action: manipulation;
 }
 
 .app {

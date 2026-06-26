@@ -615,6 +615,92 @@ const log = false;
         }
     };
 
+    const dejavu_getDiskSpaceInfo = async (path) => {
+        try {
+            let target = String(path || "").trim();
+            if (!target) return fail("No path provided.");
+            if (target.charAt(0) === "~") {
+                try {
+                    const os = requireModule("os");
+                    if (os && typeof os.homedir === "function") {
+                        target = os.homedir() + target.slice(1);
+                    }
+                } catch {}
+            }
+
+            try {
+                const fs = requireModule("fs");
+                if (fs && typeof fs.statfsSync === "function") {
+                    const stats = fs.statfsSync(target);
+                    const blockSize = Number(stats.bsize || stats.frsize || 0);
+                    const freeBlocks = Number(stats.bavail || stats.bfree || 0);
+                    const totalBlocks = Number(stats.blocks || 0);
+                    if (blockSize > 0 && totalBlocks > 0) {
+                        return ok({
+                            freeBytes: freeBlocks * blockSize,
+                            totalBytes: totalBlocks * blockSize,
+                        });
+                    }
+                }
+            } catch {}
+
+            try {
+                const cp = requireModule("child_process");
+                if (cp && typeof cp.execFile === "function") {
+                    const isWin = typeof process !== "undefined" &&
+                        process.platform === "win32";
+                    if (isWin) {
+                        const drive = target.match(/^[a-z]:/i);
+                        if (!drive) {
+                            return fail("Cannot determine Windows drive.");
+                        }
+                        return await new Promise((resolve) => {
+                            cp.execFile(
+                                "powershell.exe",
+                                [
+                                    "-NoProfile",
+                                    "-Command",
+                                    `$d = Get-PSDrive ${drive[0].charAt(0)}; "$(($d.Free)),$($d.Free + $d.Used)"`,
+                                ],
+                                (err, stdout) => {
+                                    if (err) {
+                                        resolve(fail(err));
+                                        return;
+                                    }
+                                    const parts = String(stdout || "").trim().split(",");
+                                    resolve(ok({
+                                        freeBytes: Number(parts[0]) || 0,
+                                        totalBytes: Number(parts[1]) || 0,
+                                    }));
+                                }
+                            );
+                        });
+                    }
+                    return await new Promise((resolve) => {
+                        cp.execFile("df", ["-k", target], (err, stdout) => {
+                            if (err) {
+                                resolve(fail(err));
+                                return;
+                            }
+                            const lines = String(stdout || "").trim().split(/\r?\n/);
+                            const parts = (lines[lines.length - 1] || "").split(/\s+/);
+                            const totalKb = Number(parts[1]) || 0;
+                            const freeKb = Number(parts[3]) || 0;
+                            resolve(ok({
+                                freeBytes: freeKb * 1024,
+                                totalBytes: totalKb * 1024,
+                            }));
+                        });
+                    });
+                }
+            } catch {}
+
+            return fail("Could not determine disk space.");
+        } catch (error) {
+            return fail(error);
+        }
+    };
+
     const dejavu_openPath = async (path) => {
         try {
             const entry = await entryFromPath(path);
@@ -690,6 +776,7 @@ const log = false;
         dejavu_dejavu,
         dejavu_listDejavus,
         dejavu_revealPath,
+        dejavu_getDiskSpaceInfo,
         dejavu_openPath,
         dejavu_deletePath,
         dejavu_duplicateRecovery,

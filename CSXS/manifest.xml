@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionManifest Version="11.0" ExtensionBundleId="com.joaodev.dejavu"
-    ExtensionBundleVersion="1.5.1"
+    ExtensionBundleVersion="1.5.2"
     ExtensionBundleName="DejaVu">
     <ExtensionList>
-        <Extension Id="com.joaodev.dejavu.panel" Version="1.5.1" />
+        <Extension Id="com.joaodev.dejavu.panel" Version="1.5.2" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>

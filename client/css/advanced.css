@@ -60,6 +60,23 @@
     gap: var(--dimension-8);
 }
 
+
+
+.cache-health-drawer > .drawer__body {
+    max-height: none;
+    /* padding: 0; */
+}
+
+.cache-health-drawer .cache-health {
+    border-bottom: 0;
+    padding-bottom: var(--dimension-8);
+    padding-top: var(--dimension-8);
+}
+
+.cache-health__disk {
+    margin-top: 0;
+}
+
 .cache-health__summary {
     min-height: var(--dimension-24);
     border: var(--dimension-1) solid var(--border-soft);
@@ -80,17 +97,6 @@
     font-size: var(--dimension-10);
     line-height: 1.35;
     padding: var(--dimension-6) var(--dimension-7);
-}
-
-.cache-actions {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    width: 100%;
-}
-
-.cache-actions .btn {
-    width: 100%;
-    min-width: 0;
 }
 
 .hidden-file-input {

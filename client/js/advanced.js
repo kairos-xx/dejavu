@@ -205,7 +205,7 @@ const normalizeDiskProbePath = (path) => {
     return value;
 };
 
-const getDiskSpaceInfo = (path) => {
+const getDiskSpaceInfoClient = (path) => {
     return new Promise((resolve) => {
         const target = normalizeDiskProbePath(path);
         if (!target || typeof require !== "function") {
@@ -214,13 +214,23 @@ const getDiskSpaceInfo = (path) => {
         }
         let fs = null;
         let cp = null;
+        let pathMod = null;
         try {
             fs = require("fs");
             cp = require("child_process");
+            pathMod = require("path");
         } catch {
             resolve(null);
             return;
         }
+
+        const dirname = pathMod && typeof pathMod.dirname === "function"
+            ? pathMod.dirname
+            : (p) => {
+                const lastSlash = p.replace(/\\/g, "/").lastIndexOf("/");
+                return lastSlash > 0 ? p.slice(0, lastSlash) : "/";
+            };
+
         try {
             if (fs.statfsSync) {
                 const stats = fs.statfsSync(target);
@@ -237,47 +247,99 @@ const getDiskSpaceInfo = (path) => {
             }
         } catch {}
 
-        const isWin = (navigator.platform || "")
-            .toLowerCase().indexOf("win") !== -1;
+        const isWin = typeof process !== "undefined" &&
+            process.platform === "win32";
         if (isWin) {
-            const drive = target.match(/^[a-z]:/i);
-            if (!drive) {
-                resolve(null);
-                return;
-            }
-            cp.execFile(
-                "powershell.exe",
-                [
-                    "-NoProfile",
-                    "-Command",
-                    `(Get-PSDrive ${drive[0].charAt(0)}).Free`
-                ],
-                (err, stdout) => {
-                    if (err) {
-                        resolve(null);
-                        return;
-                    }
-                    resolve({ freeBytes: Number(String(stdout).trim()) || 0 });
-                }
-            );
+            const runPowerShell = (probePath) => {
+                const drive = probePath.match(/^[a-z]:/i);
+                if (!drive) return Promise.resolve(null);
+                return new Promise((res) => {
+                    cp.execFile(
+                        "powershell.exe",
+                        [
+                            "-NoProfile",
+                            "-Command",
+                            `$d = Get-PSDrive ${drive[0].charAt(0)}; "$($d.Free),$($d.Free + $d.Used)"`
+                        ],
+                        (err, stdout) => {
+                            if (err) {
+                                res(null);
+                                return;
+                            }
+                            const parts = String(stdout || "").trim().split(",");
+                            res({
+                                freeBytes: Number(parts[0]) || 0,
+                                totalBytes: Number(parts[1]) || 0
+                            });
+                        }
+                    );
+                });
+            };
+            runPowerShell(target).then((disk) => {
+                if (disk) return disk;
+                return runPowerShell(dirname(target));
+            }).then((disk) => {
+                if (disk) return disk;
+                return runPowerShell("C:");
+            }).then(resolve);
             return;
         }
 
-        cp.execFile("df", ["-k", target], (err, stdout) => {
-            if (err) {
-                resolve(null);
-                return;
-            }
-            const lines = String(stdout || "").trim().split(/\r?\n/);
-            const parts = (lines[lines.length - 1] || "").split(/\s+/);
-            const totalKb = Number(parts[1]) || 0;
-            const freeKb = Number(parts[3]) || 0;
-            resolve({
-                freeBytes: freeKb * 1024,
-                totalBytes: totalKb * 1024
+        const runDf = (probePath) => {
+            return new Promise((res) => {
+                cp.execFile("df", ["-k", probePath], (err, stdout) => {
+                    if (err) {
+                        res(null);
+                        return;
+                    }
+                    const lines = String(stdout || "").trim().split(/\r?\n/);
+                    const parts = (lines[lines.length - 1] || "").split(/\s+/);
+                    const totalKb = Number(parts[1]) || 0;
+                    const freeKb = Number(parts[3]) || 0;
+                    res({
+                        freeBytes: freeKb * 1024,
+                        totalBytes: totalKb * 1024
+                    });
+                });
             });
-        });
+        };
+
+        runDf(target).then((disk) => {
+            if (disk) return disk;
+            const parent = dirname(target);
+            if (parent && parent !== target) return runDf(parent);
+            return null;
+        }).then((disk) => {
+            if (disk) return disk;
+            return runDf("/");
+        }).then(resolve);
     });
+};
+
+const getDiskSpaceInfo = (path) => {
+    const target = normalizeDiskProbePath(path);
+    // In CEP the webview has Node/child_process, so the client-side probe
+    // works reliably. In UXP we must ask the host.
+    const isCep = typeof window !== "undefined" &&
+        typeof window.__adobe_cep__ !== "undefined";
+    if (isCep) {
+        return getDiskSpaceInfoClient(target);
+    }
+    return callHost("dejavu_getDiskSpaceInfo", [target])
+        .then((result) => {
+            if (
+                result &&
+                result.ok &&
+                Number.isFinite(Number(result.freeBytes))
+            ) {
+                return {
+                    freeBytes: Number(result.freeBytes),
+                    totalBytes: Number(result.totalBytes || 0),
+                };
+            }
+            return getDiskSpaceInfoClient(target);
+        })
+        .catch(() => getDiskSpaceInfoClient(target));
 };
 
 const setCacheHealthWarning = (message) => {
@@ -302,18 +364,141 @@ const summarizeCacheFiles = (files) => {
     return { count: items.length, totalBytes, missing, latest };
 };
 
+const renderCacheDiskSpace = (disk, folder) => {
+    if (
+        !el.cacheDiskSpaceSummary ||
+        !el.cacheDiskSpacePercent ||
+        !el.cacheDiskSpaceFill
+    ) {
+        return;
+    }
+
+    const rawFreeBytes = disk ? Number(disk.freeBytes) : NaN;
+    const hasDiskMeasurement = Number.isFinite(rawFreeBytes);
+    const freeBytes = hasDiskMeasurement ? Math.max(0, rawFreeBytes) : 0;
+    const totalBytes = disk ? Math.max(0, Number(disk.totalBytes) || 0) : 0;
+    const thresholdBytes =
+        (Number(state.settings.diskSpaceWarningMb) || 0) * 1024 * 1024;
+    el.cacheDiskSpaceFill.classList.remove(
+        "timeline-insights__fill--warn",
+        "timeline-insights__fill--over"
+    );
+
+    if (!hasDiskMeasurement) {
+        el.cacheDiskSpaceSummary.textContent = "Disk space not checked.";
+        el.cacheDiskSpacePercent.textContent = "—";
+        el.cacheDiskSpaceFill.style.width = "0%";
+        if (el.cacheDiskSpace) {
+            el.cacheDiskSpace.title = folder || "No cache folder resolved yet";
+        }
+        return;
+    }
+
+    const freePct = totalBytes > 0
+        ? Math.max(0, Math.min(100, Math.round((freeBytes / totalBytes) * 100)))
+        : 0;
+    const usedPct = totalBytes > 0 ? 100 - freePct : 0;
+    el.cacheDiskSpaceSummary.textContent = totalBytes > 0
+        ? `Available disk · ${formatBytes(freeBytes)} of ${formatBytes(totalBytes)}`
+        : `Available disk · ${formatBytes(freeBytes)}`;
+    el.cacheDiskSpacePercent.textContent = totalBytes > 0
+        ? `${freePct}% free`
+        : "Measured";
+    el.cacheDiskSpaceFill.style.width = totalBytes > 0 ? `${usedPct}%` : "0%";
+    el.cacheDiskSpaceFill.classList.toggle(
+        "timeline-insights__fill--warn",
+        thresholdBytes > 0 && freeBytes < thresholdBytes
+    );
+    if (el.cacheDiskSpace) {
+        el.cacheDiskSpace.title = folder || "No cache folder resolved yet";
+    }
+};
+
+const getDiskRefreshThresholdBytes = () => {
+    const mb = Number(state.settings.diskSpaceRefreshMb) || 256;
+    if (mb <= 0) return 0;
+    return mb * 1024 * 1024;
+};
+
+const rememberDiskSpaceMeasurement = (disk, folder) => {
+    if (!disk || !Number.isFinite(Number(disk.freeBytes))) return false;
+    const freeBytes = Math.max(0, Number(disk.freeBytes));
+    const totalDiskBytes = Math.max(0, Number(disk.totalBytes) || 0);
+    state.lastDiskSpaceCheckAt = Date.now();
+    state.lastDiskSpaceSessionBytes = Number(state.sessionBytes) || 0;
+    if (
+        state.lastCacheHealth &&
+        state.lastCacheHealth.folder === folder
+    ) {
+        state.lastCacheHealth.diskChecked = true;
+        state.lastCacheHealth.freeBytes = freeBytes;
+        state.lastCacheHealth.totalDiskBytes = totalDiskBytes;
+        state.lastCacheHealth.checkedAt = state.lastDiskSpaceCheckAt;
+    }
+    return true;
+};
+
+const shouldRefreshDiskSpaceAfterSave = () => {
+    const thresholdBytes = getDiskRefreshThresholdBytes();
+    if (thresholdBytes <= 0) return false;
+    const savedSinceCheck = Math.max(
+        0,
+        (Number(state.sessionBytes) || 0) -
+            (Number(state.lastDiskSpaceSessionBytes) || 0)
+    );
+    return savedSinceCheck >= thresholdBytes;
+};
+
+const getCacheDiskProbeFolder = (folder) => {
+    return String(
+        folder ||
+        state.currentDejavuFolder ||
+        state.settings.folder ||
+        ""
+    ).trim();
+};
+
+const refreshCacheDiskSpace = (folder) => {
+    const resolvedFolder = getCacheDiskProbeFolder(folder);
+    if (!resolvedFolder) {
+        renderCacheDiskSpace(null, "");
+        return Promise.resolve(null);
+    }
+    return getDiskSpaceInfo(resolvedFolder).then((disk) => {
+        if (disk && Number.isFinite(Number(disk.freeBytes))) {
+            renderCacheDiskSpace(disk, resolvedFolder);
+            rememberDiskSpaceMeasurement(disk, resolvedFolder);
+        } else {
+            renderCacheDiskSpace(null, resolvedFolder);
+        }
+        return disk;
+    });
+};
+
 const renderCacheHealth = (files, result, disk) => {
     if (!el.cacheHealthSummary) return;
     const stats = summarizeCacheFiles(files);
     const folder = (result && (result.folder || result.folderPath)) ||
         state.currentDejavuFolder ||
         "";
+    const cachedDisk = state.lastCacheHealth &&
+        state.lastCacheHealth.folder === folder &&
+        state.lastCacheHealth.diskChecked
+        ? {
+            freeBytes: state.lastCacheHealth.freeBytes,
+            totalBytes: state.lastCacheHealth.totalDiskBytes || 0
+        }
+        : null;
+    const diskInfo = disk || cachedDisk;
+    renderCacheDiskSpace(diskInfo, folder);
     const latestModified = stats.latest ? Number(stats.latest.modified) || 0 : 0;
     const latestLabel = latestModified
         ? (Fmt.relative(latestModified) || "just now")
         : "none";
-    const freeLabel = disk && disk.freeBytes
-        ? ` · free ${formatBytes(disk.freeBytes)}`
+    const hasDiskMeasurement = diskInfo &&
+        Number.isFinite(Number(diskInfo.freeBytes));
+    const freeLabel = hasDiskMeasurement
+        ? ` · free ${formatBytes(diskInfo.freeBytes)}`
         : "";
     const missingLabel = stats.missing > 0
         ? ` · ${stats.missing} missing`
@@ -330,8 +515,8 @@ const renderCacheHealth = (files, result, disk) => {
             ? "1 cache entry points to a file that is no longer on disk."
             : `${stats.missing} cache entries point to files that are no longer on disk.`;
     }
-    if (disk && thresholdBytes > 0 && disk.freeBytes < thresholdBytes) {
-        warning = `Low disk space: ${formatBytes(disk.freeBytes)} free near the dejavu folder.`;
+    if (diskInfo && thresholdBytes > 0 && diskInfo.freeBytes < thresholdBytes) {
+        warning = `Low disk space: ${formatBytes(diskInfo.freeBytes)} free near the dejavu folder.`;
     }
     setCacheHealthWarning(warning);
     state.lastCacheHealth = {
@@ -340,20 +525,22 @@ const renderCacheHealth = (files, result, disk) => {
         count: stats.count,
         totalBytes: stats.totalBytes,
         missing: stats.missing,
-        freeBytes: disk && disk.freeBytes ? disk.freeBytes : 0
+        diskChecked: !!hasDiskMeasurement,
+        freeBytes: hasDiskMeasurement ? Math.max(0, Number(diskInfo.freeBytes)) : 0,
+        totalDiskBytes: diskInfo && diskInfo.totalBytes ? diskInfo.totalBytes : 0
     };
 };
 
 const auditCacheHealth = (options) => {
     const opts = options || {};
     if (!opts.quiet) setHint("Auditing dejavu cache…");
-    return refreshVersions(true).then((result) => {
+    return Promise.resolve(refreshVersions(true)).then((result) => {
         const files = result && result.ok ? (result.files || []) : state.versions;
         const folder = (result && (result.folder || result.folderPath)) ||
             state.currentDejavuFolder ||
             state.settings.folder ||
             "";
-        return getDiskSpaceInfo(folder).then((disk) => {
+        return refreshCacheDiskSpace(folder).then((disk) => {
             renderCacheHealth(files, result, disk);
             if (!opts.quiet) {
                 setHint("Cache audit complete.", "ok");
@@ -363,16 +550,21 @@ const auditCacheHealth = (options) => {
     });
 };
 
-const maybeWarnLowDiskSpace = (folder) => {
+const maybeWarnLowDiskSpace = (folder, options) => {
+    const opts = options || {};
     const thresholdMb = Number(state.settings.diskSpaceWarningMb) || 0;
-    if (thresholdMb <= 0) return Promise.resolve(null);
     const now = Date.now();
-    if (now - state.lastDiskSpaceCheckAt < 10 * 60000) {
+    const dueForWarning = thresholdMb > 0 &&
+        now - state.lastDiskSpaceCheckAt >= 10 * 60000;
+    const dueForSavedBytes = shouldRefreshDiskSpaceAfterSave();
+    if (!opts.force && !dueForWarning && !dueForSavedBytes) {
         return Promise.resolve(null);
     }
-    state.lastDiskSpaceCheckAt = now;
-    return getDiskSpaceInfo(folder || state.currentDejavuFolder).then((disk) => {
-        if (!disk || !disk.freeBytes) return null;
+    const resolvedFolder = folder || state.currentDejavuFolder || "";
+    return getDiskSpaceInfo(resolvedFolder).then((disk) => {
+        if (!disk || !Number.isFinite(Number(disk.freeBytes))) return null;
+        renderCacheDiskSpace(disk, resolvedFolder);
+        rememberDiskSpaceMeasurement(disk, resolvedFolder);
         const thresholdBytes = thresholdMb * 1024 * 1024;
         if (disk.freeBytes < thresholdBytes) {
             const message = `Low disk space: ${formatBytes(disk.freeBytes)} free near the dejavu folder.`;
@@ -385,7 +577,7 @@ const maybeWarnLowDiskSpace = (folder) => {
 
 const openLatestRecoverableSnapshot = () => {
     setHint("Opening latest recoverable snapshot…");
-    return refreshVersions(true).then(() => {
+    return Promise.resolve(refreshVersions(true)).then(() => {
         const candidates = getRecoveryCandidates()
             .concat((state.versions || []).map((item) => {
                 return {
@@ -501,6 +693,7 @@ const refreshVersions = (force) => {
         state.refreshVersionsPromise = null;
         throw err;
     });
+    return state.refreshVersionsPromise;
 };
 
 const cleanupDejavus = (manual) => {
@@ -1184,6 +1377,12 @@ const hydrateForm = () => {
     el.maxFolderSizeInput.value = s.maxFolderSizeMb;
     if (el.diskSpaceWarningInput) {
         el.diskSpaceWarningInput.value = s.diskSpaceWarningMb;
+    }
+    if (el.diskSpaceRefreshInput) {
+        el.diskSpaceRefreshInput.value = Math.max(
+            1,
+            parseInt(s.diskSpaceRefreshMb, 10) || 256
+        );
     }
     if (el.recoveryVersionsInput) {
         el.recoveryVersionsInput.value = Math.max(

@@ -612,6 +612,7 @@ const DEFAULT_SETTINGS = {
     keepDays: 0,
     maxFolderSizeMb: 0,
     diskSpaceWarningMb: 1024,
+    diskSpaceRefreshMb: 256,
     recoveryVersionsPerUnsavedDoc: 5,
     recoveryMaxCandidates: 80,
     folderTemplate: "$defaultFolder/$filename",
@@ -838,6 +839,7 @@ const state = {
     periodicRefreshId: null,
     refreshVersionsPromise: null,
     lastDiskSpaceCheckAt: 0,
+    lastDiskSpaceSessionBytes: 0,
     lastCacheHealth: null
 };
 
@@ -1195,6 +1197,17 @@ const bindEvents = () => {
             el.diskSpaceWarningInput.value = state.settings.diskSpaceWarningMb;
             saveSettings();
             auditCacheHealth({ quiet: true });
+        });
+    }
+
+    if (el.diskSpaceRefreshInput) {
+        el.diskSpaceRefreshInput.addEventListener("change", () => {
+            state.settings.diskSpaceRefreshMb = Math.max(
+                1,
+                readNumberInput(el.diskSpaceRefreshInput, 256)
+            );
+            el.diskSpaceRefreshInput.value = state.settings.diskSpaceRefreshMb;
+            saveSettings();
         });
     }
 
@@ -1563,29 +1576,9 @@ const bindEvents = () => {
         runHealthCheck();
     });
 
-    if (el.cacheAuditBtn) {
-        el.cacheAuditBtn.addEventListener("click", () => {
+    if (el.cacheDiskSpaceRefresh) {
+        el.cacheDiskSpaceRefresh.addEventListener("click", () => {
             auditCacheHealth({ quiet: false });
-        });
-    }
-
-    if (el.cacheRevealBtn) {
-        el.cacheRevealBtn.addEventListener("click", () => {
-            revealPath(state.currentDejavuFolder || state.settings.folder || "");
-        });
-    }
-
-    if (el.cacheCleanBtn) {
-        el.cacheCleanBtn.addEventListener("click", () => {
-            cleanupDejavus(true).then(() => {
-                auditCacheHealth({ quiet: true });
-            });
-        });
-    }
-
-    if (el.recoverLatestBtn) {
-        el.recoverLatestBtn.addEventListener("click", () => {
-            openLatestRecoverableSnapshot();
         });
     }
 
@@ -2350,10 +2343,16 @@ const init = () => {
     );
     el.cacheHealthSummary = document.getElementById("cacheHealthSummary");
     el.cacheHealthWarning = document.getElementById("cacheHealthWarning");
-    el.cacheAuditBtn = document.getElementById("cacheAuditBtn");
-    el.cacheRevealBtn = document.getElementById("cacheRevealBtn");
-    el.cacheCleanBtn = document.getElementById("cacheCleanBtn");
-    el.recoverLatestBtn = document.getElementById("recoverLatestBtn");
+    el.diskSpaceRefreshInput = document.getElementById("diskSpaceRefreshInput");
+    el.cacheDiskSpace = document.getElementById("cacheDiskSpace");
+    el.cacheDiskSpaceRefresh = document.getElementById("cacheDiskSpaceRefresh");
+    el.cacheDiskSpaceSummary = document.getElementById(
+        "cacheDiskSpaceSummary"
+    );
+    el.cacheDiskSpacePercent = document.getElementById(
+        "cacheDiskSpacePercent"
+    );
+    el.cacheDiskSpaceFill = document.getElementById("cacheDiskSpaceFill");
     el.folderTemplateInput = document.getElementById("folderTemplateInput");
     el.folderTemplateEditor = document.getElementById(
         "folderTemplateEditor"
@@ -2493,6 +2492,7 @@ const init = () => {
         syncInstallSignatureAndSplash();
         refreshDocStatus().then(() => {
             refreshVersions(true);
+            auditCacheHealth({ quiet: true });
             checkRecoveryWarning();
             refreshOpenDocuments();
         }).then(() => {

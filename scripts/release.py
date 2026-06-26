@@ -305,7 +305,14 @@ def manifest_repo() -> str | None:
 
 def default_repo() -> str:
     """Best available default GitHub repository for the release manager."""
-    return parse_origin_repo() or manifest_repo() or "joaoslopes/dejavu"
+    return parse_origin_repo() or manifest_repo() or "OWNER/dejavu"
+
+
+def default_repo_for_login(login: str | None) -> str:
+    """Default OWNER/dejavu using the authenticated GitHub login when known."""
+    if login:
+        return f"{login}/dejavu"
+    return default_repo()
 
 
 def gh_cli_token() -> str:
@@ -1210,16 +1217,8 @@ def _parse_args() -> Args:
 
 def _resolve_repo_and_token(args: Args) -> tuple[str, str, str | None, str]:
     """Return (owner, repo, login, token) from the parsed arguments."""
-    repo_arg: str
-    if args.repo is not None:
-        repo_arg = args.repo
-    elif args.build_only:
-        repo_arg = "local/dejavu"
-    else:
-        repo_arg = default_repo()
-    repo_arg = repo_arg.strip()
-    if not repo_arg:
-        die(msg="A repository name is required.")
+    if args.build_only and args.repo is None:
+        return "local", "dejavu", None, ""
 
     needs_github: bool = not args.dry_run and not args.build_only
     token: str
@@ -1228,10 +1227,16 @@ def _resolve_repo_and_token(args: Args) -> tuple[str, str, str | None, str]:
     if not token and needs_github:
         die(msg="A GitHub token is required (set $GITHUB_TOKEN).")
 
-    if args.build_only and args.repo is None:
-        owner, repo = "local", "dejavu"
+    repo_arg: str
+    if args.repo is not None:
+        repo_arg = args.repo
     else:
-        owner, repo = split_repo(repo_arg=repo_arg, login=login)
+        repo_arg = default_repo_for_login(login=login)
+    repo_arg = repo_arg.strip()
+    if not repo_arg:
+        die(msg="A repository name is required.")
+
+    owner, repo = split_repo(repo_arg=repo_arg, login=login)
     return owner, repo, login, token or ""
 
 
@@ -1438,7 +1443,7 @@ def tui_autopilot(args: Args) -> None:
 
     repo_arg: str = tui_input(
         label="GitHub repository OWNER/NAME",
-        default=args.repo or default_repo(),
+        default=args.repo or default_repo_for_login(login=login),
     )
     owner, repo = split_repo(repo_arg=repo_arg, login=login)
     args.repo = f"{owner}/{repo}"
