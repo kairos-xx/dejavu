@@ -246,6 +246,9 @@ def section(title: str) -> None:
 
 def tui_input(label: str, default: str = "", *, secret: bool = False) -> str:
     """Prompt for text in the release TUI."""
+    _CONSOLE.print(
+        f"[dim]DEBUG tui_input: label={label!r} default={default!r}[/dim]",
+    )
     default = sanitize_input(value=default)
     suffix: str = f" [{default}]" if default else ""
     prompt: str = f"{label}{suffix}: "
