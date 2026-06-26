@@ -246,16 +246,14 @@ def section(title: str) -> None:
 
 def tui_input(label: str, default: str = "", *, secret: bool = False) -> str:
     """Prompt for text in the release TUI."""
-    _CONSOLE.print(
-        f"[dim]DEBUG tui_input: label={label!r} default={default!r}[/dim]",
-    )
     default = sanitize_input(value=default)
     suffix: str = f" [{default}]" if default else ""
     prompt: str = f"{label}{suffix}: "
     if secret:
         value: str = getpass(prompt=prompt).strip()
     else:
-        value = _CONSOLE.input(prompt).strip()
+        _CONSOLE.print(prompt, end="", markup=False)
+        value = input().strip()
     value = sanitize_input(value=value)
     return value or default
 
@@ -264,7 +262,9 @@ def tui_confirm(label: str, *, default: bool = True) -> bool:
     """Prompt for a yes/no answer in the release TUI."""
     hint: str = "Y/n" if default else "y/N"
     while True:
-        answer: str = _CONSOLE.input(f"{label} [{hint}]: ").strip().lower()
+        prompt: str = f"{label} [{hint}]: "
+        _CONSOLE.print(prompt, end="", markup=False)
+        answer: str = input().strip().lower()
         if not answer:
             return default
         if answer in {"y", "yes"}:
@@ -286,7 +286,8 @@ def tui_choice(label: str, choices: list[str], default: str) -> str:
                 )
             else:
                 _CONSOLE.print(f"   {index}. {choice}")
-        answer: str = _CONSOLE.input(f"Choose [{default}]: ").strip()
+        _CONSOLE.print(f"Choose [{default}]: ", end="", markup=False)
+        answer: str = input().strip()
         if not answer:
             return default
         if answer.isdigit():
@@ -1769,12 +1770,9 @@ def tui_autopilot(args: Args) -> None:
     if not token:
         die(msg="GitHub auth is required for autopilot.")
 
-    repo_default: str = args.repo or default_repo_for_login(login=login)
-    debug_msg: str = f"DEBUG: autopilot repo default={repo_default!r}"
-    _CONSOLE.print(f"[dim]{debug_msg}[/dim]")
     repo_arg: str = tui_input(
         label="GitHub repository OWNER/NAME",
-        default=repo_default,
+        default=args.repo or default_repo_for_login(login=login),
     )
     owner, repo = split_repo(repo_arg=repo_arg, login=login)
     args.repo = f"{owner}/{repo}"
