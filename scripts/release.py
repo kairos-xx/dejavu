@@ -1766,9 +1766,12 @@ def tui_autopilot(args: Args) -> None:
     if not token:
         die(msg="GitHub auth is required for autopilot.")
 
+    repo_default: str = args.repo or default_repo_for_login(login=login)
+    debug_msg: str = f"DEBUG: autopilot repo default={repo_default!r}"
+    _CONSOLE.print(f"[dim]{debug_msg}[/dim]")
     repo_arg: str = tui_input(
         label="GitHub repository OWNER/NAME",
-        default=args.repo or default_repo_for_login(login=login),
+        default=repo_default,
     )
     owner, repo = split_repo(repo_arg=repo_arg, login=login)
     args.repo = f"{owner}/{repo}"
