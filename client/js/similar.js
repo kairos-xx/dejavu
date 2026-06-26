@@ -29,6 +29,10 @@
     const closeAllMultiselects = () => {
         if (!msOpen) return;
         msOpen.menu.hidden = true;
+        msOpen.menu.style.left = "";
+        msOpen.menu.style.minWidth = "";
+        msOpen.menu.style.maxHeight = "";
+        msOpen.menu.style.top = "";
         msOpen.ms.classList.remove("is-open");
         msOpen.trigger.setAttribute("aria-expanded", "false");
         msOpen = null;
@@ -42,6 +46,7 @@
         const openBelow = below >= Math.min(menu.scrollHeight, 220) ||
             below >= above;
         const maxH = Math.max(80, Math.min(240, openBelow ? below : above));
+        menu.style.position = "fixed";
         menu.style.left = `${Math.round(r.left)}px`;
         menu.style.minWidth = `${Math.round(r.width)}px`;
         menu.style.maxHeight = `${Math.round(maxH)}px`;
@@ -759,30 +764,32 @@
         return section;
     };
 
-    // ---- byte size with a KB / MB / GB unit selector ---------------------
-    const BYTE_UNITS = [
-        { id: "KB", factor: 1024 },
-        { id: "MB", factor: 1048576 },
-        { id: "GB", factor: 1073741824 }
+    // ---- numeric value with seconds / minutes / hours unit selector ------
+    const TIME_UNITS = [
+        { id: "seconds", factor: 1 },
+        { id: "minutes", factor: 60 },
+        { id: "hours", factor: 3600 }
     ];
-    const LS_SIZE_UNIT = "dejavu.similarity.maxsize.unit.v1";
+    const LS_TIME_UNIT = "dejavu.similarity.maxsize.timeunit.v1";
     const trimNum = (n) => Math.round(n * 1e6) / 1e6;
-    const unitById = (id) => BYTE_UNITS.filter((u) => u.id === id)[0] || null;
-    const bestByteUnit = (bytes) => {
-        for (let i = BYTE_UNITS.length - 1; i >= 0; i--) {
-            if (bytes >= BYTE_UNITS[i].factor) return BYTE_UNITS[i];
+    const timeUnitById = (id) =>
+        TIME_UNITS.filter((u) => u.id === id)[0] || null;
+    const bestTimeUnit = (seconds) => {
+        for (let i = TIME_UNITS.length - 1; i >= 0; i--) {
+            if (seconds >= TIME_UNITS[i].factor &&
+                seconds % TIME_UNITS[i].factor === 0) {
+                return TIME_UNITS[i];
+            }
         }
-        return BYTE_UNITS[1];
+        return TIME_UNITS[0];
     };
 
-    const makeByteSizeRow = (path, label, hint, value, tip) => {
+    const makeTimeUnitRow = (path, label, hint, value, tip) => {
         const section = valueRowSection();
         const lab = fieldLabel(label, tip);
-        let unit = unitById(window.localStorage.getItem(LS_SIZE_UNIT)) ||
-            bestByteUnit(Number(value) || 0);
+        let unit = timeUnitById(window.localStorage.getItem(LS_TIME_UNIT)) ||
+            bestTimeUnit(Number(value) || 0);
 
-        // Same number-input-group + select-wrapper layout as the save
-        // interval's pills, so it reads identically.
         const pills = document.createElement("div");
         pills.className = "settings-row__pills";
 
@@ -794,7 +801,7 @@
         selWrap.className = "select-wrapper";
         const sel = document.createElement("select");
         sel.className = "unit-select";
-        BYTE_UNITS.forEach((u) => {
+        TIME_UNITS.forEach((u) => {
             const o = document.createElement("option");
             o.value = u.id;
             o.textContent = u.id;
@@ -804,17 +811,15 @@
         selWrap.appendChild(sel);
 
         input.addEventListener("change", () => {
-            const bytes = Math.round(
+            const seconds = Math.round(
                 (parseFloat(input.value) || 0) * unit.factor);
-            onSettingChange(path, bytes, "number");
+            onSettingChange(path, seconds, "number");
         });
         sel.addEventListener("change", () => {
-            // Switching units converts the displayed number; the stored
-            // byte value is unchanged.
-            const bytes = (parseFloat(input.value) || 0) * unit.factor;
-            unit = unitById(sel.value) || unit;
-            window.localStorage.setItem(LS_SIZE_UNIT, unit.id);
-            input.value = String(trimNum(bytes / unit.factor));
+            const seconds = (parseFloat(input.value) || 0) * unit.factor;
+            unit = timeUnitById(sel.value) || unit;
+            window.localStorage.setItem(LS_TIME_UNIT, unit.id);
+            input.value = String(trimNum(seconds / unit.factor));
         });
 
         pills.appendChild(built.group);
@@ -1001,7 +1006,7 @@
         ui.settings.querySelectorAll("[data-dep-on]").forEach((section) => {
             const on = !!getPath(cfg, section.getAttribute("data-dep-on"));
             section.classList.toggle("is-disabled", !on);
-            section.querySelectorAll("input, button").forEach((ctl) => {
+            section.querySelectorAll("input, button, select").forEach((ctl) => {
                 ctl.disabled = !on;
             });
             if (!on) closeAllMultiselects();
@@ -1049,7 +1054,7 @@
                 if (typeof v === "boolean") {
                     row = makeBoolRow(path, meta.label, hint, v, tip);
                 } else if (path === "index.maxFileSizeBytes") {
-                    row = makeByteSizeRow(path, meta.label, hint, v, tip);
+                    row = makeTimeUnitRow(path, meta.label, hint, v, tip);
                 } else if (path === "index.skipFolders") {
                     row = makeTokenRow(path, meta.label, hint, v, tip,
                         { allowFinder: true });
@@ -1375,6 +1380,12 @@
                     });
             }
         });
+        window.addEventListener("resize", () => {
+            if (msOpen) positionMsMenu(msOpen.trigger, msOpen.menu);
+        });
+        window.addEventListener("scroll", () => {
+            if (msOpen) positionMsMenu(msOpen.trigger, msOpen.menu);
+        }, true);
     };
 
     if (document.readyState === "loading") {
