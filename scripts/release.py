@@ -19,7 +19,7 @@ from re import compile as re_compile
 from re import findall as re_findall
 from re import split as re_split
 from re import sub as re_sub
-from shutil import copy2, copytree, rmtree, which
+from shutil import copy2, rmtree, which
 from subprocess import DEVNULL, CompletedProcess
 from subprocess import run as subprocess_run
 from sys import argv as sys_argv
@@ -837,25 +837,42 @@ def validate_project(version: str) -> None:
 # --------------------------------------------------------------------------- #
 # Steps
 # --------------------------------------------------------------------------- #
+def _git_files() -> list[Path]:
+    """Return repository files that should be staged, excluding .gitignore."""
+    git_cmd: str | None = which(cmd="git")
+    if not git_cmd:
+        die(msg="git is required for staging but was not found on PATH.")
+    result: CompletedProcess[str] = subprocess_run(
+        args=[
+            git_cmd,
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        die(msg=f"git ls-files failed: {result.stderr}")
+    return [
+        ROOT / rel
+        for rel in result.stdout.split("\0")
+        if rel and not rel.startswith(".git")
+    ]
+
+
 def _stage_files(stage: Path) -> None:
-    """Copy the production file whitelist into the staging directory."""
-    copytree(src=ROOT / "client", dst=stage / "client", dirs_exist_ok=True)
-    copytree(src=ROOT / "host", dst=stage / "host", dirs_exist_ok=True)
-    copytree(src=ROOT / "icons", dst=stage / "icons", dirs_exist_ok=True)
-    copytree(src=ROOT / "CSXS", dst=stage / "CSXS", dirs_exist_ok=True)
-    # JSX bridge for the Similarity drawer (auto-loaded by the engine).
-    copytree(src=ROOT / "jsx", dst=stage / "jsx", dirs_exist_ok=True)
-    # Bundled similarity engine (js / lib / config / schemas) used by the
-    # Similarity drawer; loaded via ../similarity/... from client/index.html.
-    for sub in ("js", "lib", "schemas"):
-        src = ROOT / "similarity" / sub
-        if src.exists():
-            copytree(src=src, dst=stage / "similarity" / sub,
-                     dirs_exist_ok=True)
-    config_src = ROOT / "similarity" / "config.json"
-    if config_src.exists():
-        copy2(src=config_src, dst=stage / "similarity" / "config.json")
-    copy2(src=ROOT / "manifest.json", dst=stage / "manifest.json")
+    """Copy every non-ignored repository file into the staging directory."""
+    for src in _git_files():
+        if src.is_dir():
+            continue
+        dst = stage / src.relative_to(ROOT)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        copy2(src=src, dst=dst)
 
 
 def _prune_dead_files(stage: Path) -> None:
