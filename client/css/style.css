@@ -1963,3 +1963,177 @@ select:disabled {
 .drawer[open] > summary {
     box-shadow: inset 0 var(--dimension-neg-1) 0 var(--border-soft);
 }
+
+/* ---------------------------------------------------------------- */
+/* Similarity drawer                                                 */
+/* ---------------------------------------------------------------- */
+
+.similar-settings {
+    margin: var(--dimension-6) 0;
+}
+
+.similar-cfg__group {
+    margin-bottom: var(--dimension-6);
+}
+
+.similar-cfg__group-title {
+    margin: var(--dimension-6) 0 var(--dimension-4);
+    font-size: var(--dimension-9-5);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+}
+
+.similar-cfg__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--dimension-72);
+    align-items: center;
+    gap: var(--dimension-6);
+    min-height: var(--dimension-22);
+}
+
+.similar-cfg__label {
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: var(--dimension-10);
+    color: var(--text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.similar-cfg__input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.similar-cfg__check {
+    justify-self: end;
+}
+
+/* Result rows — compact by default, click to expand the breakdown. */
+.similar-row:not(:last-child) {
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+}
+
+.similar-row__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--dimension-8);
+    width: 100%;
+    padding: var(--dimension-6) var(--dimension-10);
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.similar-row__head:hover,
+.similar-row__head:focus-visible {
+    background: var(--bg-hover);
+    outline: none;
+}
+
+.similar-row__name {
+    overflow: hidden;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.similar-row__score {
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    font-weight: 700;
+    color: var(--text-bright);
+}
+
+.similar-row__date {
+    font-size: var(--dimension-9-5);
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+
+.similar-row__detail {
+    display: none;
+    padding: 0 var(--dimension-10) var(--dimension-8);
+}
+
+.similar-row.is-expanded .similar-row__detail {
+    display: block;
+}
+
+.similar-row__counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dimension-5);
+    margin: var(--dimension-2) 0 var(--dimension-6);
+}
+
+.sim-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dimension-3);
+    padding: var(--dimension-2) var(--dimension-7);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--dimension-11);
+    background: var(--bg-input-well);
+    color: var(--text-dim);
+    font-size: var(--dimension-9-5);
+}
+
+.sim-pill strong {
+    color: var(--text-bright);
+    font-weight: 700;
+}
+
+.sim-pill--similar {
+    border-color: var(--ok);
+    color: var(--ok);
+}
+
+.sim-pill--similar strong {
+    color: var(--ok);
+}
+
+.sim-pill--changed {
+    border-color: var(--warn);
+    color: var(--warn);
+}
+
+.sim-pill--changed strong {
+    color: var(--warn);
+}
+
+.sim-pill--new {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.sim-pill--new strong {
+    color: var(--accent);
+}
+
+.sim-pill--removed {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.sim-pill--removed strong {
+    color: var(--danger);
+}
+
+.similar-row__meta {
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    color: var(--text-dim);
+    line-height: 1.5;
+}
+
+.similar-row__actions {
+    margin-top: var(--dimension-6);
+}

@@ -26,6 +26,20 @@ from typing import NoReturn, TextIO, TypedDict, cast
 from urllib.parse import SplitResult, urlsplit
 from zipfile import ZIP_DEFLATED, ZipFile
 
+from rich import box
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+)
+from rich.table import Table
+from rich.text import Text
+
 type Json = None | bool | int | float | str | list[Json] | dict[str, Json]
 
 ROOT: Path = Path(__file__).resolve().parent.parent
@@ -50,6 +64,20 @@ if not _LOGGER.handlers:
     )
     _LOGGER.addHandler(hdlr=_HANDLER)
 
+_CONSOLE: Console = Console()
+
+
+def _make_progress() -> Progress:
+    """Create a rich Progress bar for long-running operations."""
+    return Progress(
+        SpinnerColumn(),
+        TextColumn("[bold cyan]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        TextColumn("[dim]{task.fields[status]}"),
+        console=_CONSOLE,
+    )
+
 HTTP_OK: int = 200
 HTTP_CREATED: int = 201
 HTTP_NOT_FOUND: int = 404
@@ -60,6 +88,70 @@ EXTENSION_DIR_NAME: str = "DejaVu"
 STAGE_DIR: Path = BUILD_DIR / "staging"
 CHECKSUMS_PATH: Path = BUILD_DIR / "SHA256SUMS.txt"
 RELEASE_INFO_PATH: Path = BUILD_DIR / "dejavu-release.json"
+STATE_FILE: Path = Path.home() / ".dejavu_release_state.json"
+
+
+def load_release_state() -> dict[str, Json]:
+    """Load persisted release settings from the user's home directory."""
+    if not STATE_FILE.exists():
+        return {}
+    try:
+        text: str = STATE_FILE.read_text(encoding="utf-8")
+        data: Json = cast(typ="Json", val=loads(s=text))
+        if isinstance(data, dict):
+            return data
+    except (ValueError, OSError):
+        pass
+    return {}
+
+
+def _write_state_file(state: dict[str, Json]) -> None:
+    """Write the release state to disk with restrictive permissions."""
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(
+        data=dumps(obj=state, indent=2) + "\n",
+        encoding="utf-8",
+        errors="strict",
+    )
+    STATE_FILE.chmod(mode=0o600)
+
+
+def persist_token(token: str) -> None:
+    """Persist only the GitHub token to the release state file."""
+    state: dict[str, Json] = load_release_state()
+    state["token"] = token
+    _write_state_file(state=state)
+
+
+def save_release_state(args: Args) -> None:
+    """Persist release settings (not the token) for later runs."""
+    state: dict[str, Json] = load_release_state()
+    state["repo"] = args.repo
+    state["branch"] = args.branch
+    state["private"] = args.private
+    state["bump"] = args.bump
+    state["prerelease"] = args.prerelease
+    state["no_sign"] = args.no_sign
+    _write_state_file(state=state)
+
+
+def apply_release_state(args: Args) -> None:
+    """Fill missing CLI defaults from previously saved release settings."""
+    state: dict[str, Json] = load_release_state()
+    if args.repo is None and isinstance(state.get("repo"), str):
+        args.repo = str(state["repo"]).strip() or None
+    if not args.branch and isinstance(state.get("branch"), str):
+        args.branch = str(state["branch"])
+    if state.get("bump") in {"patch", "minor", "major", "none"}:
+        args.bump = str(state["bump"])
+    if isinstance(state.get("private"), bool):
+        args.private = bool(state["private"])
+    if isinstance(state.get("prerelease"), bool):
+        args.prerelease = bool(state["prerelease"])
+    if isinstance(state.get("no_sign"), bool):
+        args.no_sign = bool(state["no_sign"])
+
+
 DEAD_FILES: tuple[str, ...] = (
     "client/js/main_es6.js",
     "host/host.legacy.jsx",
@@ -109,22 +201,24 @@ def _style(text: str, *codes: str) -> str:
 
 def info(msg: str) -> None:
     """Log a bold cyan section header."""
-    _LOGGER.info("%s %s", Style.ARROW, _style(msg, Style.BOLD))
+    _CONSOLE.print(f"[bold cyan]\\u27f4[/bold cyan] {msg}")
 
 
 def ok(msg: str) -> None:
     """Log a green success marker."""
-    _LOGGER.info("%s %s", Style.CHECK, msg)
+    _CONSOLE.print(f"[green]  \\u2713[/green] {msg}")
 
 
 def warn(msg: str) -> None:
     """Log a yellow warning marker."""
-    _LOGGER.info("%s %s", Style.WARN, _style(msg, Style.DIM))
+    _CONSOLE.print(f"[yellow]  ![/yellow] [dim]{msg}[/dim]")
 
 
 def die(msg: str) -> NoReturn:
     """Log a fatal error and exit."""
-    _LOGGER.error("%s %s", Style.CROSS, _style(msg, Style.BOLD, Style.RED))
+    _CONSOLE.print(
+        f"[bold red]  \\u2717[/bold red] [bold red]{msg}[/bold red]",
+    )
     sys_exit(1)
 
 
@@ -135,10 +229,7 @@ def rule(char: str = "─") -> None:
 
 def section(title: str) -> None:
     """Print a prominent section header with a surrounding rule."""
-    _LOGGER.info("")
-    rule()
-    _LOGGER.info("%s %s", Style.ARROW, _style(title, Style.BOLD, Style.CYAN))
-    rule()
+    _CONSOLE.rule(title=f"[bold cyan]{title}")
 
 
 def summary(label: str, value: str) -> None:
@@ -327,7 +418,8 @@ def discover_token(*, prompt: bool) -> tuple[str, str | None]:
 
     A token entered via prompt is stored in the current process environment
     under GITHUB_TOKEN so the rest of the script and any child processes can
-    reuse it without asking again.
+    reuse it without asking again. It is also persisted to the release state
+    file so later runs do not need to re-prompt.
     """
     token: str = (
         environ.get("GITHUB_TOKEN")
@@ -335,6 +427,14 @@ def discover_token(*, prompt: bool) -> tuple[str, str | None]:
         or gh_cli_token()
         or ""
     ).strip()
+    if not token:
+        state: dict[str, Json] = load_release_state()
+        saved_token: str = str(state.get("token", "")).strip()
+        if saved_token:
+            token = saved_token
+            environ["GITHUB_TOKEN"] = token
+            ok(msg="loaded saved GitHub token")
+
     prompted: bool = False
     if not token and prompt:
         token = tui_input(
@@ -354,7 +454,8 @@ def discover_token(*, prompt: bool) -> tuple[str, str | None]:
         return "", None
     if prompted:
         environ["GITHUB_TOKEN"] = token
-        ok(msg="token stored in $GITHUB_TOKEN for this session")
+        persist_token(token=token)
+        ok(msg="token stored in $GITHUB_TOKEN and release state")
     user_dict: dict[str, Json] = cast(typ="dict[str, Json]", val=user)
     login = cast(typ="str | None", val=user_dict.get("login"))
     return token, login
@@ -720,6 +821,17 @@ def _stage_files(stage: Path) -> None:
     copytree(src=ROOT / "host", dst=stage / "host", dirs_exist_ok=True)
     copytree(src=ROOT / "icons", dst=stage / "icons", dirs_exist_ok=True)
     copytree(src=ROOT / "CSXS", dst=stage / "CSXS", dirs_exist_ok=True)
+    # JSX bridge for the Similarity drawer (auto-loaded by the engine).
+    copytree(src=ROOT / "jsx", dst=stage / "jsx", dirs_exist_ok=True)
+    # Bundled similarity engine (js / lib / config / schemas) used by the
+    # Similarity drawer; loaded via ../similarity/... from client/index.html.
+    for sub in ("js", "lib", "schemas"):
+        src = ROOT / "similarity" / sub
+        if src.exists():
+            copytree(src=src, dst=stage / "similarity" / sub,
+                     dirs_exist_ok=True)
+    copy2(src=ROOT / "similarity" / "config.json",
+          dst=stage / "similarity" / "config.json")
     copy2(src=ROOT / "manifest.json", dst=stage / "manifest.json")
 
 
@@ -850,36 +962,69 @@ def write_release_metadata(version: str, artifacts: list[Path]) -> list[Path]:
 
 def build(*, no_sign: bool = False) -> list[Path]:
     """Build the distributable artifacts and return their paths."""
-    info(msg="Building package")
+    section(title="Building package")
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     if STAGE_DIR.exists():
         rmtree(path=STAGE_DIR)
     STAGE_DIR.mkdir(parents=True)
 
     version: str = read_version()
-    validate_project(version=version)
-    _stage_files(stage=STAGE_DIR)
-    _prune_dead_files(stage=STAGE_DIR)
-    _verify_stage(stage=STAGE_DIR)
-
-    zip_path: Path = _build_zip(version=version)
-    artifacts: list[Path] = [zip_path]
-
-    zxp_path: Path | None = None
+    step_names = [
+        "Validate project",
+        "Stage files",
+        "Prune dev files",
+        "Verify staging tree",
+        "Build zip archive",
+        "Write metadata",
+    ]
     if not no_sign:
-        zxp_path = _sign_zxp(version=version)
-    if zxp_path:
-        artifacts.append(zxp_path)
+        step_names.insert(5, "Sign .zxp package")
+
+    with _make_progress() as progress:
+        tasks = [
+            progress.add_task(description=name, total=1, status="")
+            for name in step_names
+        ]
+
+        def advance(step: int, status: str = "done") -> None:
+            progress.update(tasks[step], completed=1, status=status)
+
+        validate_project(version=version)
+        advance(0)
+
+        _stage_files(stage=STAGE_DIR)
+        advance(1)
+
+        _prune_dead_files(stage=STAGE_DIR)
+        advance(2)
+
+        _verify_stage(stage=STAGE_DIR)
+        advance(3)
+
+        zip_path: Path = _build_zip(version=version)
+        advance(4)
+
+        artifacts: list[Path] = [zip_path]
+        zxp_step = 5 if not no_sign else -1
+        zxp_path: Path | None = None
+        if not no_sign:
+            zxp_path = _sign_zxp(version=version)
+            if zxp_path:
+                artifacts.append(zxp_path)
+            advance(zxp_step)
+
+        meta_artifacts = write_release_metadata(
+            version=version,
+            artifacts=artifacts,
+        )
+        advance(len(tasks) - 1)
 
     artifact: Path
     for artifact in artifacts:
         size: int = artifact.stat().st_size
         rel: Path = artifact.relative_to(ROOT)
         ok(msg=f"artifact: {rel} ({format_size(size)})")
-    return artifacts + write_release_metadata(
-        version=version,
-        artifacts=artifacts,
-    )
+    return artifacts + meta_artifacts
 
 
 def find_existing_artifacts() -> list[Path]:
@@ -1079,33 +1224,41 @@ def upload_assets(
     }
     upload_url: str = cast(typ="str", val=release["upload_url"])
     upload_base: str = upload_url.split(sep="{")[0]
-    path: Path
-    for path in artifacts:
-        name: str = path.name
-        if name in existing:
-            _ = gh(
-                method="DELETE",
-                url=f"/repos/{owner}/{repo}/releases/assets/{existing[name]}",
-                token=token,
-            )
-        info(msg=f"Uploading {name}")
-        ctype: str = guess_type(url=name)[0] or "application/octet-stream"
-        code: int
-        body: dict[str, Json] | str
-        code, body = gh(
-            method="POST",
-            url=f"{upload_base}?name={name}",
-            token=token,
-            options={
-                "raw": path.read_bytes(),
-                "base": "",
-                "content_type": ctype,
-            },
+
+    with _make_progress() as progress:
+        task = progress.add_task(
+            description="Uploading release assets",
+            total=len(artifacts),
+            status="",
         )
-        if code not in (HTTP_OK, HTTP_CREATED):
-            message: str = _gh_message(body=body, code=code)
-            die(msg=f"Asset upload failed: {message}")
-        ok(msg=f"uploaded {name}")
+        path: Path
+        for path in artifacts:
+            name: str = path.name
+            size = format_size(path.stat().st_size)
+            progress.update(task, status=f"{name} ({size})")
+            if name in existing:
+                _ = gh(
+                    method="DELETE",
+                    url=f"/repos/{owner}/{repo}/releases/assets/{existing[name]}",
+                    token=token,
+                )
+            ctype: str = guess_type(url=name)[0] or "application/octet-stream"
+            code: int
+            body: dict[str, Json] | str
+            code, body = gh(
+                method="POST",
+                url=f"{upload_base}?name={name}",
+                token=token,
+                options={
+                    "raw": path.read_bytes(),
+                    "base": "",
+                    "content_type": ctype,
+                },
+            )
+            if code not in (HTTP_OK, HTTP_CREATED):
+                message: str = _gh_message(body=body, code=code)
+                die(msg=f"Asset upload failed: {message}")
+            progress.advance(task)
 
 
 # --------------------------------------------------------------------------- #
@@ -1287,20 +1440,40 @@ def run_release_pipeline(
     new_version, artifacts = _local_release_work(args=args)
 
     if args.build_only:
-        section(title="Build summary")
-        summary(label="Version", value=f"v{new_version}")
-        artifact_names: str = ", ".join(path.name for path in artifacts)
-        summary(label="Artifacts", value=artifact_names)
+        table = Table(
+            title="Build summary",
+            title_style="bold cyan",
+            box=box.ROUNDED,
+            show_header=False,
+        )
+        table.add_column(style="dim cyan")
+        table.add_column(style="green")
+        table.add_row("Version", f"v{new_version}")
+        table.add_row(
+            "Artifacts",
+            ", ".join(path.name for path in artifacts),
+        )
+        _CONSOLE.print(Panel(table, border_style="green"))
         ok(msg="local package build complete")
         return
 
     if args.dry_run:
-        section(title="Dry-run summary")
+        table = Table(
+            title="Dry-run summary",
+            title_style="bold cyan",
+            box=box.ROUNDED,
+            show_header=False,
+        )
+        table.add_column(style="dim cyan")
+        table.add_column(style="green")
+        table.add_row("Repository", f"{owner}/{repo}")
+        table.add_row("Version", f"v{new_version}")
+        table.add_row(
+            "Artifacts",
+            ", ".join(path.name for path in artifacts),
+        )
+        _CONSOLE.print(Panel(table, border_style="yellow"))
         warn(msg="Skipping GitHub create/push/release.")
-        summary(label="Repository", value=f"{owner}/{repo}")
-        summary(label="Version", value=f"v{new_version}")
-        artifact_names = ", ".join(path.name for path in artifacts)
-        summary(label="Artifacts", value=artifact_names)
         return
 
     if not token:
@@ -1341,13 +1514,23 @@ def run_release_pipeline(
         artifacts=artifacts,
     )
 
-    section(title="Release summary")
-    summary(label="Repository", value=f"{owner}/{repo}")
-    summary(label="Version", value=f"v{new_version}")
-    artifact_names = ", ".join(path.name for path in artifacts)
-    summary(label="Artifacts", value=artifact_names)
-    url: str = f"https://github.com/{owner}/{repo}/releases/tag/v{new_version}"
-    summary(label="Release URL", value=url)
+    table = Table(
+        title="Release summary",
+        title_style="bold cyan",
+        box=box.ROUNDED,
+        show_header=False,
+    )
+    table.add_column(style="dim cyan")
+    table.add_column(style="green")
+    table.add_row("Repository", f"{owner}/{repo}")
+    table.add_row("Version", f"v{new_version}")
+    table.add_row(
+        "Artifacts",
+        ", ".join(path.name for path in artifacts),
+    )
+    url = f"https://github.com/{owner}/{repo}/releases/tag/v{new_version}"
+    table.add_row("Release URL", f"[link={url}]{url}[/link]")
+    _CONSOLE.print(Panel(table, border_style="green"))
     ok(msg="release complete")
 
 
@@ -1361,27 +1544,37 @@ def tui_status(args: Args) -> None:
     repo_value: str = args.repo or default_repo()
     artifacts = find_existing_artifacts()
 
-    section(title="DejaVu release manager")
-    summary(label="Repository", value=repo_value)
-    summary(label="Version", value=f"{current} -> {next_version}")
-    summary(label="Branch", value=args.branch)
-    summary(label="Git", value=git_dirty_summary())
-    summary(label="Visibility", value="private" if args.private else "public")
-    summary(
-        label="Release type",
-        value="pre-release" if args.prerelease else "stable",
+    table = Table(
+        title="DejaVu release manager",
+        title_style="bold cyan",
+        box=box.ROUNDED,
+        show_header=True,
+        header_style="bold magenta",
     )
-    summary(
-        label="Signing",
-        value="skip .zxp" if args.no_sign else "auto if configured",
+    table.add_column("Setting", style="dim cyan", no_wrap=True)
+    table.add_column("Value", style="green")
+    table.add_row("Repository", repo_value)
+    table.add_row("Version", f"{current} -> {next_version}")
+    table.add_row("Branch", args.branch)
+    table.add_row("Git", git_dirty_summary())
+    table.add_row(
+        "Visibility",
+        "[yellow]private" if args.private else "[green]public",
     )
-    summary(label="GitHub auth", value=auth_source)
-    summary(
-        label="Artifacts",
-        value=(
-            ", ".join(path.name for path in artifacts) if artifacts else "none"
-        ),
+    table.add_row(
+        "Release type",
+        "[yellow]pre-release" if args.prerelease else "[green]stable",
     )
+    table.add_row(
+        "Signing",
+        "[yellow]skip .zxp" if args.no_sign else "auto if configured",
+    )
+    table.add_row("GitHub auth", auth_source)
+    table.add_row(
+        "Artifacts",
+        ", ".join(path.name for path in artifacts) if artifacts else "none",
+    )
+    _CONSOLE.print(Panel(table, border_style="cyan"))
 
 
 def tui_configure_repo(args: Args) -> None:
@@ -1401,6 +1594,7 @@ def tui_configure_repo(args: Args) -> None:
         default=args.private,
     )
     write_update_repo(owner=owner, repo=repo)
+    save_release_state(args=args)
 
 
 def tui_configure_options(args: Args) -> None:
@@ -1419,19 +1613,28 @@ def tui_configure_options(args: Args) -> None:
         label="Skip .zxp signing even if ZXP_CERT/ZXP_PASS exist?",
         default=args.no_sign,
     )
+    save_release_state(args=args)
 
 
 def tui_plan(args: Args, owner: str, repo: str) -> None:
     """Print the full release plan before autopilot starts."""
     current: str = read_version()
     next_version: str = bump(version=current, part=args.bump)
-    section(title="Autopilot plan")
-    summary(label="Repository", value=f"{owner}/{repo}")
-    summary(label="Version", value=f"{current} -> {next_version}")
-    summary(label="Branch", value=args.branch)
-    summary(label="Git", value="init/repair, add all, commit release")
-    summary(label="GitHub", value="create repo if missing, push branch + tag")
-    summary(label="Release", value="create/reuse release and upload assets")
+    table = Table(
+        title="Autopilot plan",
+        title_style="bold cyan",
+        box=box.ROUNDED,
+        show_header=False,
+    )
+    table.add_column(style="dim cyan")
+    table.add_column(style="green")
+    table.add_row("Repository", f"{owner}/{repo}")
+    table.add_row("Version", f"{current} -> {next_version}")
+    table.add_row("Branch", args.branch)
+    table.add_row("Git", "init/repair, add all, commit release")
+    table.add_row("GitHub", "create repo if missing, push branch + tag")
+    table.add_row("Release", "create/reuse release and upload assets")
+    _CONSOLE.print(Panel(table, border_style="cyan"))
 
 
 def tui_autopilot(args: Args) -> None:
@@ -1447,6 +1650,7 @@ def tui_autopilot(args: Args) -> None:
     )
     owner, repo = split_repo(repo_arg=repo_arg, login=login)
     args.repo = f"{owner}/{repo}"
+    save_release_state(args=args)
 
     if tui_confirm(
         label="Review release options before running?", default=False,
@@ -1479,6 +1683,7 @@ def tui_init_git(args: Args) -> None:
         owner, repo = split_repo(repo_arg=repo_arg, login=login)
         args.repo = f"{owner}/{repo}"
         ensure_git_remote(owner=owner, repo=repo)
+    save_release_state(args=args)
 
 
 def tui_build_only(args: Args) -> None:
@@ -1508,39 +1713,79 @@ def tui_build_only(args: Args) -> None:
         login=None,
         token="",
     )
+    save_release_state(args=build_args)
 
 
 def tui_run_checks() -> None:
     """Run the checks that do not require Illustrator."""
-    section(title="Checks")
     commands: list[list[str]] = [
         ["python3", "-m", "py_compile", "scripts/release.py"],
         ["node", "--check", "client/js/update-install.js"],
         ["node", "--check", "client/js/update-check.js"],
         ["node", "--test"],
     ]
-    for command in commands:
-        label: str = " ".join(command)
-        info(msg=label)
-        if run_ok(args=command):
-            ok(msg="passed")
-        else:
-            warn(msg=f"failed: {label}")
+
+    def _render(results: list[tuple[str, bool | None]]) -> Panel:
+        table = Table(
+            title="Checks",
+            title_style="bold cyan",
+            box=box.ROUNDED,
+            show_header=False,
+        )
+        table.add_column(style="dim cyan")
+        table.add_column()
+        for label, passed in results:
+            if passed is None:
+                status = Text("running", style="bold yellow")
+            elif passed:
+                status = Text("passed", style="bold green")
+            else:
+                status = Text("failed", style="bold red")
+            table.add_row(label, status)
+        return Panel(table, border_style="cyan")
+
+    results: list[tuple[str, bool | None]] = [
+        (" ".join(command), None) for command in commands
+    ]
+    with Live(
+        _render(results), console=_CONSOLE, refresh_per_second=10,
+    ) as live:
+        for index, command in enumerate(commands):
+            label = " ".join(command)
+            results[index] = (label, None)
+            live.update(_render(results))
+            if run_ok(args=command):
+                results[index] = (label, True)
+            else:
+                results[index] = (label, False)
+            live.update(_render(results))
+    _CONSOLE.print(_render(results))
 
 
 def tui_show_artifacts() -> None:
     """Print generated artifact paths and sizes."""
-    section(title="Artifacts")
     artifacts = find_existing_artifacts()
     if not artifacts:
         warn(msg="No artifacts found. Run Build package first.")
         return
+    table = Table(
+        title="Artifacts",
+        title_style="bold cyan",
+        box=box.ROUNDED,
+        show_header=True,
+        header_style="bold magenta",
+    )
+    table.add_column("Name", style="green")
+    table.add_column("Size", style="cyan", justify="right")
+    table.add_column("SHA-256", style="dim")
     for artifact in artifacts:
         digest = sha256_file(path=artifact) if artifact.is_file() else ""
-        summary(
-            label=artifact.name,
-            value=f"{format_size(artifact.stat().st_size)} {digest[:12]}",
+        table.add_row(
+            artifact.name,
+            format_size(artifact.stat().st_size),
+            digest[:12] if digest else "-",
         )
+    _CONSOLE.print(Panel(table, border_style="cyan"))
 
 
 def _run_tui_choice(args: Args, choice: str) -> bool:
@@ -1568,23 +1813,42 @@ def _run_tui_choice(args: Args, choice: str) -> bool:
     return False
 
 
+def _tui_menu_table() -> Table:
+    """Return the rich Table used for the interactive release menu."""
+    table = Table(
+        title="Menu",
+        title_style="bold",
+        box=box.ROUNDED,
+        show_header=False,
+        show_edge=True,
+        padding=(0, 1),
+    )
+    table.add_column(style="dim cyan", width=3, justify="right")
+    table.add_column(style="bold")
+    menu_items = [
+        ("1", "Release autopilot", True),
+        ("2", "Configure repository", False),
+        ("3", "Configure release options", False),
+        ("4", "Initialize/repair local git", False),
+        ("5", "Build package only", False),
+        ("6", "Run checks", False),
+        ("7", "Show artifacts", False),
+        ("8", "Quit", False),
+    ]
+    for number, label, default in menu_items:
+        marker = f"[bold green]{number}" if default else number
+        text = f"[bold green]{label}" if default else label
+        table.add_row(marker, text)
+    return table
+
+
 def run_tui(args: Args) -> None:
     """Open the interactive release manager."""
     if args.repo is None:
         args.repo = default_repo()
     while True:
         tui_status(args=args)
-        _LOGGER.info("")
-        _LOGGER.info(
-            "  1. %s", _style("Release autopilot", Style.BOLD, Style.GREEN),
-        )
-        _LOGGER.info("  2. Configure repository")
-        _LOGGER.info("  3. Configure release options")
-        _LOGGER.info("  4. Initialize/repair local git")
-        _LOGGER.info("  5. Build package only")
-        _LOGGER.info("  6. Run checks")
-        _LOGGER.info("  7. Show artifacts")
-        _LOGGER.info("  8. Quit")
+        _CONSOLE.print(Panel(_tui_menu_table(), border_style="blue"))
         choice: str = input("Choose [1]: ").strip() or "1"
         if _run_tui_choice(args=args, choice=choice):
             return
@@ -1594,6 +1858,7 @@ def run_tui(args: Args) -> None:
 def main() -> None:
     """Parse arguments and run the release pipeline."""
     args: Args = _parse_args()
+    apply_release_state(args=args)
     if args.tui or len(sys_argv) == 1:
         run_tui(args=args)
         return

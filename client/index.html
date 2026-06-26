@@ -1176,6 +1176,92 @@
                     </section>
                 </div>
             </details>
+
+            <details class="drawer" id="similarityDrawer">
+                <summary>
+                    <span>Similarity</span>
+                    <span
+                        class="drawer__meta drawer__counter"
+                        id="similarityCount"
+                    >0</span>
+                </summary>
+                <div class="drawer__body">
+                    <section class="field-group field-group--embedded">
+                        <label class="field-label" for="similarityFolderInput">
+                            Search folder
+                        </label>
+                        <div class="field-row">
+                            <span class="folder-field" id="similarityFolderField">
+                                <input
+                                    type="text"
+                                    id="similarityFolderInput"
+                                    placeholder="Type a path or browse…  (~/ = home)"
+                                    autocomplete="off"
+                                    autocapitalize="off"
+                                    spellcheck="false"
+                                />
+                                <span
+                                    class="folder-validity"
+                                    id="similarityFolderValidity"
+                                    aria-hidden="true"
+                                ></span>
+                            </span>
+                            <button class="btn" id="similarityBrowseBtn">
+                                Browse…
+                            </button>
+                        </div>
+                        <label class="checkbox">
+                            <input type="checkbox" id="similarityRecursive" />
+                            <span>Search inside subfolders</span>
+                        </label>
+                        <p class="field-hint">
+                            Scans the folder for the files most similar to the
+                            active document (.svg / .ai / .pdf / .eps).
+                        </p>
+                        <div class="field-row">
+                            <button
+                                class="btn btn--primary"
+                                id="similarityRunBtn"
+                            >Find similar</button>
+                        </div>
+                    </section>
+
+                    <details class="drawer similar-settings" id="similaritySettingsDrawer">
+                        <summary><span>Comparison settings</span></summary>
+                        <div
+                            class="drawer__body drawer__body--settings"
+                            id="similaritySettings"
+                        ></div>
+                    </details>
+
+                    <div class="timeline-search">
+                        <input
+                            class="timeline-filter"
+                            type="text"
+                            id="similarityFilterInput"
+                            placeholder="Filter results"
+                        />
+                        <div class="select-wrapper">
+                            <select
+                                class="timeline-sort"
+                                id="similaritySortSelect"
+                            >
+                                <option value="similar">Most similar</option>
+                                <option value="newest">Newest first</option>
+                                <option value="oldest">Oldest first</option>
+                                <option value="name">Name A–Z</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="version-list" id="similarityList">
+                        <div class="empty-state">
+                            Pick a folder and click “Find similar”.
+                        </div>
+                    </div>
+                </div>
+            </details>
+
             <details class="drawer settings-drawer" id="advancedDrawer">
                 <summary><span>Advanced</span></summary>
                 <div class="drawer__body drawer__body--settings">
@@ -1823,7 +1909,14 @@
                     "./js/bottom.js",
                     "./js/timeline.js",
                     "./js/advanced.js",
+                    "../similarity/js/svg-similarity-config.js",
+                    "../similarity/js/svg-similarity-engine.js",
+                    "../similarity/js/svg-similarity-current-document.js",
+                    "../similarity/js/svg-similarity-adapters.js",
+                    "../similarity/js/svg-similarity-env.js",
+                    "../similarity/js/svg-similarity-index.js",
                     "./js/main.js",
+                    "./js/similar.js",
                     "./js/update-check.js",
                     "./js/update-install.js",
                     "./js/theme.js"

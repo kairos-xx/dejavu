@@ -1,11 +1,14 @@
 {
   "exclude": [
     ".dev",
-    ".history"
+    ".history",
+    "./stubs"
   ],
   "extraPaths": [
     "/opt/anaconda3/lib/python3.13/site-packages"
   ],
+    "stubPath": "./stubs",
+ 
   "pythonVersion": "3.13",
   "typeCheckingMode": "strict"
 }
