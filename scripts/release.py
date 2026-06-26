@@ -852,8 +852,9 @@ def _stage_files(stage: Path) -> None:
         if src.exists():
             copytree(src=src, dst=stage / "similarity" / sub,
                      dirs_exist_ok=True)
-    copy2(src=ROOT / "similarity" / "config.json",
-          dst=stage / "similarity" / "config.json")
+    config_src = ROOT / "similarity" / "config.json"
+    if config_src.exists():
+        copy2(src=config_src, dst=stage / "similarity" / "config.json")
     copy2(src=ROOT / "manifest.json", dst=stage / "manifest.json")
 
 

@@ -8,8 +8,7 @@
 
 **A local, change-aware autosave and recovery panel for Illustrator.**
 
-[![CI](https://github.com/joaoslopes/dejavu/actions/workflows/ci.yml/badge.svg)](https://github.com/joaoslopes/dejavu/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/joaoslopes/dejavu?label=download&color=4d94d9)](https://github.com/joaoslopes/dejavu/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/kairos-xx/dejavu?label=download&color=4d94d9)](https://github.com/kairos-xx/dejavu/releases/latest)
 [![Illustrator](https://img.shields.io/badge/Adobe%20Illustrator-2022%2B-f5a623)](https://www.adobe.com/products/illustrator.html)
 [![Privacy](https://img.shields.io/badge/privacy-local%20only-46a758)](#privacy)
 
@@ -41,7 +40,7 @@ DejaVu respects the current document format where possible: `.ai`, `.pdf`, `.svg
 
 ## Install
 
-Download the latest release from [github.com/joaoslopes/dejavu/releases/latest](https://github.com/joaoslopes/dejavu/releases/latest).
+Download the latest release from [github.com/kairos-xx/dejavu/releases/latest](https://github.com/kairos-xx/dejavu/releases/latest).
 
 ### Recommended: zip install
 
@@ -91,7 +90,7 @@ Update checks are configured in `manifest.json`:
 ```jsonc
 "updateCheck": {
   "enabled": true,
-  "owner": "joaoslopes",
+  "owner": "kairos-xx",
   "repo": "dejavu",
   "intervalDays": 7,
   "includePrereleases": false,
@@ -158,7 +157,7 @@ python3 scripts/release.py --build-only --bump none
 For a non-interactive GitHub release:
 
 ```bash
-GITHUB_TOKEN=ghp_... python3 scripts/release.py --repo joaoslopes/dejavu --bump patch
+GITHUB_TOKEN=ghp_... python3 scripts/release.py --repo kairos-xx/dejavu --bump patch
 ```
 
 If `GITHUB_TOKEN`/`GH_TOKEN` is not set, the TUI can use `gh auth token` from GitHub CLI or prompt for a token.

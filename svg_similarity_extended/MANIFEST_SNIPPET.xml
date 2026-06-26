@@ -1,5 +1,0 @@
-<CEFCommandLine>
-    <Parameter>--enable-nodejs</Parameter>
-    <Parameter>--mixed-context</Parameter>
-    <Parameter>--allow-file-access</Parameter>
-</CEFCommandLine>

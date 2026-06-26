@@ -153,7 +153,7 @@ const DEJAVU_CONFIG = (() => {
         devMode: null,
         updateCheck: {
             enabled: true,
-            owner: "joaoslopes",
+            owner: "kairos-xx",
             repo: "dejavu",
             intervalDays: 7,
             includePrereleases: false,
