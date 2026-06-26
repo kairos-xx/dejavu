@@ -107,10 +107,18 @@ def load_release_state() -> dict[str, Json]:
     try:
         text: str = STATE_FILE.read_text(encoding="utf-8")
         data: Json = cast(typ="Json", val=loads(s=text))
-        if isinstance(data, dict):
-            project_state = data.get(_state_key())
-            if isinstance(project_state, dict):
-                return project_state
+        if not isinstance(data, dict):
+            return {}
+        key = _state_key()
+        project_state = data.get(key)
+        if isinstance(project_state, dict):
+            return project_state
+        # Legacy: flat file written before project scoping.
+        if any(
+            field in data
+            for field in ("repo", "branch", "bump", "token", "private")
+        ):
+            return cast(typ="dict[str, Json]", val=data)
     except (ValueError, OSError):
         pass
     return {}
@@ -161,8 +169,8 @@ def apply_release_state(args: Args) -> None:
     state: dict[str, Json] = load_release_state()
     if args.repo is None and isinstance(state.get("repo"), str):
         args.repo = str(state["repo"]).strip() or None
-    if not args.branch and isinstance(state.get("branch"), str):
-        args.branch = str(state["branch"])
+    if args.branch == "main" and isinstance(state.get("branch"), str):
+        args.branch = str(state["branch"]).strip() or "main"
     if state.get("bump") in {"patch", "minor", "major", "none"}:
         args.bump = str(state["bump"])
     if isinstance(state.get("private"), bool):
@@ -384,10 +392,14 @@ def default_repo() -> str:
 
 
 def default_repo_for_login(login: str | None) -> str:
-    """Default OWNER/dejavu using the authenticated GitHub login when known."""
+    """Default OWNER/NAME from manifest, git origin, or authenticated login."""
+    if repo := manifest_repo():
+        return repo
+    if origin := parse_origin_repo():
+        return origin
     if login:
         return f"{login}/dejavu"
-    return default_repo()
+    return "OWNER/dejavu"
 
 
 def gh_cli_token() -> str:

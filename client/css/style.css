@@ -664,7 +664,7 @@ select {
     line-height: var(--dimension-19);
     outline: none;
     transition: border-color 0.12s ease, background 0.12s ease;
-    flex: 1;
+    /* flex: 1; */
 }
 
 input.snapshot__note-input {
@@ -827,7 +827,8 @@ input[type="text"][readonly]:hover {
     font-size: var(--dimension-9-5);
     line-height: var(--dimension-16);
     vertical-align: middle;
-    white-space: nowrap;
+    /* white-space: nowrap; */
+    /* flex: 0 1 auto; */
 }
 
 .template-token--locked {
@@ -2001,6 +2002,17 @@ select:disabled {
     left: var(--dimension-11);
 }
 
+/* The generic `.drawer[open] summary::before` is a descendant selector, so the
+   OUTER drawer being open rotates this nested chevron. Re-bind it to this
+   drawer's own open state. */
+.similar-settings:not([open]) > summary::before {
+    transform: translateY(-50%) rotate(-45deg);
+}
+
+.similar-settings[open] > summary::before {
+    transform: translateY(-65%) rotate(45deg);
+}
+
 .similar-settings[open] > summary {
     border-bottom: var(--dimension-1) solid var(--border-soft);
 }
@@ -2063,11 +2075,15 @@ select:disabled {
     cursor: not-allowed;
 }
 
-/* Multi-select dropdown — collapses inline (no clipping inside the card). */
-.ms {
-    width: 100%;
-    max-width: var(--dimension-92);
+.similar-cfg__field.is-disabled .number-input-group,
+.similar-cfg__field.is-disabled .ms,
+.similar-cfg__field.is-disabled .tok,
+.similar-cfg__field.is-disabled .bytesize {
+    pointer-events: none;
 }
+
+/* Multi-select dropdown — collapses inline (no clipping inside the card). */
+
 
 .ms__trigger {
     display: flex;
@@ -2117,38 +2133,102 @@ select:disabled {
     transform: rotate(180deg);
 }
 
-.ms__menu {
+/* Menus (multi-select + token "Add") reuse the themed select-menu items —
+   accent checkmark, hover fill — and the per-skin menu palette. */
+.ms__menu,
+.tok__add-menu {
     margin-top: var(--dimension-4);
-    padding: var(--dimension-3);
-    border: var(--dimension-1) solid var(--border-strong);
+    padding: var(--dimension-4) 0;
+    border: var(--dimension-1) solid var(--menu-border);
     border-radius: var(--radius);
-    background: var(--bg-raised);
+    background: var(--menu-bg);
     max-height: var(--dimension-120);
     overflow-y: auto;
 }
 
-.ms__opt {
+/* ---------------------------------------------------------------- */
+/* Byte-size field (number spin-box + KB/MB/GB unit select)          */
+/* ---------------------------------------------------------------- */
+.bytesize {
     display: flex;
     align-items: center;
-    gap: var(--dimension-6);
-    padding: var(--dimension-4) var(--dimension-5);
-    border-radius: var(--radius-sm);
+    gap: var(--dimension-5);
+    width: 100%;
+    max-width: var(--dimension-92);
+}
+
+.bytesize .number-input-group {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.unit-select {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: var(--dimension-36);
+    height: var(--dimension-21);
+    padding: 0 var(--dimension-6);
     font-family: var(--mono);
     font-size: var(--dimension-10);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--radius);
+    background: var(--bg-input);
     color: var(--text);
-    cursor: pointer;
 }
 
-.ms__opt:hover {
-    background: var(--bg-hover);
+/* ---------------------------------------------------------------- */
+/* Token / chip editors (skip folders, converter order)             */
+/* ---------------------------------------------------------------- */
+.tok {
+    width: 100%;
+    /* max-width: var(--dimension-92); */
+    flex: 1;
 }
 
-.ms__opt input {
-    accent-color: var(--accent);
-    width: var(--dimension-12);
-    height: var(--dimension-12);
-    margin: 0;
-    flex: 0 0 auto;
+.tok__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dimension-3);
+    min-height: var(--dimension-22);
+    padding: var(--dimension-4) var(--dimension-5);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--radius);
+    background: var(--bg-input-well);
+}
+
+.tok__chip--draggable {
+    cursor: grab;
+}
+
+.tok__chip.is-dragging {
+    opacity: 0.45;
+}
+
+.tok__input {
+    flex: 0 0 170px;
+    min-width: var(--dimension-80);
+    height: var(--dimension-16);
+    padding: 0 var(--dimension-3);
+    border: 0;
+    background: transparent;
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: var(--dimension-10);
+}
+
+.tok__input:hover,
+.tok__input:focus {
+    border: 0;
+    outline: none;
+}
+
+.tok__add-row {
+    margin-top: var(--dimension-4);
+}
+
+.tok__add {
+    width: auto;
 }
 
 /* Result rows — compact by default, click to expand the breakdown. */

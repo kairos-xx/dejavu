@@ -322,7 +322,7 @@
         },
         "index.skipFolders": {
             label: "Folders to skip",
-            hint: "Folder names never scanned (comma-separated)."
+            hint: "Folders never scanned. Type a name and press Enter, or add one from disk."
         },
 
         "index.externalConverters.enabled": {
@@ -331,7 +331,7 @@
         },
         "index.externalConverters.prefer": {
             label: "Converter order",
-            hint: "Preferred converters, tried in order (comma-separated)."
+            hint: "Converters are tried in this order. Drag to reorder; add or remove from the fixed set."
         },
         "index.externalConverters.inkscapePath": {
             label: "Inkscape path",
@@ -696,23 +696,28 @@
         };
 
         opts.forEach((opt) => {
-            const optRow = document.createElement("label");
-            optRow.className = "ms__opt";
-            const cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.checked = selected.has(opt);
-            cb.addEventListener("change", () => {
-                if (cb.checked) selected.add(opt);
-                else selected.delete(opt);
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "select-menu__item";
+            item.setAttribute("role", "option");
+            item.setAttribute("aria-selected", String(selected.has(opt)));
+            const check = document.createElement("span");
+            check.className = "select-menu__check";
+            check.setAttribute("aria-hidden", "true");
+            const label = document.createElement("span");
+            label.className = "select-menu__label";
+            label.textContent = opt;
+            item.appendChild(check);
+            item.appendChild(label);
+            item.addEventListener("click", () => {
+                if (selected.has(opt)) selected.delete(opt);
+                else selected.add(opt);
+                item.setAttribute("aria-selected", String(selected.has(opt)));
                 refresh();
                 onSettingChange(
                     path, opts.filter((o) => selected.has(o)), "array");
             });
-            const txt = document.createElement("span");
-            txt.textContent = opt;
-            optRow.appendChild(cb);
-            optRow.appendChild(txt);
-            menu.appendChild(optRow);
+            menu.appendChild(item);
         });
 
         trigger.addEventListener("click", () => {
@@ -728,6 +733,244 @@
         ms.appendChild(trigger);
         ms.appendChild(menu);
         lab.appendChild(ms);
+        section.appendChild(lab);
+        addHint(section, hint);
+        return section;
+    };
+
+    // ---- byte size with a KB / MB / GB unit selector ---------------------
+    const BYTE_UNITS = [
+        { id: "KB", factor: 1024 },
+        { id: "MB", factor: 1048576 },
+        { id: "GB", factor: 1073741824 }
+    ];
+    const LS_SIZE_UNIT = "dejavu.similarity.maxsize.unit.v1";
+    const trimNum = (n) => Math.round(n * 1e6) / 1e6;
+    const unitById = (id) => BYTE_UNITS.filter((u) => u.id === id)[0] || null;
+    const bestByteUnit = (bytes) => {
+        for (let i = BYTE_UNITS.length - 1; i >= 0; i--) {
+            if (bytes >= BYTE_UNITS[i].factor) return BYTE_UNITS[i];
+        }
+        return BYTE_UNITS[1];
+    };
+
+    const makeByteSizeRow = (path, label, hint, value, tip) => {
+        const section = valueRowSection();
+        const lab = fieldLabel(label, tip);
+        let unit = unitById(window.localStorage.getItem(LS_SIZE_UNIT)) ||
+            bestByteUnit(Number(value) || 0);
+
+        const wrap = document.createElement("div");
+        wrap.className = "bytesize";
+
+        const built = makeSpinbox(
+            trimNum((Number(value) || 0) / unit.factor), { min: 0, step: 1 });
+        const input = built.input;
+
+        const sel = document.createElement("select");
+        sel.className = "unit-select";
+        BYTE_UNITS.forEach((u) => {
+            const o = document.createElement("option");
+            o.value = u.id;
+            o.textContent = u.id;
+            if (u.id === unit.id) o.selected = true;
+            sel.appendChild(o);
+        });
+
+        input.addEventListener("change", () => {
+            const bytes = Math.round(
+                (parseFloat(input.value) || 0) * unit.factor);
+            onSettingChange(path, bytes, "number");
+        });
+        sel.addEventListener("change", () => {
+            // Switching units converts the displayed number; the stored
+            // byte value is unchanged.
+            const bytes = (parseFloat(input.value) || 0) * unit.factor;
+            unit = unitById(sel.value) || unit;
+            window.localStorage.setItem(LS_SIZE_UNIT, unit.id);
+            input.value = String(trimNum(bytes / unit.factor));
+        });
+
+        wrap.appendChild(built.group);
+        wrap.appendChild(sel);
+        lab.appendChild(wrap);
+        section.appendChild(lab);
+        addHint(section, hint);
+        return section;
+    };
+
+    // ---- token / chip editors --------------------------------------------
+    // opts: { fixed: string[]|null, reorder: bool, allowFinder: bool }
+    //   fixed  → only these values (add from remaining, no free typing)
+    //   null   → free text + an "Add folder…" picker
+    const makeTokenRow = (path, label, hint, value, tip, opts) => {
+        opts = opts || {};
+        const fixed = opts.fixed || null;
+        const reorder = !!opts.reorder;
+        const section = valueRowSection();
+        const lab = fieldLabel(label, tip);
+
+        let tokens = (value || []).slice();
+        let dragIndex = -1;
+        let refreshAdd = () => {};
+        const persist = () => onSettingChange(path, tokens.slice(), "array");
+
+        const tok = document.createElement("div");
+        tok.className = "tok";
+        const chips = document.createElement("div");
+        chips.className = "tok__chips";
+
+        let textInput = null;
+        if (!fixed) {
+            textInput = document.createElement("input");
+            textInput.type = "text";
+            textInput.className = "tok__input";
+            textInput.placeholder = "Type a name, Enter to add…";
+        }
+
+        const addToken = (raw) => {
+            const v = String(raw || "").trim();
+            if (!v) return;
+            if (fixed && fixed.indexOf(v) < 0) return;
+            if (tokens.indexOf(v) >= 0) return;
+            tokens.push(v);
+            renderChips();
+            refreshAdd();
+            persist();
+        };
+
+        function renderChips() {
+            chips.innerHTML = "";
+            tokens.forEach((t, i) => {
+                const chip = document.createElement("span");
+                chip.className = "template-token tok__chip";
+                if (reorder) {
+                    chip.draggable = true;
+                    chip.classList.add("tok__chip--draggable");
+                    chip.addEventListener("dragstart", (e) => {
+                        dragIndex = i;
+                        chip.classList.add("is-dragging");
+                        if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+                    });
+                    chip.addEventListener("dragend", () => {
+                        dragIndex = -1;
+                        chip.classList.remove("is-dragging");
+                    });
+                    chip.addEventListener("dragover", (e) => {
+                        e.preventDefault();
+                        if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                    });
+                    chip.addEventListener("drop", (e) => {
+                        e.preventDefault();
+                        if (dragIndex < 0 || dragIndex === i) return;
+                        const moved = tokens.splice(dragIndex, 1)[0];
+                        tokens.splice(i, 0, moved);
+                        dragIndex = -1;
+                        renderChips();
+                        persist();
+                    });
+                }
+                const text = document.createElement("span");
+                text.className = "template-token__label";
+                text.textContent = t;
+                chip.appendChild(text);
+                const rm = document.createElement("button");
+                rm.type = "button";
+                rm.className = "template-token__remove";
+                rm.textContent = "×";
+                rm.title = "Remove";
+                rm.addEventListener("click", () => {
+                    tokens = tokens.filter((x) => x !== t);
+                    renderChips();
+                    refreshAdd();
+                    persist();
+                });
+                chip.appendChild(rm);
+                chips.appendChild(chip);
+            });
+            if (textInput) chips.appendChild(textInput);
+        }
+
+        if (textInput) {
+            textInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    addToken(textInput.value);
+                    textInput.value = "";
+                } else if (e.key === "Backspace" && !textInput.value &&
+                    tokens.length) {
+                    tokens.pop();
+                    renderChips();
+                    persist();
+                    const again = chips.querySelector(".tok__input");
+                    if (again) again.focus();
+                }
+            });
+            textInput.addEventListener("blur", () => {
+                if (textInput.value.trim()) {
+                    addToken(textInput.value);
+                    textInput.value = "";
+                }
+            });
+        }
+
+        const addRow = document.createElement("div");
+        addRow.className = "tok__add-row";
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "btn btn--ghost btn--micro tok__add";
+        let addMenu = null;
+
+        if (fixed) {
+            addBtn.textContent = "Add…";
+            addMenu = document.createElement("div");
+            addMenu.className = "ms__menu tok__add-menu";
+            addMenu.hidden = true;
+            refreshAdd = () => {
+                const remaining = fixed.filter((f) => tokens.indexOf(f) < 0);
+                addBtn.disabled = remaining.length === 0;
+                addMenu.innerHTML = "";
+                remaining.forEach((opt) => {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.className = "select-menu__item";
+                    item.setAttribute("role", "option");
+                    const sp = document.createElement("span");
+                    sp.className = "select-menu__check";
+                    const lb = document.createElement("span");
+                    lb.className = "select-menu__label";
+                    lb.textContent = opt;
+                    item.appendChild(sp);
+                    item.appendChild(lb);
+                    item.addEventListener("click", () => {
+                        addToken(opt);
+                        addMenu.hidden = true;
+                    });
+                    addMenu.appendChild(item);
+                });
+            };
+            addBtn.addEventListener("click", () => {
+                if (addBtn.disabled || !addMenu.children.length) return;
+                addMenu.hidden = !addMenu.hidden;
+            });
+        } else {
+            addBtn.textContent = "Add folder…";
+            addBtn.addEventListener("click", () => {
+                Promise.resolve(callHost("dejavu_chooseFolder", [""]))
+                    .then((r) => {
+                        if (r && r.ok && r.path) addToken(r.path);
+                    });
+            });
+        }
+
+        addRow.appendChild(addBtn);
+        if (addMenu) addRow.appendChild(addMenu);
+
+        renderChips();
+        refreshAdd();
+        tok.appendChild(chips);
+        tok.appendChild(addRow);
+        lab.appendChild(tok);
         section.appendChild(lab);
         addHint(section, hint);
         return section;
@@ -788,6 +1031,14 @@
                 let row;
                 if (typeof v === "boolean") {
                     row = makeBoolRow(path, meta.label, hint, v, tip);
+                } else if (path === "index.maxFileSizeBytes") {
+                    row = makeByteSizeRow(path, meta.label, hint, v, tip);
+                } else if (path === "index.skipFolders") {
+                    row = makeTokenRow(path, meta.label, hint, v, tip,
+                        { allowFinder: true });
+                } else if (path === "index.externalConverters.prefer") {
+                    row = makeTokenRow(path, meta.label, hint, v, tip,
+                        { fixed: OPTIONS[path], reorder: true });
                 } else if (Array.isArray(v) && OPTIONS[path]) {
                     row = makeMultiRow(
                         path, meta.label, hint, v, tip, OPTIONS[path]);
@@ -1097,9 +1348,15 @@
                 render();
             });
         }
-        // Collapse open multi-selects when clicking outside of one.
+        // Collapse open multi-selects / token "Add" menus on outside click.
         document.addEventListener("click", (evt) => {
             if (!evt.target.closest(".ms")) closeAllMultiselects();
+            if (!evt.target.closest(".tok__add-row")) {
+                (ui.settings || document)
+                    .querySelectorAll(".tok__add-menu").forEach((m) => {
+                        m.hidden = true;
+                    });
+            }
         });
     };
 

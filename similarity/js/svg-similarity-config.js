@@ -47,7 +47,7 @@
         allowedExtensions: [".svg", ".svgz", ".pdf", ".ai", ".eps"],
         recursive: true,
         maxFileSizeBytes: 104857600,
-        cacheFileName: ".svg_similarity_cache_v11.json",
+        cacheFileName: "dejavu-similarity.json",
         limit: 60,
         shortlistLimit: 300,
         ioConcurrency: 12,
