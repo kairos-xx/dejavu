@@ -1,0 +1,439 @@
+/* ================================================================
+   Top content and dejavu mode controls
+   ================================================================ */
+
+/* ---------------------------------------------------------------- */
+/* Header                                                            */
+/* ---------------------------------------------------------------- */
+
+.app__header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--dimension-9) var(--dimension-12) var(--dimension-8);
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+    background: var(--bg);
+    flex: 0 0 auto;
+}
+
+.app__title {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-7);
+}
+
+.app__logo {
+    --icon-size: var(--dimension-16);
+    color: var(--accent);
+    flex: 0 0 auto;
+    display: block;
+}
+
+.app__title h1 {
+    font-size: var(--dimension-12);
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-bright);
+    letter-spacing: var(--dimension-0-1);
+    transition: color 0.12s ease;
+}
+
+.app__title--running h1 {
+    color: var(--accent);
+}
+
+.app__dot {
+    width: var(--dimension-6);
+    height: var(--dimension-6);
+    border-radius: 50%;
+    background: var(--text-dim);
+    box-shadow: 0 0 0 0 var(--color-shadow-transparent);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    flex: 0 0 auto;
+}
+
+.app__dot--active {
+    background: var(--accent);
+    box-shadow: 0 0 var(--dimension-5) 0 var(--accent);
+}
+
+/* Error: steady red, slightly stronger glow so it reads as a fault. */
+.app__dot--error {
+    background: var(--danger);
+    box-shadow: 0 0 var(--dimension-6) 0 var(--danger);
+    animation: none;
+}
+
+/* Saving: fade-pulse the LED from its green base toward blue (accent)
+   and back, so the header dot signals an in-progress dejavu. */
+.app__dot--saving {
+    animation: dot-saving-pulse 0.5s ease-in-out 3;
+}
+
+@keyframes dot-saving-pulse {
+    0%, 100% {
+        background: var(--ok);
+        box-shadow: 0 0 var(--dimension-5) 0 var(--ok);
+    }
+    50% {
+        background: var(--accent);
+        box-shadow: 0 0 var(--dimension-7) 0 var(--accent);
+    }
+}
+
+/* ---------------------------------------------------------------- */
+/* Saving progress bar — thin, non-blocking, indeterminate.          */
+/* The save itself is synchronous in UXP host so we can't show   */
+/* real percentages; this is an honest "work in progress" pulse that */
+/* appears only while a save promise is in flight. It lives in the   */
+/* panel's own Chromium process, so it keeps animating regardless of */
+/* what Illustrator's main thread is doing.                          */
+/* ---------------------------------------------------------------- */
+
+.saving-bar {
+    position: sticky;
+    top: var(--dimension-41);
+    z-index: 19;
+    flex: 0 0 auto;
+    height: var(--dimension-2);
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.saving-bar.is-active {
+    opacity: 1;
+}
+
+.saving-bar__track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-input-well);
+}
+
+.saving-bar__pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 40%;
+    border-radius: var(--dimension-2);
+    background: var(--accent);
+    transform: translateX(-120%);
+}
+
+.saving-bar.is-active .saving-bar__pulse {
+    animation: saving-slide 1.05s ease-in-out infinite;
+}
+
+@keyframes saving-slide {
+    0% {
+        transform: translateX(-120%);
+        width: 35%;
+    }
+    50% {
+        width: 55%;
+    }
+    100% {
+        transform: translateX(320%);
+        width: 35%;
+    }
+}
+
+.status__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--dimension-5);
+    min-height: var(--dimension-23);
+    padding: var(--dimension-2) var(--dimension-4);
+    border-radius: var(--radius);
+    transition: background-color 0.12s ease;
+}
+
+.status__label {
+    color: var(--text-dim);
+    font-size: var(--dimension-9);
+    font-weight: 600;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+}
+
+.status__label--paused {
+    color: var(--warn);
+}
+
+.status__value {
+    color: var(--text-bright);
+    background: var(--bg-input-well);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: var(--dimension-2) var(--dimension-6);
+    font-size: var(--dimension-10-5);
+    font-family: var(--mono);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+#docNameValue,
+#folderStatusValue {
+    color: var(--accent);
+}
+
+#formatValue {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-4);
+}
+
+#formatValue .svg-icon {
+    --icon-size: var(--dimension-12);
+}
+
+#sessionStatsValue {
+    color: var(--text);
+}
+
+#lastSavedValue,
+.status__value--countdown,
+#sessionStatsValue {
+    background: transparent;
+    border-color: transparent;
+}
+
+#folderStatusValue {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+#folderStatusValue:hover,
+#folderStatusValue:focus-visible {
+    color: var(--text-bright) !important;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: var(--dimension-3);
+    outline: none;
+}
+
+.status__folder-wrap {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+    max-width: 68%;
+}
+
+.status__folder-wrap #folderStatusValue {
+    max-width: 100%;
+}
+
+.status__value--warn {
+    color: var(--warn);
+}
+
+/* Countdown ring: an SVG circle whose stroke sweeps down as the next
+   dejavu approaches, sitting inline with the remaining-time text. */
+.status__value--countdown {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dimension-6);
+    justify-content: flex-end;
+}
+
+#nextCheckValue.is-snoozed {
+    color: var(--warn);
+}
+
+/* ---------------------------------------------------------------- */
+/* Four-state dejavu mode selector                                 */
+/*                                                                   */
+/* A full-width segmented control: four joined buttons (Off all /    */
+/* Off current / On current / On all). Click any segment to set that */
+/* state directly. The active segment is filled — green for the two  */
+/* ON states, neutral for the two OFF states. The current-scope      */
+/* segments disable themselves when no document is open, since a     */
+/* per-document rule needs a document to attach to.                  */
+/* ---------------------------------------------------------------- */
+
+.app__mode-tag {
+    font-size: var(--dimension-10);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-dim);
+    flex: 0 0 auto;
+}
+
+.app__mode-tag--on {
+    color: var(--ok);
+}
+
+.mode-seg {
+    display: flex;
+    flex: 0 0 auto;
+    margin: var(--dimension-10) var(--dimension-14);
+    border: var(--dimension-1) solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-input-well);
+    overflow: hidden;
+}
+
+.mode-seg__btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: var(--dimension-6) var(--dimension-4);
+    border: 0;
+    border-left: var(--dimension-1) solid var(--border-soft);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--sans);
+    font-size: var(--dimension-10-5);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.mode-seg__btn:first-child {
+    border-left: 0;
+}
+
+.mode-seg__btn:hover:not(:disabled):not(.mode-seg__btn--active) {
+    background: var(--bg-hover);
+    color: var(--text-bright);
+}
+
+/* Light Illustrator skins need a whisper of separation between each
+   inactive segment and the recessed track behind it. */
+html.theme-light .mode-seg__btn:not(.mode-seg__btn--active) {
+    background: var(--bg-input);
+    color: var(--text);
+}
+
+html.theme-light .mode-seg__btn:hover:not(:disabled):not(.mode-seg__btn--active) {
+    background: var(--bg-hover);
+    color: var(--text-bright);
+}
+
+.mode-seg__btn:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 var(--dimension-1) var(--accent);
+}
+
+/* Active OFF state — neutral fill: reads as selected without implying
+   dejavu is running. */
+.mode-seg__btn--active {
+    background: var(--bg-hover);
+    color: var(--text-bright);
+    font-weight: 600;
+}
+
+/* Active ON state — green fill with dark-green text. */
+.mode-seg__btn--on {
+    background: var(--ok);
+    color: var(--color-success-contrast);
+    font-weight: 600;
+}
+
+/* In light mode --ok darkens, so dark-green text loses contrast — switch
+   the ON label to white there. */
+html.theme-light .mode-seg__btn--on {
+    color: var(--color-static-white);
+}
+
+.mode-seg__btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- */
+/* Snooze (temporary pause) bar — compact row under the mode buttons */
+/* ---------------------------------------------------------------- */
+
+.snooze-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--dimension-5);
+    padding: var(--dimension-5) var(--dimension-4) 0;
+    width: 100%;
+    flex: 0 0 auto;
+}
+
+.snooze-bar__label {
+    width: auto;
+    min-height: var(--dimension-23);
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-dim);
+    font-size: var(--dimension-9);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.055em;
+}
+
+.snooze-bar__chips {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--dimension-4);
+    margin-left: auto;
+}
+
+/* ---------------------------------------------------------------- */
+/* Maximum-polish additions: presets, timeline tools, health/actions */
+/* ---------------------------------------------------------------- */
+
+.status__value--path {
+    cursor: default;
+    flex: 1 1 auto;
+    color: var(--accent);
+    background: transparent;
+    border: 0;
+}
+
+.status__value:not(#lastSavedValue):not(#sessionStatsValue):not(.status__value--countdown),
+.preview,
+
+.snapshot {
+    border-radius: var(--radius-sm);
+}
+
+.snapshot__name,
+.recovery-item__name,
+.recovery-item__path,
+#folderStatusValue {
+    transition: color 0.12s ease, border-color 0.12s ease,
+        text-decoration-color 0.12s ease;
+}
+
+html.theme-light .status__value:not(#lastSavedValue):not(#sessionStatsValue):not(.status__value--countdown):not(.status__value--path),
+html.theme-light .preview,
+html.theme-light .timeline-insights,
+html.theme-light .version-list {
+    color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

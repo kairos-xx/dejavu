@@ -1,0 +1,1957 @@
+/* ================================================================
+   Common styles and CSS variables
+   ================================================================ */
+
+:root {
+    /* ------------------------------------------------------------
+       Host and runtime scale inputs
+       ------------------------------------------------------------ */
+    --ai-background-color: var(--uxp-host-background-color, #323232);
+    --ai-color: var(--uxp-host-text-color, #f5f5f5);
+    --ai-border-color: var(--uxp-host-border-color, #4a4a4a);
+    --ai-font-family: var(--uxp-host-font-family, "Adobe Clean",
+        "Segoe UI", "Helvetica Neue", Arial, sans-serif);
+    --ai-ui-scale: var(--uxp-host-ui-scale-factor, 1);
+    --ai-large-tabs-scale: 1;
+    --ui-scale-preference: var(--ai-ui-scale);
+    --ui-scale-factor: var(--ai-ui-scale);
+    --ui-large-tabs-multiplier: var(--ai-large-tabs-scale);
+    --effective-ui-scale: calc(
+        var(--ui-scale-factor) * var(--ui-large-tabs-multiplier)
+    );
+
+    /* ------------------------------------------------------------
+       Base colour tokens
+       ------------------------------------------------------------
+       theme.js overwrites the base tokens from Illustrator
+       uiBrightness. The semantic tokens below are then consumed by
+       the UI and keep the old variable names as compatibility aliases. */
+    --color-base-background: var(--ai-background-color);
+    --color-base-raised: #3a3a3a;
+    --color-base-input: #232323;
+    --color-base-input-well: #1c1c1c;
+    --color-base-hover: #404040;
+    --color-base-border: var(--ai-border-color);
+    --color-base-border-soft: #292929;
+    --color-base-border-strong: #5e5e5e;
+    --color-base-text: var(--ai-color);
+    --color-base-text-dim: #8a8a8a;
+    --color-base-text-bright: var(--ai-color);
+    --color-base-accent: #4d94d9;
+    --color-base-accent-dim: #3d6e96;
+    --color-base-accent-text: #ffffff;
+    --color-base-ok: #6fbf73;
+    --color-base-warn: #d9a23b;
+    --color-base-warn-gold: #e6a400;
+    --color-base-danger: #d96f6f;
+    --color-base-accent-glow: rgba(77, 148, 217, 0.28);
+    --color-base-warn-tint: rgba(217, 162, 59, 0.16);
+    --color-base-ok-tint: rgba(111, 191, 115, 0.16);
+    --color-base-shadow: rgba(0, 0, 0, 0.4);
+
+    --color-surface-app: var(--color-base-background);
+    --color-surface-raised: var(--color-base-raised);
+    --color-surface-input: var(--color-base-input);
+    --color-surface-well: var(--color-base-input-well);
+    --color-surface-hover: var(--color-base-hover);
+    --color-border-default: var(--color-base-border);
+    --color-border-soft: var(--color-base-border-soft);
+    --color-border-strong: var(--color-base-border-strong);
+    --color-text-default: var(--color-base-text);
+    --color-text-dim: var(--color-base-text-dim);
+    --color-text-bright: var(--color-base-text-bright);
+    --color-action-accent: var(--color-base-accent);
+    --color-action-accent-dim: var(--color-base-accent-dim);
+    --color-action-accent-text: var(--color-base-accent-text);
+    --color-status-ok: var(--color-base-ok);
+    --color-status-warn: var(--color-base-warn);
+    --color-status-danger: var(--color-base-danger);
+    --color-effect-accent-glow: var(--color-base-accent-glow);
+    --color-effect-warn-tint: var(--color-base-warn-tint);
+    --color-effect-ok-tint: var(--color-base-ok-tint);
+    --color-effect-shadow: var(--color-base-shadow);
+    --color-static-white: #ffffff;
+    --color-success-contrast: #14320f;
+    --color-shadow-transparent: rgba(0, 0, 0, 0);
+    --color-overlay-strong: rgba(0, 0, 0, 0.58);
+    --color-format-ai: #FF9A00;
+    --color-format-pdf: #FF4040;
+    --color-format-eps: #FFB800;
+    --color-format-svg: #2196F3;
+    --color-row-flag-pin: var(--color-format-eps);
+    --color-row-flag-note: var(--color-format-svg);
+    --color-row-pin-fill: rgba(230, 164, 0, 0.45);
+    --color-menu-hover: rgba(255, 255, 255, 0.08);
+
+    /* Compatibility aliases consumed throughout the existing files. */
+    --bg: var(--color-surface-app);
+    --bg-raised: var(--color-surface-raised);
+    --bg-input: var(--color-surface-input);
+    --bg-input-well: var(--color-surface-well);
+    --bg-hover: var(--color-surface-hover);
+    --border: var(--color-border-default);
+    --border-soft: var(--color-border-soft);
+    --border-strong: var(--color-border-strong);
+    --text: var(--color-text-default);
+    --text-dim: var(--color-text-dim);
+    --text-bright: var(--color-text-bright);
+    --accent: var(--color-action-accent);
+    --accent-dim: var(--color-action-accent-dim);
+    --accent-text: var(--color-action-accent-text);
+    --ok: var(--color-status-ok);
+    --warn: var(--color-status-warn);
+    --warn-gold: var(--color-base-warn-gold);
+    --danger: var(--color-status-danger);
+    --accent-glow: var(--color-effect-accent-glow);
+    --warn-tint: var(--color-effect-warn-tint);
+    --ok-tint: var(--color-effect-ok-tint);
+    --shadow: var(--color-effect-shadow);
+
+    /* ------------------------------------------------------------
+       Base dimension tokens and scaled dimension tokens
+       ------------------------------------------------------------
+       Only the --dimension-base-* tokens contain literal px values.
+       Every --dimension-* token is multiplied by Illustrator's effective
+       UI scale, and element rules consume the scaled tokens. */
+    --dimension-base-neg-4: -4px;
+    --dimension-neg-4: calc(var(--dimension-base-neg-4) * var(--effective-ui-scale));
+    --dimension-base-neg-3: -3px;
+    --dimension-neg-3: calc(var(--dimension-base-neg-3) * var(--effective-ui-scale));
+    --dimension-base-neg-1: -1px;
+    --dimension-neg-1: calc(var(--dimension-base-neg-1) * var(--effective-ui-scale));
+    --dimension-base-0: 0px;
+    --dimension-0: calc(var(--dimension-base-0) * var(--effective-ui-scale));
+    --dimension-base-0-1: 0.1px;
+    --dimension-0-1: calc(var(--dimension-base-0-1) * var(--effective-ui-scale));
+    --dimension-base-1: 1px;
+    --dimension-1: calc(var(--dimension-base-1) * var(--effective-ui-scale));
+    --dimension-base-2: 2px;
+    --dimension-2: calc(var(--dimension-base-2) * var(--effective-ui-scale));
+    --dimension-base-3: 3px;
+    --dimension-3: calc(var(--dimension-base-3) * var(--effective-ui-scale));
+    --dimension-base-3-5: 3.5px;
+    --dimension-3-5: calc(var(--dimension-base-3-5) * var(--effective-ui-scale));
+    --dimension-base-4: 4px;
+    --dimension-4: calc(var(--dimension-base-4) * var(--effective-ui-scale));
+    --dimension-base-4-5: 4.5px;
+    --dimension-4-5: calc(var(--dimension-base-4-5) * var(--effective-ui-scale));
+    --dimension-base-5: 5px;
+    --dimension-5: calc(var(--dimension-base-5) * var(--effective-ui-scale));
+    --dimension-base-6: 6px;
+    --dimension-6: calc(var(--dimension-base-6) * var(--effective-ui-scale));
+    --dimension-base-7: 7px;
+    --dimension-7: calc(var(--dimension-base-7) * var(--effective-ui-scale));
+    --dimension-base-8: 8px;
+    --dimension-8: calc(var(--dimension-base-8) * var(--effective-ui-scale));
+    --dimension-base-8-5: 8.5px;
+    --dimension-8-5: calc(var(--dimension-base-8-5) * var(--effective-ui-scale));
+    --dimension-base-9: 9px;
+    --dimension-9: calc(var(--dimension-base-9) * var(--effective-ui-scale));
+    --dimension-base-9-5: 9.5px;
+    --dimension-9-5: calc(var(--dimension-base-9-5) * var(--effective-ui-scale));
+    --dimension-base-10: 10px;
+    --dimension-10: calc(var(--dimension-base-10) * var(--effective-ui-scale));
+    --dimension-base-10-5: 10.5px;
+    --dimension-10-5: calc(var(--dimension-base-10-5) * var(--effective-ui-scale));
+    --dimension-base-11: 11px;
+    --dimension-11: calc(var(--dimension-base-11) * var(--effective-ui-scale));
+    --dimension-base-11-5: 11.5px;
+    --dimension-11-5: calc(var(--dimension-base-11-5) * var(--effective-ui-scale));
+    --dimension-base-12: 12px;
+    --dimension-12: calc(var(--dimension-base-12) * var(--effective-ui-scale));
+    --dimension-base-13: 13px;
+    --dimension-13: calc(var(--dimension-base-13) * var(--effective-ui-scale));
+    --dimension-base-14: 14px;
+    --dimension-14: calc(var(--dimension-base-14) * var(--effective-ui-scale));
+    --dimension-base-15: 15px;
+    --dimension-15: calc(var(--dimension-base-15) * var(--effective-ui-scale));
+    --dimension-base-16: 16px;
+    --dimension-16: calc(var(--dimension-base-16) * var(--effective-ui-scale));
+    --dimension-base-18: 18px;
+    --dimension-18: calc(var(--dimension-base-18) * var(--effective-ui-scale));
+    --dimension-base-19: 19px;
+    --dimension-19: calc(var(--dimension-base-19) * var(--effective-ui-scale));
+    --dimension-base-20: 20px;
+    --dimension-20: calc(var(--dimension-base-20) * var(--effective-ui-scale));
+    --dimension-base-21: 21px;
+    --dimension-21: calc(var(--dimension-base-21) * var(--effective-ui-scale));
+    --dimension-base-22: 22px;
+    --dimension-22: calc(var(--dimension-base-22) * var(--effective-ui-scale));
+    --dimension-base-23: 23px;
+    --dimension-23: calc(var(--dimension-base-23) * var(--effective-ui-scale));
+    --dimension-base-24: 24px;
+    --dimension-24: calc(var(--dimension-base-24) * var(--effective-ui-scale));
+    --dimension-base-26: 26px;
+    --dimension-26: calc(var(--dimension-base-26) * var(--effective-ui-scale));
+    --dimension-base-27: 27px;
+    --dimension-27: calc(var(--dimension-base-27) * var(--effective-ui-scale));
+    --dimension-base-28: 28px;
+    --dimension-28: calc(var(--dimension-base-28) * var(--effective-ui-scale));
+    --dimension-base-30: 30px;
+    --dimension-30: calc(var(--dimension-base-30) * var(--effective-ui-scale));
+    --dimension-base-34: 34px;
+    --dimension-34: calc(var(--dimension-base-34) * var(--effective-ui-scale));
+    --dimension-base-36: 36px;
+    --dimension-36: calc(var(--dimension-base-36) * var(--effective-ui-scale));
+    --dimension-base-40: 40px;
+    --dimension-40: calc(var(--dimension-base-40) * var(--effective-ui-scale));
+    --dimension-base-41: 41px;
+    --dimension-41: calc(var(--dimension-base-41) * var(--effective-ui-scale));
+    --dimension-base-52: 52px;
+    --dimension-52: calc(var(--dimension-base-52) * var(--effective-ui-scale));
+    --dimension-base-54: 54px;
+    --dimension-54: calc(var(--dimension-base-54) * var(--effective-ui-scale));
+    --dimension-base-58: 58px;
+    --dimension-58: calc(var(--dimension-base-58) * var(--effective-ui-scale));
+    --dimension-base-60: 60px;
+    --dimension-60: calc(var(--dimension-base-60) * var(--effective-ui-scale));
+    --dimension-base-64: 64px;
+    --dimension-64: calc(var(--dimension-base-64) * var(--effective-ui-scale));
+    --dimension-base-66: 66px;
+    --dimension-66: calc(var(--dimension-base-66) * var(--effective-ui-scale));
+    --dimension-base-70: 70px;
+    --dimension-70: calc(var(--dimension-base-70) * var(--effective-ui-scale));
+    --dimension-base-72: 72px;
+    --dimension-72: calc(var(--dimension-base-72) * var(--effective-ui-scale));
+    --dimension-base-92: 92px;
+    --dimension-92: calc(var(--dimension-base-92) * var(--effective-ui-scale));
+    --dimension-base-96: 96px;
+    --dimension-96: calc(var(--dimension-base-96) * var(--effective-ui-scale));
+    --dimension-base-100: 100px;
+    --dimension-100: calc(var(--dimension-base-100) * var(--effective-ui-scale));
+    --dimension-base-106: 106px;
+    --dimension-106: calc(var(--dimension-base-106) * var(--effective-ui-scale));
+    --dimension-base-120: 120px;
+    --dimension-120: calc(var(--dimension-base-120) * var(--effective-ui-scale));
+    --dimension-base-132: 132px;
+    --dimension-132: calc(var(--dimension-base-132) * var(--effective-ui-scale));
+    --dimension-base-200: 200px;
+    --dimension-200: calc(var(--dimension-base-200) * var(--effective-ui-scale));
+    --dimension-base-210: 210px;
+    --dimension-210: calc(var(--dimension-base-210) * var(--effective-ui-scale));
+    --dimension-base-220: 220px;
+    --dimension-220: calc(var(--dimension-base-220) * var(--effective-ui-scale));
+    --dimension-base-240: 240px;
+    --dimension-240: calc(var(--dimension-base-240) * var(--effective-ui-scale));
+    --dimension-base-280: 280px;
+    --dimension-280: calc(var(--dimension-base-280) * var(--effective-ui-scale));
+    --dimension-base-360: 360px;
+    --dimension-360: calc(var(--dimension-base-360) * var(--effective-ui-scale));
+    --dimension-base-420: 420px;
+    --dimension-420: calc(var(--dimension-base-420) * var(--effective-ui-scale));
+    --dimension-base-450: 450px;
+    --dimension-450: calc(var(--dimension-base-450) * var(--effective-ui-scale));
+
+    /* Semantic dimensions built on top of scaled primitives. */
+    --unit: var(--dimension-2);
+    --space-1: var(--dimension-2);
+    --space-2: var(--dimension-4);
+    --space-3: var(--dimension-6);
+    --space-4: var(--dimension-8);
+    --space-5: var(--dimension-10);
+    --space-6: var(--dimension-12);
+    --space-7: var(--dimension-14);
+    --radius-sm: var(--dimension-2);
+    --radius: var(--dimension-3);
+    --radius-lg: var(--dimension-6);
+    --border-width: var(--dimension-1);
+    --control-h: var(--dimension-26);
+    --compact-control-h: var(--dimension-21);
+    --table-icon-button-size: var(--dimension-26);
+    --table-icon-button-height: var(--dimension-24);
+    --table-icon-size: var(--dimension-16);
+    --row-action-size: var(--dimension-22);
+    --row-select-size: var(--dimension-12);
+    --row-select-dot-size: var(--dimension-3);
+    --bulk-control-h: var(--dimension-18);
+    --list-well-max-height: var(--dimension-280);
+    --popup-z-index: 10020;
+    --tooltip-z-index: 10000;
+    --day-header-h: var(--dimension-26);
+    --app-min-width: var(--dimension-450);
+    --mono: "SF Mono", "Consolas", "Menlo", monospace;
+    --sans: var(--ai-font-family);
+    --base-font-size-raw: var(--dimension-base-12);
+    --base-font-size: calc(
+        var(--base-font-size-raw) * var(--effective-ui-scale)
+    );
+}
+
+
+html.theme-light {
+    color-scheme: light;
+    --color-base-shadow: rgba(0, 0, 0, 0.1);
+    --color-row-pin-fill: rgba(156, 105, 19, 0.18);
+    --color-menu-hover: rgba(0, 0, 0, 0.08);
+}
+
+html.theme-dark {
+    color-scheme: dark;
+    --color-base-shadow: rgba(0, 0, 0, 0.45);
+    --color-row-pin-fill: rgba(230, 164, 0, 0.45);
+    --color-menu-hover: rgba(255, 255, 255, 0.08);
+}
+
+html.ui-large-tabs {
+    --ai-large-tabs-scale: 1.08;
+}
+
+/* ---------------------------------------------------------------- */
+/* External SVG icon system                                          */
+/* ---------------------------------------------------------------- */
+
+.svg-icon {
+    --icon-size: var(--dimension-16);
+    --svg-icon-url: none;
+    display: inline-block;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex: 0 0 var(--icon-size);
+    color: currentColor;
+    background-color: currentColor;
+    -webkit-mask-image: var(--svg-icon-url);
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: contain;
+    mask-image: var(--svg-icon-url);
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    pointer-events: none;
+}
+
+.app__logo {
+    --svg-icon-url: url("../../icons/app-logo.svg");
+}
+
+.app__logo:not(.app__logo--anim) {
+    color: var(--text-dim);
+}
+
+.app__logo.app__logo--anim {
+    --svg-icon-url: url("../../icons/app-logo-anim.svg");
+}
+
+.icon-circle {
+    --svg-icon-url: url("../../icons/icon-circle.svg");
+}
+
+.icon-coffee {
+    --svg-icon-url: url("../../icons/icon-coffee.svg");
+}
+
+.icon-compact {
+    --svg-icon-url: url("../../icons/icon-compact.svg");
+}
+
+.icon-download {
+    --svg-icon-url: url("../../icons/icon-download.svg");
+}
+
+.icon-dropdown {
+    --svg-icon-url: url("../../icons/icon-chevron-down.svg");
+}
+
+.icon-pin {
+    --svg-icon-url: url("../../icons/icon-pin.svg");
+    --is-on-color: var(--warn-gold);
+}
+
+.icon-power {
+    --svg-icon-url: url("../../icons/icon-power.svg");
+}
+
+.icon-refresh {
+    --svg-icon-url: url("../../icons/icon-refresh.svg");
+}
+
+.icon-reset {
+    --svg-icon-url: url("../../icons/icon-reset.svg");
+}
+
+.icon-save {
+    --svg-icon-url: url("../../icons/icon-save.svg");
+}
+
+.icon-trash {
+    --svg-icon-url: url("../../icons/icon-trash.svg");
+}
+
+.icon-unsaved {
+    --svg-icon-url: url("../../icons/icon-unsaved.svg");
+    --is-on-color: var(--warn-gold);
+}
+
+/* Format icons with colors (N12) â€” distinct chip per supported
+   Illustrator dejavu format (ai/pdf/eps/svg, see detectDejavuExtension). */
+.icon-format-ai {
+    --svg-icon-url: url("../../icons/icon-format-ai.svg");
+    color: var(--color-format-ai);
+}
+
+.icon-format-pdf {
+    --svg-icon-url: url("../../icons/icon-format-pdf.svg");
+    color: var(--color-format-pdf);
+}
+
+.icon-format-eps {
+    --svg-icon-url: url("../../icons/icon-format-eps.svg");
+    color: var(--color-format-eps);
+}
+
+.icon-format-svg {
+    --svg-icon-url: url("../../icons/icon-format-svg.svg");
+    color: var(--color-format-svg);
+}
+
+html.ui-large-tabs .icon-btn {
+    min-height: calc(var(--control-h) * 1.08);
+}
+
+html.ui-large-tabs .mode-seg__btn {
+    min-height: calc(var(--control-h) * 1.08);
+}
+
+html.ui-large-tabs .drawer__summary {
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-5);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-width: var(--dimension-450);
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: var(--base-font-size);
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    min-width: var(--dimension-450);
+    max-height: 100vh;
+    overflow-y: auto;
+    overscroll-behavior-y: none;
+    position: relative;
+    z-index: 1;
+}
+/* Toggle switch â€” matches Illustrator's flat pill switches          */
+/* ---------------------------------------------------------------- */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: var(--dimension-30);
+    height: var(--dimension-16);
+    flex: 0 0 auto;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.switch__track {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-input-well);
+    border: var(--dimension-1) solid var(--border);
+    border-radius: var(--dimension-16);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.switch__thumb {
+    position: absolute;
+    top: var(--dimension-1);
+    left: var(--dimension-1);
+    width: var(--dimension-12);
+    height: var(--dimension-12);
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.switch input:checked + .switch__track {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.switch input:checked + .switch__track .switch__thumb {
+    transform: translateX(var(--dimension-14));
+    background: var(--accent-text);
+}
+
+.switch input:focus-visible + .switch__track {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 var(--dimension-1) var(--accent);
+}
+
+/* ---------------------------------------------------------------- */
+/* Status block                                                      */
+/* ---------------------------------------------------------------- */
+
+.status {
+    padding: var(--dimension-8) var(--dimension-12);
+    background: var(--bg-raised);
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-3);
+    flex: 0 0 auto;
+}
+
+.folder-balloon {
+    position: absolute;
+    right: 0;
+    top: calc(100% + var(--dimension-5));
+    z-index: 30;
+    padding: var(--dimension-4);
+    border: var(--dimension-1) solid var(--border);
+    border-radius: var(--dimension-5);
+    background: var(--bg-raised);
+    box-shadow: 0 var(--dimension-2) var(--dimension-6) var(--shadow);
+}
+
+.folder-balloon[hidden] {
+    display: none;
+}
+
+.folder-balloon__action {
+    border: 0;
+    border-radius: var(--radius);
+    padding: var(--dimension-4) var(--dimension-8);
+    background: transparent;
+    color: var(--text-bright);
+    font-family: var(--sans);
+    font-size: var(--dimension-10);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.folder-balloon__action:hover,
+.folder-balloon__action:focus-visible {
+    background: var(--bg-hover);
+    color: var(--accent);
+    outline: none;
+}
+
+.countdown-pie {
+    flex: 0 0 auto;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    overflow: visible;
+}
+
+.countdown-pie__track {
+    fill: none;
+    stroke: var(--bg-input-well);
+    stroke-width: 4;
+}
+
+.countdown-pie__sweep {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transform-box: fill-box;
+    transform-origin: center;
+    /* Circumference for r=6.5 (2·π·6.5 ≈ 40.84). The dasharray must be set
+       here, not only in startLoop(), so the ring reads as empty/disabled
+       when dejavu is off — otherwise, before the loop ever runs, the
+       sweep renders as a full solid accent ring. */
+    stroke-dasharray: 40.84;
+    stroke-dashoffset: 40.84;
+    transition: stroke-dashoffset 0.12s linear, stroke 0.2s ease,
+        transform 0.2s ease;
+}
+
+/* When a save is imminent/running the ring turns to the "ok" color
+   to read as "saving now" rather than "waiting". */
+.countdown-pie.is-saving .countdown-pie__sweep {
+    stroke: var(--ok);
+    animation: countdown-pie-save-pulse 0.42s ease-in-out 3 alternate;
+}
+
+.countdown-pie.is-snoozed .countdown-pie__sweep {
+    stroke: var(--warn);
+}
+
+@keyframes countdown-pie-save-pulse {
+    from {
+        stroke-width: 4;
+    }
+    to {
+        stroke-width: 5.5;
+    }
+}
+
+/* ---------------------------------------------------------------- */
+/* Field groups                                                      */
+/* ---------------------------------------------------------------- */
+
+.field-group {
+    padding: var(--dimension-8) var(--dimension-12);
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-5);
+    flex: 0 0 auto;
+}
+
+.field-group--row {
+    padding-top: var(--dimension-9);
+    padding-bottom: var(--dimension-9);
+}
+
+.field-label {
+    font-size: var(--dimension-11);
+    color: var(--text-dim);
+    font-weight: 400;
+}
+
+.field-hint {
+    font-size: var(--dimension-10);
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin: var(--dimension-4) 0 0;
+}
+
+.field-row {
+    display: flex;
+    gap: var(--dimension-6);
+    align-items: center;
+}
+
+/* ---------------------------------------------------------------- */
+/* Inputs â€” Illustrator-style: flat well, border appears on          */
+/* hover/focus rather than sitting visible at rest                   */
+/* ---------------------------------------------------------------- */
+
+input[type="text"],
+input[type="number"],
+select {
+    background: var(--bg-input);
+    border: var(--dimension-1) solid transparent;
+    border-radius: var(--radius);
+    color: var(--text-bright);
+    height: var(--dimension-21);
+    min-height: var(--dimension-21);
+    padding: 0 var(--dimension-7);
+    font-size: var(--dimension-11);
+    font-family: var(--sans);
+    line-height: var(--dimension-19);
+    outline: none;
+    transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+input.snapshot__note-input {
+    height: auto;
+    min-height: var(--dimension-20);
+}
+
+/* Custom spin box styling - arrows always visible on left */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.number-input-group input[type="number"] {
+    height: var(--dimension-21);
+    min-height: var(--dimension-21);
+    border: none;
+    background: transparent;
+    padding-left: var(--dimension-7);
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Custom spin buttons container */
+.number-input-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.number-input-group {
+    display: flex;
+    align-items: center;
+    height: var(--dimension-21);
+    min-height: var(--dimension-21);
+    border: var(--dimension-1) solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-input);
+}
+
+/* Move the focus ring off the bare inner input and onto the whole group, so
+   it frames the spin buttons too rather than just the number field. */
+.number-input-group input[type="number"]:focus,
+.number-input-group input[type="number"]:focus-visible {
+    outline: none;
+}
+
+.number-input-group:focus-within {
+    outline: var(--dimension-1) solid var(--accent);
+}
+
+.number-spin-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: 100%;
+    pointer-events: auto;
+    border-right: var(--dimension-1) solid var(--border);
+    background: var(--bg-input);
+    width: var(--dimension-14);
+    transition: background 0.12s ease;
+    border-top-left-radius: var(--radius);
+    border-bottom-left-radius: var(--radius);
+}
+
+.number-spin-button {
+    width: 100%;
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--dimension-10);
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    transition: color 0.12s ease, background 0.12s ease;
+    user-select: none;
+}
+
+.number-spin-button:first-child {
+    margin-bottom: var(--dimension-1);
+}
+
+.number-spin-button .spin-chevron {
+    width: var(--dimension-8);
+    height: var(--dimension-8);
+    display: block;
+    color: currentColor;
+    pointer-events: none;
+}
+
+.number-spin-button:hover {
+    background: var(--bg-hover);
+    color: var(--text-bright);
+}
+
+/* Pressed via mouse (:active) or keyboard arrows (.is-active, see 2.2) */
+.number-spin-button:active,
+.number-spin-button.is-active {
+    background: var(--bg-input-well);
+    color: var(--accent);
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+select:hover {
+    border-color: var(--border);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+    border-color: var(--accent);
+}
+
+/* Readonly fields (currently just #folderInput) default to dimmed
+   text â€” appropriate while showing placeholder copy like "No folder
+   selected". Once a real value is set, .has-value overrides this so
+   the chosen path reads as normal, fully legible text rather than
+   looking perpetually muted/disabled. */
+input[type="text"][readonly] {
+    color: var(--text-dim);
+    cursor: default;
+}
+
+input[type="text"][readonly].has-value {
+    color: var(--text-bright);
+}
+
+input[type="text"][readonly]::placeholder {
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+input[type="text"][readonly]:hover {
+    border-color: transparent;
+}
+
+.template-token {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dimension-4);
+    height: var(--dimension-18);
+    margin: 0 var(--dimension-1);
+    padding: 0 var(--dimension-5);
+    border: var(--dimension-1) solid var(--accent-dim);
+    border-radius: var(--dimension-9);
+    background: var(--accent-glow);
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    line-height: var(--dimension-16);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.template-token--locked {
+    border-color: var(--border-strong);
+    background: var(--bg-hover);
+    color: var(--text);
+    user-select: none;
+}
+
+.template-token__remove {
+    width: var(--dimension-12);
+    height: var(--dimension-12);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-dim);
+    font: var(--dimension-11)/var(--dimension-11) var(--sans);
+    cursor: pointer;
+}
+
+.template-token__remove:hover {
+    background: var(--bg-hover);
+    color: var(--text-bright);
+}
+
+/* ---------------------------------------------------------------- */
+/* TokenInput library (client/lib/token-input.js) â€” themed to the     */
+/* panel's minimal flat look: small mono accent pills + an            */
+/* Illustrator-style dropdown. Drives the filename template field.    */
+/* ---------------------------------------------------------------- */
+
+.token-shell { position: relative; min-width: 0; }
+
+.token-editor {
+    width: 100%;
+    min-height: var(--dimension-30);
+    max-height: var(--dimension-120);
+    overflow: auto;
+    padding: var(--dimension-5) var(--dimension-7);
+    border: var(--dimension-1) solid var(--border);
+    border-radius: var(--radius);
+    outline: 0;
+    background: var(--bg-input-well);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    line-height: var(--dimension-22);
+    letter-spacing: var(--dimension-0-1);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    caret-color: var(--text-bright);
+    cursor: text;
+}
+.token-editor:hover { border-color: var(--border-strong); }
+.token-editor:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 var(--dimension-1) var(--accent-glow);
+}
+.token-editor[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+.token-editor[data-empty="true"]::before {
+    content: attr(data-placeholder);
+    position: absolute;
+    color: var(--text-dim);
+    font-style: italic;
+    pointer-events: none;
+}
+
+.token-chip,
+.token-placeholder {
+    display: inline-flex;
+    align-items: center;
+    height: var(--dimension-22);
+    vertical-align: top;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.token-chip {
+    margin: 0 var(--dimension-1);
+    cursor: grab;
+    touch-action: none;
+    /* Suppress native HTML5 drag so the library's pointer drag owns the
+       gesture (see createToken: token.draggable = false). */
+    -webkit-user-drag: none;
+}
+.token-chip:active { cursor: grabbing; }
+.token-chip__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dimension-4);
+    height: var(--dimension-18);
+    max-width: var(--dimension-220);
+    padding: 0 var(--dimension-6);
+    border: var(--dimension-1) solid var(--accent-dim);
+    border-radius: var(--dimension-9);
+    background: var(--accent-glow);
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    font-weight: 500;
+    line-height: var(--dimension-16);
+}
+.token-chip:hover .token-chip__pill,
+.token-chip.is-drag-source .token-chip__pill {
+    border-color: var(--accent);
+    background: var(--bg-hover);
+}
+.token-chip__icon { color: var(--accent); font-size: var(--dimension-10); }
+.token-chip__icon:empty { display: none; }
+.token-chip__label { overflow: hidden; text-overflow: ellipsis; }
+.token-chip.is-disabled { opacity: 0.5; cursor: not-allowed; }
+.token-chip.is-drag-source { opacity: 0.25; }
+/* Hide the demo's LOCK/PIN/1Ã—/OFF state badges for the minimal look. */
+.token-chip__pill::after { content: none !important; }
+
+.token-placeholder { min-width: var(--dimension-36); margin: 0 var(--dimension-2); }
+.token-placeholder::before {
+    content: "";
+    width: 100%;
+    height: var(--dimension-18);
+    border: var(--dimension-1) dashed var(--accent);
+    border-radius: var(--dimension-9);
+    background: var(--accent-glow);
+}
+
+.token-ghost {
+    position: fixed;
+    z-index: 99999;
+    pointer-events: none;
+    transform: translate3d(-50%, -50%, 0) scale(1.03);
+    filter: drop-shadow(0 var(--dimension-8) var(--dimension-16) var(--shadow));
+}
+.token-drop-caret {
+    position: fixed;
+    z-index: 99998;
+    width: var(--dimension-2);
+    height: var(--dimension-22);
+    border-radius: var(--dimension-2);
+    background: var(--accent);
+    box-shadow: 0 0 0 var(--dimension-2) var(--accent-glow);
+    pointer-events: none;
+}
+
+.token-menu {
+    position: fixed;
+    z-index: 10000;
+    display: none;
+    width: min(var(--dimension-420), calc(100vw - var(--dimension-20)));
+    max-height: var(--dimension-220);
+    overflow: auto;
+    padding: var(--dimension-4);
+    border: var(--dimension-1) solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+    box-shadow: 0 var(--dimension-4) var(--dimension-14) var(--shadow);
+}
+.token-menu.is-open { display: grid; gap: var(--dimension-2); }
+.token-menu__hint {
+    padding: var(--dimension-5) var(--dimension-8);
+    color: var(--text-dim);
+    font-size: var(--dimension-10);
+    line-height: 1.35;
+}
+.token-menu__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    min-height: var(--dimension-28);
+    padding: var(--dimension-4) var(--dimension-8);
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+}
+.token-menu__item:hover,
+.token-menu__item[aria-selected="true"] { background: var(--bg-hover); }
+.token-menu__item[aria-disabled="true"] { opacity: 0.42; cursor: not-allowed; }
+.token-menu__icon,
+.token-menu__badge { display: none; }
+.token-menu__main { min-width: 0; display: grid; gap: var(--dimension-1); }
+.token-menu__title {
+    overflow: hidden;
+    color: var(--text-bright);
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.token-menu__desc {
+    overflow: hidden;
+    color: var(--text-dim);
+    font-size: var(--dimension-10);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Custom select chevron, theme-aware via currentColor trick */
+select {
+    -webkit-appearance: none;
+    appearance: none;
+}
+select:focus {
+    outline: none;
+}
+input:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.select-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: var(--dimension-21);
+    min-height: var(--dimension-21);
+    border: var(--dimension-1) solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-input);
+}
+.select-wrapper select {
+    height: 100%;
+    min-height: 0;
+    border: none;
+    background: transparent;
+    padding: 0 var(--dimension-7);
+    padding-right: var(--dimension-24);
+    font-size: var(--dimension-11);
+    font-family: var(--sans);
+    color: var(--text-bright);
+    outline: none;
+    line-height: 1;
+    flex: 1;
+    width: 100%;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Native dropdown options â€” match the panel brightness instead of the OS
+   default (white) popup, including the selected and hovered rows. */
+.select-wrapper select option {
+    background: var(--bg-raised);
+    color: var(--text-bright);
+}
+
+.select-wrapper select option:checked,
+.select-wrapper select option:hover,
+.select-wrapper select option:focus {
+    background: var(--bg-hover);
+    color: var(--text-bright);
+}
+
+/* Dropdown menu palette — hand-tuned per Illustrator brightness mode
+   (data-skin set by theme.js) so the popup keeps strong contrast in all
+   four modes, not just the extremes. Falls back to derived tokens. */
+:root {
+    --menu-bg: var(--bg-raised);
+    --menu-text: var(--text);
+    --menu-text-strong: var(--text-bright);
+    --menu-border: var(--border-strong);
+}
+
+html[data-skin="darkest"] {
+    --menu-bg: #2d2d2d;
+    --menu-text: #d6d6d6;
+    --menu-text-strong: #ffffff;
+    --menu-border: #000000;
+}
+
+html[data-skin="dark"] {
+    --menu-bg: #3d3d3d;
+    --menu-text: #dcdcdc;
+    --menu-text-strong: #ffffff;
+    --menu-border: #161616;
+}
+
+html[data-skin="light"] {
+    --menu-bg: #ffffff;
+    --menu-text: #232323;
+    --menu-text-strong: #000000;
+    --menu-border: #8f8f8f;
+}
+
+html[data-skin="lightest"] {
+    --menu-bg: #ffffff;
+    --menu-text: #1f1f1f;
+    --menu-text-strong: #000000;
+    --menu-border: #c2c2c2;
+}
+
+.select-menu {
+    position: fixed;
+    z-index: var(--popup-z-index);
+    display: none;
+    overflow-y: auto;
+    padding: var(--dimension-4) 0;
+    border: var(--dimension-1) solid var(--menu-border);
+    border-radius: var(--radius);
+    background: var(--menu-bg);
+    box-shadow: 0 var(--dimension-4) var(--dimension-14) var(--shadow);
+}
+
+.select-menu.is-open {
+    display: block;
+}
+
+.select-menu__item {
+    display: grid;
+    grid-template-columns: var(--dimension-20) minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    min-height: var(--dimension-21);
+    padding: 0 var(--dimension-8);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--menu-text);
+    font-family: var(--sans);
+    font-size: var(--dimension-11);
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+}
+
+/* Selected (but not highlighted) row: brighter text + accent checkmark,
+   so the current value reads clearly without a filled bar. */
+.select-menu__item[aria-selected="true"] {
+    color: var(--menu-text-strong);
+}
+
+/* Highlighted row (pointer or keyboard) uses the accent fill with white
+   text — a fixed high-contrast pair that stays legible at every panel
+   brightness, matching the native dropdown highlight. */
+.select-menu__item:hover,
+.select-menu__item:focus-visible {
+    background: var(--accent);
+    color: var(--accent-text);
+    outline: none;
+}
+
+.select-menu__item:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.select-menu__item:disabled:hover {
+    background: transparent;
+    color: var(--menu-text);
+}
+
+.select-menu__check {
+    position: relative;
+    width: var(--dimension-14);
+    height: var(--dimension-14);
+}
+
+.select-menu__item[aria-selected="true"] .select-menu__check::before {
+    content: "";
+    position: absolute;
+    left: var(--dimension-2);
+    top: var(--dimension-3);
+    width: var(--dimension-8);
+    height: var(--dimension-4);
+    border-left: var(--dimension-2) solid var(--accent);
+    border-bottom: var(--dimension-2) solid var(--accent);
+    transform: rotate(-45deg);
+}
+
+/* On the accent-filled highlight, recolor the checkmark to white so it
+   stays visible against the blue. */
+.select-menu__item[aria-selected="true"]:hover .select-menu__check::before,
+.select-menu__item[aria-selected="true"]:focus-visible .select-menu__check::before {
+    border-left-color: var(--accent-text);
+    border-bottom-color: var(--accent-text);
+}
+
+.select-menu__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Chevron is a real element with an inline <svg> (injected in bindEvents).
+   It overlays the right edge of the select but is click-through, so clicking
+   anywhere in the wrapper â€” including the chevron â€” opens the native
+   dropdown. Hover/press feedback is driven by the wrapper and uses the same
+   colors as .number-spin-button chevrons. */
+.select-chevron {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--dimension-20);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    pointer-events: none;
+    transition: background 0.12s ease, color 0.12s ease,
+        transform 0.12s ease;
+}
+
+/* Flip the chevron while the native dropdown is open (toggled in JS). */
+.select-wrapper.is-open .select-chevron {
+    transform: rotate(180deg);
+}
+
+.select-wrapper.is-open .select-chevron svg {
+    color: var(--accent) !important;
+}
+
+.select-chevron svg {
+    width: var(--dimension-8);
+    height: var(--dimension-10);
+    display: block;
+    color: currentColor;
+}
+
+.select-wrapper:hover .select-chevron {
+    color: var(--text-bright);
+}
+
+.select-wrapper:active .select-chevron {
+    color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- */
+/* Buttons                                                           */
+/* ---------------------------------------------------------------- */
+
+.btn {
+    border: var(--dimension-1) solid var(--border);
+    background: var(--bg-input);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: var(--dimension-3) var(--dimension-8);
+    font-size: var(--dimension-11);
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease,
+        color 0.12s ease;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-strong);
+    color: var(--text-bright);
+}
+
+.btn:active {
+    background: var(--bg-input-well);
+}
+
+.btn:focus-visible {
+    outline: var(--dimension-2) solid var(--accent);
+    outline-offset: var(--dimension-1);
+}
+
+.btn--ghost {
+    background: var(--accent-dim);
+}
+
+.btn--ghost:hover {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+
+.btn--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    font-weight: 600;
+}
+
+.btn--primary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    filter: brightness(1.1);
+}
+
+.btn--primary:active {
+    filter: brightness(0.92);
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.token {
+    background: var(--bg-input);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--dimension-3);
+    padding: var(--dimension-2) var(--dimension-2);
+    margin: 0;
+    font-family: var(--mono);
+    font-size: var(--dimension-10);
+    line-height: 1.4;
+    color: var(--accent);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    flex: 0 0 auto;
+    transition: border-color 0.12s ease, background 0.12s ease,
+        color 0.12s ease, opacity 0.12s ease;
+}
+
+.token:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--bg-hover);
+    color: var(--text-bright);
+}
+
+.token:active:not(:disabled) {
+    background: var(--bg-input-well);
+}
+
+.token:focus-visible {
+    outline: var(--dimension-2) solid var(--accent);
+    outline-offset: var(--dimension-1);
+}
+
+/* A token already present in the template is spent: dimmed, struck
+   through, and not clickable until it's removed from the field. */
+.token--used,
+.token:disabled {
+    color: var(--text-dim);
+    background: var(--bg-input-well);
+    border-color: var(--border-soft);
+    cursor: default;
+    opacity: 0.55;
+    text-decoration: line-through;
+}
+
+.preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--dimension-8);
+    margin-top: var(--dimension-3);
+    padding: var(--dimension-6) var(--dimension-8);
+    background: var(--bg-input-well);
+    border-radius: var(--radius);
+    border: var(--dimension-1) solid var(--border-soft);
+}
+
+.preview__label {
+    font-size: var(--dimension-10);
+    color: var(--text-dim);
+    flex: 0 0 auto;
+}
+
+.preview__value {
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    color: var(--accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    text-align: right;
+}
+
+/* ---------------------------------------------------------------- */
+/* Checkboxes                                                        */
+/* ---------------------------------------------------------------- */
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-8);
+    cursor: pointer;
+    font-size: var(--dimension-11-5);
+    color: var(--text);
+}
+
+.checkbox input {
+    accent-color: var(--accent);
+    width: var(--dimension-13);
+    height: var(--dimension-13);
+    margin: 0;
+    flex: 0 0 auto;
+}
+
+/* ---------------------------------------------------------------- */
+/* Scrollbars â€” thin, theme-matched (WebKit/CEF only)                */
+/* ---------------------------------------------------------------- */
+
+::-webkit-scrollbar {
+    width: var(--dimension-10);
+    height: var(--dimension-10);
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: var(--dimension-5);
+    border: var(--dimension-2) solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-dim);
+    background-clip: content-box;
+}
+
+
+/* ---------------------------------------------------------------- */
+/* Compact advanced UI                                               */
+/* ---------------------------------------------------------------- */
+
+.field-group--compact {
+    gap: var(--dimension-8);
+}
+
+.field-group--embedded {
+    padding: var(--dimension-8) 0;
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+}
+
+.field-group--embedded:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-title {
+    color: var(--text-dim);
+    font-size: var(--dimension-11);
+}
+
+.drawer {
+    border-bottom: var(--dimension-1) solid var(--border);
+    flex: 0 0 auto;
+}
+
+.drawer summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    min-height: var(--dimension-30);
+    gap: var(--dimension-7);
+    padding: var(--dimension-7) var(--dimension-12) var(--dimension-7) var(--dimension-27);
+    line-height: var(--dimension-16);
+    cursor: pointer;
+    position: relative;
+    color: var(--text-bright);
+    font-size: var(--dimension-11-5);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    user-select: none;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.drawer summary::-webkit-details-marker {
+    display: none;
+}
+
+.drawer__body {
+    padding: var(--dimension-12) var(--dimension-9);
+    max-height: calc(100vh - var(--dimension-200));
+}
+
+/* ---------------------------------------------------------------- */
+/* Snapshot timeline                                                 */
+/* ---------------------------------------------------------------- */
+
+.drawer__meta {
+    margin-left: auto;
+    font-size: var(--dimension-10);
+    color: var(--text-dim);
+    font-weight: 400;
+    font-family: var(--mono);
+    padding-right: var(--dimension-4);
+}
+
+.drawer__counter {
+    width: var(--dimension-26);
+    max-width: var(--dimension-26);
+    height: var(--dimension-14);
+    margin-left: auto;
+    margin-right: var(--dimension-8);
+    padding: 0 var(--dimension-5);
+    border: 0;
+    border-radius: var(--dimension-12);
+    background: var(--bg-input);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--dimension-9);
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn--micro {
+    padding: var(--dimension-1) var(--dimension-6);
+    font-size: var(--dimension-10);
+    flex: 1;
+}
+
+.btn--danger-armed {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--color-static-white);
+    font-weight: 600;
+}
+
+.btn--danger-armed:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--color-static-white);
+}
+
+.empty-state {
+    color: var(--text-dim);
+    font-size: var(--dimension-10-5);
+    padding: var(--dimension-16) var(--dimension-12);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.snooze-chip {
+    min-height: var(--dimension-18);
+    padding: var(--dimension-1) var(--dimension-8);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--dimension-9);
+    background: var(--bg-input-well);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease,
+        color 0.12s ease;
+}
+
+.snooze-chip:hover,
+.snooze-chip:focus-visible {
+    border-color: var(--border-strong);
+    color: var(--text-bright);
+    outline: none;
+}
+
+.snooze-chip--resume {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-text);
+}
+
+.drawer__meta--warn {
+    color: var(--warn);
+}
+
+.preview__value--warn {
+    color: var(--warn);
+}
+
+.drawer summary::before {
+    content: "";
+    position: absolute;
+    left: var(--dimension-15);
+    top: 50%;
+    width: var(--dimension-4-5);
+    height: var(--dimension-4-5);
+    border-right: var(--dimension-1) solid var(--text-dim);
+    border-bottom: var(--dimension-1) solid var(--text-dim);
+    transform: translateY(-50%) rotate(-45deg);
+    transform-origin: 50% 50%;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.drawer[open] summary::before {
+    transform: translateY(-65%) rotate(45deg);
+}
+
+.drawer summary:hover::before,
+.drawer summary:focus-visible::before {
+    border-color: var(--text-bright);
+}
+
+.drawer summary:hover > span:not(.drawer__meta),
+.drawer summary:focus-visible > span:not(.drawer__meta) {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: var(--dimension-1);
+    text-decoration-color: var(--text-dim);
+    text-underline-offset: var(--dimension-3);
+}
+
+.drawer__body--settings {
+    padding-top: 0;
+}
+
+.drawer__body--settings .field-group--embedded:first-child {
+    padding-top: var(--dimension-6);
+}
+
+.drawer__body--settings .field-group--embedded:last-child {
+    border-bottom: 0;
+}
+
+/* Unified settings row â€” one class for the label+content rows that used to
+   be .field-row, .preset-row and .profile-row (their styles were identical). */
+.settings-row {
+    display: grid;
+    grid-template-columns: var(--dimension-66) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--dimension-5);
+    margin-top: var(--dimension-3);
+}
+
+.settings-row__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dimension-5);
+    min-width: 0;
+}
+
+.settings-row__label {
+    margin-right: var(--dimension-2);
+    width: var(--dimension-64);
+    flex: 0 0 var(--dimension-64);
+    align-self: start;
+    min-height: var(--dimension-20);
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-dim);
+    font-size: var(--dimension-9-5);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.preset-chip {
+    height: var(--dimension-20);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--dimension-11);
+    background: var(--bg-input-well);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: var(--dimension-10);
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease,
+        color 0.12s ease;
+    flex: 0 0 calc(25% - var(--dimension-5));
+    text-align: center;
+}
+
+.preset-chip:hover,
+.preset-chip:focus-visible {
+    border-color: var(--border-strong);
+    color: var(--text-bright);
+    outline: none;
+}
+
+.preset-chip--active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+}
+
+.preset-chip--clear {
+    border: var(--dimension-1) solid var(--border);
+    color: var(--text-dim);
+    background: transparent;
+}
+
+.preset-chip--clear:hover,
+.preset-chip--clear:focus-visible {
+    border-width: var(--dimension-1);
+    border-style: solid;
+    border-color: var(--warn);
+    color: var(--warn);
+    background: var(--warn-tint);
+}
+
+/* Export / Clean actions read as secondary to the Compact / Pinned /
+   Auto-refresh view toggles, so they sit dimmer until hovered. */
+.table-action {
+    opacity: 0.5;
+}
+
+.table-action:hover,
+.table-action:focus-visible {
+    opacity: 1;
+}
+
+/* Armed ("click again to clean") state for the Clean icon button. */
+.table-action--armed,
+.table-action--armed:hover {
+    opacity: 1;
+    background: transparent;
+    border-color: transparent;
+    color: var(--danger);
+}
+
+.checkbox--inline {
+    width: auto;
+    gap: var(--dimension-2);
+    color: var(--text-dim);
+}
+
+.checkbox--inline span {
+    font-size: var(--dimension-10);
+}
+
+.btn--danger-confirm {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--color-static-white);
+    font-weight: 600;
+}
+
+.btn--danger-confirm:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: var(--color-static-white);
+}
+
+select,
+select option {
+    min-height: var(--compact-control-h);
+}
+
+select option {
+    padding: var(--dimension-3) var(--dimension-8);
+    line-height: var(--compact-control-h);
+}
+
+/* ---------------------------------------------------------------- */
+/* Hover / focus tooltips                                            */
+/*                                                                   */
+/* A single shared balloon, positioned by JS, that replaces the slow */
+/* native title tooltip with a themed one. Any element with a title  */
+/* (or data-tooltip) gets one automatically.                         */
+/* ---------------------------------------------------------------- */
+
+.tooltip {
+    position: fixed;
+    z-index: var(--tooltip-z-index);
+    left: 0;
+    top: 0;
+    max-width: var(--dimension-200);
+    padding: var(--dimension-4) var(--dimension-8);
+    border: var(--dimension-1) solid var(--menu-border);
+    border-radius: var(--radius);
+    background: var(--menu-bg);
+    color: var(--menu-text-strong);
+    font-size: var(--dimension-10);
+    line-height: 1.35;
+    text-align: center;
+    box-shadow: 0 var(--dimension-2) var(--dimension-8) var(--shadow);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(var(--dimension-3));
+    transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.tooltip--below {
+    transform: translateY(var(--dimension-neg-3));
+}
+
+.tooltip--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---------------------------------------------------------------- */
+/* Themed modal dialog (replaces the unstyled window.prompt)          */
+/* ---------------------------------------------------------------- */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--dimension-16);
+    background: var(--color-overlay-strong);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.modal-overlay.is-open {
+    opacity: 1;
+}
+
+.modal {
+    width: 100%;
+    max-width: var(--dimension-300, var(--dimension-280));
+    box-sizing: border-box;
+    padding: var(--dimension-14);
+    border: var(--dimension-1) solid var(--menu-border);
+    border-radius: var(--radius-lg);
+    background: var(--menu-bg);
+    color: var(--menu-text-strong);
+    box-shadow: 0 var(--dimension-12) var(--dimension-30) var(--shadow);
+    transform: translateY(var(--dimension-6)) scale(0.985);
+    transition: transform 0.12s ease;
+}
+
+.modal-overlay.is-open .modal {
+    transform: none;
+}
+
+.modal__title {
+    font-size: var(--dimension-13);
+    font-weight: 700;
+    color: var(--menu-text-strong);
+    margin-bottom: var(--dimension-4);
+}
+
+.modal__message {
+    margin: 0 0 var(--dimension-10);
+    font-size: var(--dimension-11);
+    line-height: 1.4;
+    color: var(--menu-text);
+}
+
+.modal__input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: var(--dimension-12);
+}
+
+.modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--dimension-8);
+}
+
+/* ---------------------------------------------------------------- */
+/* "Update available" banner (GitHub release check)                  */
+/* ---------------------------------------------------------------- */
+
+.update-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-8);
+    padding: var(--dimension-6) var(--dimension-10);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: var(--dimension-11);
+    flex: 0 0 auto;
+}
+
+.update-banner__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.update-banner__action {
+    flex: 0 0 auto;
+    padding: var(--dimension-2) var(--dimension-8);
+    border: var(--dimension-1) solid var(--accent-text);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--accent-text);
+    font-size: var(--dimension-10);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.update-banner__action:hover,
+.update-banner__action:focus-visible {
+    background: var(--accent-text);
+    color: var(--accent);
+    outline: none;
+}
+
+.update-banner__close {
+    flex: 0 0 auto;
+    width: var(--dimension-18);
+    height: var(--dimension-18);
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--accent-text);
+    font-size: var(--dimension-14);
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.update-banner__close:hover,
+.update-banner__close:focus-visible {
+    opacity: 1;
+    outline: none;
+}
+
+/* ---------------------------------------------------------------- */
+/* Interface polish                                                  */
+/* ---------------------------------------------------------------- */
+
+::selection {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+
+button,
+input,
+select,
+[role="button"] {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+}
+
+.drawer summary:hover,
+.drawer summary:focus-visible {
+    background: var(--bg-hover);
+}
+
+.drawer[open] > summary {
+    box-shadow: inset 0 var(--dimension-neg-1) 0 var(--border-soft);
+}

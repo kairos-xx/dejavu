@@ -1,0 +1,13 @@
+/* ================================================================
+   Save Interval drawer
+   ================================================================ */
+
+#intervalInput {
+    width: var(--dimension-64);
+    flex: 0 0 auto;
+    font-family: var(--mono);
+}
+
+#intervalUnit {
+    flex: 1;
+}

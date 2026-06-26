@@ -1,0 +1,857 @@
+/* ================================================================
+   Timeline drawer
+   ================================================================ */
+
+.version-list {
+    max-height: var(--dimension-280);
+}
+
+.timeline-day {
+    padding: 0;
+}
+
+.timeline-day__header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-sizing: border-box;
+    height: var(--day-header-h, var(--dimension-26));
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-8);
+    padding: var(--dimension-10);
+    background: var(--bg-raised);
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+    box-shadow: inset 0 var(--dimension-neg-1) 0 var(--border-soft);
+}
+
+.timeline-day__label {
+    font-size: var(--dimension-10);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.timeline-day__count {
+    width: var(--dimension-26);
+    max-width: var(--dimension-26);
+    height: var(--dimension-14);
+    margin-left: auto;
+    margin-right: var(--dimension-1);
+    padding: 0 var(--dimension-5);
+    min-width: var(--dimension-26);
+    border-radius: var(--dimension-12);
+    background: var(--bg-input);
+    color: var(--text-dim);
+    font-size: var(--dimension-9);
+    font-family: var(--mono);
+    display: inline-flex;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    justify-content: center;
+}
+
+/* The rail: a single vertical line that the dots sit on. */
+.timeline-rail {
+    position: relative;
+    padding: var(--dimension-4) 0;
+}
+
+.timeline-rail::before {
+    content: "";
+    position: absolute;
+    left: var(--dimension-14);
+    top: 0;
+    bottom: 0;
+    width: var(--dimension-1);
+    background: var(--border);
+}
+
+/* Light-mode contrast: the panel's soft borders wash out on near-white
+   chrome, so the timeline connector rail and the round select boxes of
+   all three tables need a darker line to stay legible. */
+html.theme-light .timeline-rail::before {
+    background: var(--border-strong);
+}
+
+.snapshot {
+    position: relative;
+    padding: var(--dimension-4) var(--dimension-18) var(--dimension-4) var(--dimension-28);
+    outline: none;
+    transition: background 0.12s ease;
+    /* display: flex; */
+}
+
+.snapshot:hover,
+.snapshot:focus-visible {
+    background: var(--bg-hover);
+}
+
+.snapshot--selected {
+    background: var(--accent-glow);
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent);
+}
+
+.snapshot:focus-visible {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent);
+}
+
+.snapshot--pinned {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent-dim),
+                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin);
+}
+
+.snapshot--comment {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent-dim),
+                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-note);
+}
+
+.snapshot--pinned.snapshot--comment {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent-dim),
+                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin),
+                inset calc(var(--dimension-2) * 3) 0 0 var(--color-row-flag-note);
+}
+
+.snapshot--selected.snapshot--pinned {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent),
+                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin);
+}
+
+.snapshot--selected.snapshot--comment {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent),
+                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-note);
+}
+
+.snapshot--selected.snapshot--pinned.snapshot--comment {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent),
+                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin),
+                inset calc(var(--dimension-2) * 3) 0 0 var(--color-row-flag-note);
+}
+
+/* The node dot, centered on the rail line at left:var(--dimension-14). */
+.snapshot__dot {
+    -webkit-appearance: none;
+    appearance: none;
+    position: absolute;
+    left: var(--dimension-10);
+    top: var(--dimension-7);
+    width: var(--dimension-9);
+    height: var(--dimension-9);
+    border-radius: 50%;
+    background: var(--bg-input-well);
+    border: var(--dimension-2) solid var(--border-strong);
+    box-sizing: border-box;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.snapshot:hover .snapshot__dot {
+    border-color: var(--text-dim);
+}
+
+.snapshot__dot:focus-visible {
+    outline: var(--dimension-1) solid var(--accent);
+    outline-offset: var(--dimension-2);
+}
+
+.snapshot__dot:disabled {
+    cursor: not-allowed;
+}
+
+.snapshot--pinned .snapshot__dot {
+    background: var(--color-row-pin-fill);
+    border-color: var(--warn-gold);
+}
+
+/* The latest snapshot is the current state â€” accent dot + glow. */
+.snapshot--latest .snapshot__dot {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 var(--dimension-3) var(--accent-glow);
+}
+
+.snapshot--protected:not(.snapshot--latest) .snapshot__dot {
+    border-color: var(--warn);
+    background: var(--warn-tint);
+}
+
+/* Protected (pinned) on latest keeps blue fill and ring, yellow border */
+.snapshot--latest.snapshot--protected .snapshot__dot {
+    background: var(--accent);
+    border-color: var(--warn);
+    box-shadow: 0 0 0 var(--dimension-3) var(--accent-glow);
+}
+
+.snapshot--protected {
+    box-shadow: inset var(--dimension-2) 0 0 var(--warn-tint);
+}
+
+.snapshot--has-note {
+    box-shadow: inset var(--dimension-2) 0 0 var(--accent-glow);
+}
+
+/* Cumulative borders: pinned + note */
+.snapshot--protected.snapshot--has-note {
+    box-shadow: inset var(--dimension-4) 0 0 var(--warn-tint), inset var(--dimension-2) 0 0 var(--accent-glow);
+}
+
+.snapshot--missing {
+    background: var(--bg-input-well);
+    opacity: 0.72;
+}
+
+.snapshot--missing:hover {
+    background: var(--bg-input-well);
+}
+
+.snapshot--missing .snapshot__name,
+.snapshot--missing .snapshot__filename {
+    text-decoration: line-through !important;
+    color: var(--text-dim) !important;
+}
+
+.snapshot--missing .snapshot__name:hover,
+.snapshot--missing .snapshot__name:focus-visible,
+.snapshot--missing .snapshot__filename:hover,
+.snapshot--missing .snapshot__filename:focus-visible {
+    text-decoration: line-through !important;
+    border-bottom-color: transparent !important;
+}
+
+.snapshot--missing .snapshot__name:disabled,
+.snapshot--missing .snapshot__filename:disabled {
+    cursor: not-allowed;
+}
+
+.snapshot--missing .snapshot__delta {
+    opacity: 0.5;
+    background: var(--bg-input-well);
+    color: var(--text-dim);
+}
+
+.snapshot--missing .snapshot__dot {
+    opacity: 0.25;
+}
+
+.snapshot__time {
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    color: var(--text-bright);
+    font-weight: 500;
+}
+
+button.snapshot__time {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0 0 var(--dimension-1) 0;
+    border: var(--dimension-2) solid transparent;
+    outline: none;
+    /* vertical-align: middle; */
+    background: none;
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    color: var(--accent);
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    flex: 0 1 auto;
+    /* min-width: 0; */
+    /* display: flex; */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-bottom: var(--dimension-1) dotted transparent;
+    text-decoration: none;
+    text-underline-offset: var(--dimension-3);
+}
+
+button.snapshot__time:hover {
+    color: var(--text-bright);
+    border-bottom-color: transparent;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+}
+
+button.snapshot__time:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.snapshot__top {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-6);
+    white-space: nowrap;
+}
+
+.snapshot__time-container {
+    margin-left: auto;
+    flex-shrink: 0;
+    margin-right: var(--dimension-2);
+    display: flex;
+    background: var(--bg-hover);
+}
+
+.snapshot__right-group {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-6);
+    flex-shrink: 0;
+}
+
+.snapshot__time-separator {
+    margin: 0 var(--dimension-6);
+    color: var(--border-strong);
+    font-size: var(--dimension-10);
+}
+
+
+
+.snapshot__badge--first {
+    color: var(--text-dim) !important;
+    background: var(--bg-hover) !important;
+}
+
+.snapshot__badge--protected {
+    color: var(--warn);
+    background: var(--warn-tint);
+    border: var(--dimension-1) solid var(--warn);
+    line-height: 1.2;
+}
+
+.snapshot__rel {
+    font-weight: 800;
+    width: var(--dimension-72);
+    font-size: var(--dimension-8-5);
+    letter-spacing: 0;
+    color: var(--text-dim);
+    height: var(--dimension-14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--dimension-2) var(--dimension-6);
+    border-radius: var(--dimension-3);
+    background: var(--bg-hover);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.snapshot__top > .snapshot__rel {
+    margin-left: 0;
+}
+
+.snapshot__rel--under-size {
+    text-align: left;
+}
+
+.snapshot__badge--under-delta {
+    text-align: center;
+}
+
+.snapshot__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-8);
+    margin-top: var(--dimension-2);
+}
+
+.snapshot__name {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+    border: 0;
+    border-bottom: var(--dimension-1) dotted transparent;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    color: var(--accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.snapshot__name:hover,
+.snapshot__name:focus-visible {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: var(--dimension-3);
+    border-bottom-color: currentColor;
+    outline: none;
+    color: var(--text-bright);
+}
+
+/* Recovery Center filename uses the exact same link style as the Open
+   Documents filename (N20): blue + monospaced var(--dimension-10), with a colour shift
+   and dotted underline on hover. */
+.snapshot__filename {
+    font-family: var(--mono);
+    font-size: var(--dimension-10);
+    color: var(--accent);
+    border-bottom: var(--dimension-1) dotted transparent;
+}
+
+.snapshot__filename:hover,
+.snapshot__filename:focus-visible {
+    color: var(--text-bright);
+    border-bottom-color: currentColor;
+    outline: none;
+}
+
+.snapshot__note {
+    margin-top: var(--dimension-2);
+    padding-left: var(--dimension-7);
+    border-left: var(--dimension-2) solid var(--border-strong);
+    color: var(--accent-dim);
+    font-size: var(--dimension-9-5);
+    height: var(--dimension-16);
+    min-height: var(--dimension-16);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: text;
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+}
+
+.snapshot__note:not(.snapshot__note--empty) {
+    border-left-color: var(--accent);
+}
+.snapshot--missing .snapshot__size {
+    color: var(--text-dim);
+}
+
+.snapshot--missing .snapshot__time {
+    color: var(--text-dim);
+}
+.snapshot--missing .snapshot__badge {
+    background: var(--bg-raised) !important;
+    color: var(--text-dim) !important;
+}
+
+.snapshot--missing .snapshot__note {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.snapshot__note--empty {
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+.snapshot__note[role="button"]:hover,
+.snapshot__note[role="button"]:focus-visible {
+    color: var(--text-bright);
+    border-left-color: var(--accent);
+    outline: none;
+}
+
+.snapshot__note[data-editing="true"] {
+    border-left-color: var(--accent);
+    color: var(--accent-dim);
+    font-style: normal;
+}
+
+.snapshot__note-input {
+    height: var(--dimension-16);
+    outline: none;
+    padding: 0 var(--dimension-4) !important;
+    border: var(--dimension-1) solid var(--accent) !important;
+    border-left: none !important;
+    margin-left: calc(-1 * var(--dimension-4));
+    border-radius: 0 var(--radius) var(--radius) 0 !important;
+    background: var(--bg-input) !important;
+    color: var(--accent) !important;
+    font-family: var(--mono) !important;
+    font-size: var(--dimension-9-5) !important;
+    flex: 1 1 auto;
+}
+
+.snapshot__note-input::placeholder {
+    color: inherit;
+    opacity: 1;
+}
+
+.snapshot__size {
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    color: var(--text);
+    flex: 0 0 var(--dimension-54);
+    min-width: var(--dimension-54);
+    text-align: right;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.snapshot__delta {
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    flex: 0 0 var(--dimension-58);
+    min-width: var(--dimension-58);
+    padding: 0 var(--dimension-5);
+    border-radius: var(--dimension-7);
+    line-height: 1.5;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.snapshot__delta--initial {
+    color: var(--text-dim);
+    background: var(--bg-hover);
+    margin-left: auto;
+}
+
+.snapshot__delta--up {
+    color: var(--warn);
+    background: var(--warn-tint);
+}
+
+.snapshot__delta--down {
+    color: var(--ok);
+    background: var(--ok-tint);
+}
+
+.snapshot__delta--flat {
+    color: var(--text-dim);
+}
+
+.snapshot__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-2);
+}
+
+.snapshot__path {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    color: var(--text-dim);
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.snapshot__path:hover,
+.snapshot__path:focus-visible {
+    color: var(--text);
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: var(--dimension-3);
+    outline: none;
+}
+
+.snapshot__path:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.snapshot__note-container {
+    margin-top: var(--dimension-2);
+}
+
+.snapshot__note-container--missing {
+    opacity: 0.5;
+}
+
+.snapshot__note-btn {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: var(--dimension-9);
+    color: var(--text-dim);
+    cursor: pointer;
+    text-align: left;
+    margin-left: var(--dimension-8);
+}
+
+.snapshot__note-btn:hover {
+    color: var(--text);
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: var(--dimension-3);
+}
+
+.snapshot__note-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.snapshot__actions {
+    display: flex;
+    gap: var(--dimension-4);
+    height: var(--dimension-22);
+    max-height: none;
+    margin-top: var(--dimension-6);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+}
+
+.snapshot:hover .snapshot__actions,
+.snapshot:focus-within .snapshot__actions,
+.snapshot:focus-visible .snapshot__actions {
+    max-height: none;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.12s ease;
+}
+
+
+/* Row 1: the filter input + sort dropdown sit together. Row 2 (the
+   action buttons) lives in its own .timeline-actions toolbar below. */
+.timeline-search {
+    display: flex;
+    align-items: stretch;
+    gap: var(--dimension-6);
+}
+
+/* Compact / Pinned-only / Auto-refresh as small icon toggles pinned to
+   the top-left of the timeline table. */
+.table-toggles {
+    gap: var(--dimension-3);
+    width: 100%;
+    margin-left: var(--dimension-6);
+}
+
+/* Export CSV + Clean icon buttons, pushed to the right edge of the
+   table-toggles row. */
+.table-actions {
+    gap: var(--dimension-3);
+}
+
+.timeline-actions {
+    margin-top: var(--dimension-6);
+}
+
+.timeline-bulk {
+    gap: var(--dimension-4);
+    margin-top: var(--dimension-6);
+    padding: var(--dimension-2) var(--dimension-6);
+    border: var(--dimension-1) solid var(--accent);
+    border-radius: var(--radius);
+    background: var(--accent-glow);
+}
+
+.timeline-bulk__count {
+    margin-right: auto;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: var(--dimension-9-5);
+    flex: 1 1 50%;
+}
+
+.timeline-filter {
+    min-width: var(--dimension-106);
+    flex: 1 1 auto;
+}
+
+.timeline-sort {
+    min-width: var(--dimension-132);
+    flex: 0 0 auto;
+}
+
+.timeline-range {
+    min-width: var(--dimension-100);
+    flex: 0 0 auto;
+}
+
+.timeline-options {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-4);
+    padding: var(--dimension-8) var(--dimension-1) 0;
+}
+
+.timeline-options__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-4);
+    flex: 1;
+}
+
+.timeline-options .checkbox--inline span {
+    font-size: var(--dimension-9);
+}
+
+.timeline-option-action {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: var(--dimension-2) var(--dimension-5);
+    font-size: var(--dimension-10);
+}
+
+.timeline-insights {
+    display: grid;
+    grid-template-columns: var(--dimension-24) minmax(0, 1fr);
+    align-items: center;
+    margin-top: var(--dimension-8);
+    padding: var(--dimension-8) var(--dimension-8) var(--dimension-8) var(--dimension-4);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--radius);
+    background: var(--bg-input-well);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.timeline-insights__content {
+    min-width: 0;
+}
+.timeline-insights__refresh {
+    width: var(--dimension-22);
+    height: var(--dimension-22);
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-dim);
+    font-family: var(--sans);
+    font-size: var(--dimension-18);
+    line-height: var(--dimension-20);
+    text-align: center;
+    cursor: pointer;
+    transition: color 0.12s ease, border-color 0.12s ease,
+        background 0.12s ease, transform 0.12s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+.timeline-insights__refresh:hover,
+.timeline-insights__refresh:focus-visible {
+    color: var(--accent);
+    border: none;
+    background: none;
+    outline: none;
+}
+.timeline-insights__refresh:focus {
+    outline: none;
+}
+
+.timeline-insights__refresh:active {
+    transform: rotate(45deg);
+    outline: none;
+    border: none;
+    background: none !important;
+}
+
+.timeline-insights__labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--dimension-8);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: var(--dimension-9);
+    white-space: nowrap;
+}
+
+.timeline-insights__labels span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.timeline-insights__labels span:last-child {
+    flex: 0 0 auto;
+}
+
+.timeline-insights__track {
+    height: var(--dimension-3);
+    margin-top: var(--dimension-6);
+    border-radius: var(--dimension-2);
+    overflow: hidden;
+    background: var(--bg-input);
+}
+
+.timeline-insights__fill {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent);
+    transition: width 0.2s ease, background 0.2s ease;
+}
+
+.timeline-insights__fill--warn {
+    background: var(--warn);
+}
+
+.timeline-insights__fill--over {
+    background: var(--danger);
+}
+
+/* Compact timeline: only hide notes and filename */
+.version-list--compact .snapshot__note {
+    display: none;
+}
+
+.version-list--compact .snapshot__note-btn {
+    display: none;
+}
+
+.version-list--compact .snapshot__name {
+    display: none;
+}
+
+.version-list--compact .snapshot__meta {
+    display: none;
+}
+
+.version-list--compact .snapshot__dot {
+    top: var(--dimension-7);
+}
+
+.version-list--compact .snapshot__actions {
+    display: none;
+    height: 0;
+    margin: 0;
+    max-height: 0;
+}
+
+.btn,
+.preset-chip,
+.snooze-chip,
+.table-toggle {
+    transition: border-color 0.12s ease,
+        color 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
+}
+
+.btn:active:not(:disabled),
+.preset-chip:active:not(:disabled),
+.snooze-chip:active:not(:disabled),
+.table-toggle:active:not(:disabled) {
+    transform: translateY(var(--dimension-1));
+}
+
+.snapshot__note[role="button"] {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    transition: color 0.12s ease, background-color 0.12s ease,
+        border-color 0.12s ease;
+}
+
+.snapshot__dot::after {
+    content: "";
+    position: absolute;
+    inset: var(--dimension-neg-4);
+    border-radius: 50%;
+}

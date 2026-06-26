@@ -1,0 +1,11 @@
+{
+  "exclude": [
+    ".dev",
+    ".history"
+  ],
+  "extraPaths": [
+    "/opt/anaconda3/lib/python3.13/site-packages"
+  ],
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "strict"
+}

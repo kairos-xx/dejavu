@@ -1,0 +1,143 @@
+/* ================================================================
+   Recovery Center drawer
+   ================================================================ */
+
+/* Keep the day headers ("Today" etc.) pinned to the top while rows
+   scroll, and start the scrollbar just BELOW that pinned header by
+   insetting the scrollbar track by one header height. Applies to both
+   the timeline and the Recovery Center lists. */
+.version-list::-webkit-scrollbar-track,
+.recovery-list::-webkit-scrollbar-track {
+    margin-top: var(--day-header-h, var(--dimension-26));
+}
+
+/* Hide vertical line in Recovery Center */
+#recoveryCandidateList .timeline-rail::before {
+    display: none;
+}
+
+.recovery-list {
+    margin-top: var(--dimension-7);
+    max-height: var(--dimension-210);
+}
+
+.recovery-actions {
+    width: 100%;
+}
+
+.recovery-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.recovery-item {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-8);
+    padding: var(--dimension-7) var(--dimension-8) var(--dimension-7) var(--dimension-8);
+    padding-right: var(--dimension-15);
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+}
+
+.recovery-item:last-child {
+    border-bottom: 0;
+}
+
+.recovery-item__info {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.recovery-item__name {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    border-bottom: var(--dimension-1) dotted transparent;
+    background: transparent;
+    color: var(--text-bright);
+    font-family: inherit;
+    font-size: var(--dimension-10-5);
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.recovery-item__path {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-block;
+    max-width: 100%;
+    margin-top: var(--dimension-2);
+    padding: 0;
+    border: 0;
+    border-bottom: var(--dimension-1) dotted transparent;
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: var(--dimension-8-5);
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.recovery-item__name:hover,
+.recovery-item__name:focus-visible,
+.recovery-item__path:hover,
+.recovery-item__path:focus-visible {
+    border-bottom-color: currentColor;
+    outline: none;
+}
+
+.recovery-item__age {
+    margin-top: var(--dimension-2);
+    color: var(--text-dim);
+    font-size: var(--dimension-8-5);
+}
+
+.recovery-item__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: var(--dimension-7);
+}
+
+.recovery-item__action {
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-dim);
+    font: inherit;
+    font-size: var(--dimension-10);
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.recovery-item__action:hover,
+.recovery-item__action:focus-visible {
+    color: var(--accent);
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: var(--dimension-3);
+    outline: none;
+}
+
+.recovery-item--missing {
+    opacity: 0.5;
+}
+
+.recovery-item--missing .recovery-item__name,
+.recovery-item--missing .recovery-item__path {
+    text-decoration: line-through;
+    color: var(--text-dim);
+}
+
+.recovery-item--missing .recovery-item__name:disabled,
+.recovery-item--missing .recovery-item__path:disabled {
+    cursor: not-allowed;
+}

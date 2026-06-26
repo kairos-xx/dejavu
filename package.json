@@ -1,0 +1,15 @@
+{
+  "name": "dejavu",
+  "version": "2026.6.25-r32",
+  "description": "Timed, change-aware DejaVu panel for Adobe Illustrator (CEP + UXP).",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint client/js host *.js",
+    "format": "prettier --write \"client/**/*.{js,css,html}\" \"host/**/*.js\" \"*.md\""
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0"
+  }
+}

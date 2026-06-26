@@ -1,0 +1,157 @@
+/* ================================================================
+   Locations drawer
+   ================================================================ */
+
+.folder-template-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dimension-5);
+    margin-top: var(--dimension-5);
+    padding-top: var(--dimension-9);
+    border-top: var(--dimension-1) solid var(--border-soft);
+}
+
+/* Filename template uses monospace since tokens read better fixed-width */
+#templateInput {
+    width: 100%;
+    font-family: var(--mono);
+    letter-spacing: var(--dimension-0-1);
+}
+
+.template-editor {
+    width: 100%;
+    min-height: var(--dimension-30);
+    padding: var(--dimension-5) var(--dimension-7);
+    border: var(--dimension-1) solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-input-well);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: var(--dimension-11);
+    line-height: var(--dimension-20);
+    letter-spacing: var(--dimension-0-1);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    cursor: text;
+}
+
+.template-editor:hover {
+    border-color: var(--border-strong);
+}
+
+.template-editor:focus,
+.template-editor:focus-within {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 var(--dimension-1) var(--accent-glow);
+}
+
+/* Folder template: row of [token] / [editable middle] / [token]. Only the
+   middle (.folder-tpl-mid) is editable, so the caret can never land before
+   the fixed $defaultFolder token. */
+.template-editor--folder {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dimension-2);
+    white-space: normal;
+}
+
+.folder-tpl-sep {
+    color: var(--text-dim);
+    font-family: var(--mono);
+    user-select: none;
+}
+
+.folder-tpl-sep.is-hidden {
+    display: none;
+}
+
+.folder-tpl-mid {
+    min-width: var(--dimension-40);
+    outline: none;
+    white-space: pre;
+    overflow-wrap: normal;
+}
+
+.folder-tpl-mid:empty::before {
+    content: "subfolder";
+    color: var(--text-dim);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+body.token-input-dragging,
+body.token-input-dragging * {
+    cursor: grabbing !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
+#folderInput {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--mono);
+    font-size: var(--dimension-10-5);
+    padding-right: var(--dimension-22);
+}
+#folderInput:focus {
+    outline: none;
+}
+/* Editable default-folder field with an inline live-validity dot. */
+.folder-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.folder-validity {
+    position: absolute;
+    right: var(--dimension-8);
+    top: 50%;
+    width: var(--dimension-8);
+    height: var(--dimension-8);
+    margin-top: var(--dimension-neg-4);
+    border-radius: 50%;
+    background: transparent;
+    pointer-events: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.folder-validity--checking {
+    background: var(--text-dim);
+    opacity: 0.6;
+}
+
+.folder-validity--ok {
+    background: var(--ok);
+    box-shadow: 0 0 var(--dimension-4) 0 var(--ok);
+}
+
+.folder-validity--missing {
+    background: var(--warn);
+    box-shadow: 0 0 var(--dimension-4) 0 var(--warn);
+}
+
+.folder-field--missing #folderInput {
+    border-color: var(--warn);
+}
+
+.folder-field--ok #folderInput:not(:focus):not(:hover) {
+    border-color: var(--border-soft);
+}
+
+/* ---------------------------------------------------------------- */
+/* Template tokens                                                   */
+/* ---------------------------------------------------------------- */
+
+.tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--dimension-4);
+    margin-top: var(--dimension-1);
+    padding-bottom: var(--dimension-2);
+}
+

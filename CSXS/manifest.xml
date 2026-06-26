@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest Version="11.0" ExtensionBundleId="com.joaodev.dejavu"
+    ExtensionBundleVersion="1.5.1"
+    ExtensionBundleName="DejaVu">
+    <ExtensionList>
+        <Extension Id="com.joaodev.dejavu.panel" Version="1.5.1" />
+    </ExtensionList>
+    <ExecutionEnvironment>
+        <HostList>
+            <Host Name="ILST" Version="[26.0,99.9]" />
+        </HostList>
+        <LocaleList>
+            <Locale Code="All" />
+        </LocaleList>
+        <RequiredRuntimeList>
+            <RequiredRuntime Name="CSXS" Version="11.0" />
+        </RequiredRuntimeList>
+    </ExecutionEnvironment>
+    <DispatchInfoList>
+        <Extension Id="com.joaodev.dejavu.panel">
+            <DispatchInfo>
+                <Resources>
+                    <MainPath>./client/index.html</MainPath>
+                    <ScriptPath>./host/host.jsx</ScriptPath>
+                    <CEFCommandLine>
+                        <Parameter>--enable-nodejs</Parameter>
+                        <Parameter>--mixed-context</Parameter>
+                    </CEFCommandLine>
+                </Resources>
+                <Lifecycle>
+                    <AutoVisible>true</AutoVisible>
+                </Lifecycle>
+                <UI>
+                    <Type>Panel</Type>
+                    <Menu>DejaVu</Menu>
+                    <Geometry>
+                        <Size>
+                            <Height>560</Height>
+                            <Width>500</Width>
+                        </Size>
+                        <MinSize>
+                            <Height>480</Height>
+                            <Width>450</Width>
+                        </MinSize>
+                        <MaxSize>
+                            <Height>1000</Height>
+                            <Width>600</Width>
+                        </MaxSize>
+                    </Geometry>
+                    <Icons>
+                        <Icon Type="Normal">./icons/plugin-icon-light.svg</Icon>
+                        <Icon Type="RollOver">./icons/plugin-icon-lightest.svg</Icon>
+                        <Icon Type="Disabled">./icons/plugin-icon-lightest.svg</Icon>
+                        <Icon Type="DarkNormal">./icons/plugin-icon-dark.svg</Icon>
+                        <Icon Type="DarkRollOver">./icons/plugin-icon-darkest.svg</Icon>
+                    </Icons>
+                </UI>
+            </DispatchInfo>
+        </Extension>
+    </DispatchInfoList>
+</ExtensionManifest>

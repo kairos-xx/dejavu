@@ -1,0 +1,9 @@
+.history/
+.dev/
+.claude/
+.debug
+.DS_Store
+build/
+node_modules/
+__pycache__/
+*.pyc

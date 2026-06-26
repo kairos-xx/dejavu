@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>DejaVu</title>
+    <script>
+        // Give every panel opening a unique URL so closing and reopening
+        // always reads the latest CSS/JS from disk.
+        window.__DEJAVU_ASSET_RELOAD_TOKEN__ = String(Date.now());
+        (() => {
+            const token = window.__DEJAVU_ASSET_RELOAD_TOKEN__;
+            const styles = [
+                "./css/style.css",
+                "./css/top.css",
+                "./css/interval.css",
+                "./css/locations.css",
+                "./css/table.css",
+                "./css/timeline.css",
+                "./css/recovery.css",
+                "./css/open.css",
+                "./css/advanced.css",
+                "./css/bottom.css",
+                "./css/update-install.css"
+            ];
+            styles.forEach((stylePath) => {
+                document.write(
+                    `<link rel="stylesheet" href="${stylePath}?reload=${token}" />`
+                );
+            });
+        })();
+    </script>
+</head>
+<body>
+    <div class="app">
+        <header class="app__header">
+            <div class="app__title">
+                <span class="app__dot" id="statusDot"></span>
+                <span class="svg-icon app__logo" id="appLogo" aria-hidden="true"></span>
+                <h1>DejaVu</h1>
+            </div>
+            <!-- <span class="app__mode-tag" id="modeTag">Off all</span> -->
+        </header>
+
+        <div class="saving-bar" id="savingBar" aria-hidden="true">
+            <div class="saving-bar__track">
+                <div class="saving-bar__pulse"></div>
+            </div>
+        </div>
+
+        <div class="mode-seg" id="modeSeg" role="group" aria-label="Dejavu mode">
+            <button class="mode-seg__btn" type="button" data-mode="offAll">
+                Off all
+            </button>
+            <button class="mode-seg__btn" type="button" data-mode="offCurrent">
+                Off current
+            </button>
+            <button class="mode-seg__btn" type="button" data-mode="onCurrent">
+                On current
+            </button>
+            <button class="mode-seg__btn" type="button" data-mode="onAll">
+                On all
+            </button>
+        </div>
+
+        <section class="status">
+            <div class="status__row">
+                <span class="status__label">Document</span>
+                <span class="status__value" id="docNameValue">—</span>
+            </div>
+            <div class="status__row">
+                <span class="status__label">Format</span>
+                <span class="status__value" id="formatValue">—</span>
+            </div>
+            <div class="status__row">
+                <span class="status__label">Last dejavu</span>
+                <span class="status__value" id="lastSavedValue">never</span>
+            </div>
+            <div class="status__row">
+                <span class="status__label" id="nextCheckLabel">Next check</span>
+                <span class="status__value status__value--countdown">
+                    <svg
+                        class="countdown-pie"
+                        id="countdownPie"
+                        viewBox="0 0 16 16"
+                        width="14"
+                        height="14"
+                        aria-hidden="true"
+                    >
+                        <circle
+                            class="countdown-pie__track"
+                            cx="8"
+                            cy="8"
+                            r="6.5"
+                        ></circle>
+                        <circle
+                            class="countdown-pie__sweep"
+                            id="countdownPieSweep"
+                            cx="8"
+                            cy="8"
+                            r="6.5"
+                        ></circle>
+                    </svg>
+                    <span id="nextCheckValue">—</span>
+                </span>
+            </div>
+            <div class="status__row">
+                <span class="status__label">Mode</span>
+                <span class="status__value" id="modeValue">—</span>
+            </div>
+            <div class="status__row">
+                <span class="status__label">Session</span>
+                <span class="status__value" id="sessionStatsValue">0 saves</span>
+            </div>
+            <div class="status__row">
+                <span class="status__label">Dejavu folder</span>
+                <span class="status__folder-wrap">
+                    <span
+                        class="status__value status__value--path"
+                        id="folderStatusValue"
+                        role="button"
+                        tabindex="0"
+                    >—</span>
+                    <span class="folder-balloon" id="folderBalloon" hidden>
+                        <button
+                            class="folder-balloon__action"
+                            id="folderBalloonCopyBtn"
+                            type="button"
+                        >Copy path</button>
+                    </span>
+                </span>
+            </div>
+            <div class="snooze-bar" id="snoozeBar">
+                <span class="snooze-bar__label" id="snoozeLabel">Pause</span>
+                <div class="snooze-bar__chips" id="snoozeChips">
+                    <button class="snooze-chip" type="button" data-snooze="300">5m</button>
+                    <button class="snooze-chip" type="button" data-snooze="900">15m</button>
+                    <button class="snooze-chip" type="button" data-snooze="3600">1h</button>
+                    <button class="snooze-chip" type="button" data-snooze="7200">2h</button>
+                    <button class="snooze-chip" type="button" data-snooze-until="tomorrow">Tomorrow</button>
+                </div>
+                <button
+                    class="snooze-chip snooze-chip--resume"
+                    type="button"
+                    id="snoozeResumeBtn"
+                    hidden
+                >Resume</button>
+            </div>
+        </section>
+
+        <details class="drawer settings-drawer" id="saveSettingsDrawer" open>
+            <summary>
+                <span>Save interval</span>
+            </summary>
+            <div class="drawer__body drawer__body--settings">
+                <section class="field-group field-group--embedded">
+                    <div class="settings-row">
+                        <label class="settings-row__label" for="intervalInput">Interval</label>
+                        <div class="settings-row__pills">
+                            <div class="number-input-group">
+                                <div class="number-spin-buttons">
+                                    <div class="number-spin-button" data-target="intervalInput" data-action="up">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                    </div>
+                                    <div class="number-spin-button" data-target="intervalInput" data-action="down">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                    </div>
+                                </div>
+                                <input
+                                    type="number"
+                                    id="intervalInput"
+                                    min="1"
+                                    step="1"
+                                    value="2"
+                                />
+                            </div>
+                            <div class="select-wrapper">
+                                <select id="intervalUnit">
+                                    <option value="1">seconds</option>
+                                    <option value="60" selected>minutes</option>
+                                    <option value="3600">hours</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-row" id="intervalPresets">
+                        <span class="settings-row__label">TEMPLATES</span>
+                        <div class="settings-row__pills">
+                            <button class="preset-chip" type="button" data-seconds="30">30s</button>
+                            <button class="preset-chip" type="button" data-seconds="60">1m</button>
+                            <button class="preset-chip" type="button" data-seconds="900">15m</button>
+                            <button class="preset-chip" type="button" data-seconds="3600">1h</button>
+                        </div>
+                    </div>
+                    <div class="settings-row" id="safetyProfiles">
+                        <span class="settings-row__label">Profile</span>
+                        <div class="settings-row__pills">
+                            <button class="preset-chip" type="button" data-profile="maximum">Maximum</button>
+                            <button class="preset-chip" type="button" data-profile="balanced">Balanced</button>
+                            <button class="preset-chip" type="button" data-profile="light">Light</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </details>
+
+        <details class="drawer settings-drawer" id="locationsDrawer">
+            <summary>
+                <span>Locations</span>
+            </summary>
+            <div class="drawer__body drawer__body--settings">
+                <section class="field-group field-group--embedded">
+                    <label class="field-label" for="folderInput">
+                        Default save folder (unsaved documents only)
+                    </label>
+                    <div class="field-row">
+                        <span class="folder-field" id="folderField">
+                            <input
+                                type="text"
+                                id="folderInput"
+                                placeholder="Type a path or browse…  (~/ = home)"
+                                autocomplete="off"
+                                autocapitalize="off"
+                                spellcheck="false"
+                            />
+                            <span
+                                class="folder-validity"
+                                id="folderValidity"
+                                aria-hidden="true"
+                            ></span>
+                        </span>
+                        <button class="btn" id="browseFolderBtn">
+                            Browse…
+                        </button>
+                    </div>
+                    <p class="field-hint">
+                        Saved documents dejavu beside their file. This folder
+                        is only for unsaved documents.
+                    </p>
+                    <div class="folder-template-group">
+                        <label class="field-label" id="folderTemplateEditorLabel">
+                            Dejavu folder template
+                        </label>
+                        <div
+                            class="template-editor template-editor--folder"
+                            id="folderTemplateEditor"
+                            role="group"
+                            aria-labelledby="folderTemplateEditorLabel"
+                        ></div>
+                        <input type="hidden" id="folderTemplateInput" />
+                        <p class="field-hint">
+                            Document-folder and filename tokens are required.
+                        </p>
+                    </div>
+                </section>
+
+                <section class="field-group field-group--embedded">
+                    <label class="field-label" id="templateEditorLabel">
+                        Filename template
+                    </label>
+                    <div id="templateEditor" aria-labelledby="templateEditorLabel"></div>
+                    <input type="hidden" id="templateInput" value="$filename_$hh$mm$ss_$dd$MM$YYYY" />
+                    <div class="tokens" id="tokensList"></div>
+                    <div class="settings-row" id="templatePresets">
+                        <span class="settings-row__label">TEMPLATES</span>
+                        <div class="settings-row__pills">
+                            <button class="preset-chip" type="button" data-template="$filename_$hh$mm$ss_$dd$MM$YYYY">Time + date</button>
+                            <button class="preset-chip" type="button" data-template="$filename_$hh$mm$ss">Time only</button>
+                            <button class="preset-chip" type="button" data-template="$filename_$counter">Counter</button>
+                            <button class="preset-chip preset-chip--clear" id="clearTemplateBtn" type="button">Clear</button>
+                        </div>
+                    </div>
+                    <div class="preview">
+                        <span class="preview__value" id="templatePreview">—</span>
+                        <span class="preview__label">Preview</span>
+                    </div>
+                    <p class="field-hint">
+                        Use tokens to customize the dejavu filename format.
+                    </p>
+                </section>
+            </div>
+        </details>
+
+        <details class="drawer" id="versionDrawer" open>
+            <summary>
+                <span>Timeline</span>
+                <span
+                    class="drawer__meta drawer__counter"
+                    id="versionCount"
+                >0</span>
+            </summary>
+            <div class="drawer__body">
+                <div class="timeline-search">
+                    
+                    <input
+                        class="timeline-filter"
+                        type="text"
+                        id="timelineFilterInput"
+                        placeholder="Filter timeline"
+                    />
+                    <div class="select-wrapper">
+                        <select class="timeline-sort" id="timelineSortSelect">
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                            <option value="largest">Largest first</option>
+                            <option value="smallest">Smallest first</option>
+                        </select>
+                    </div>
+                    <div class="select-wrapper">
+                        <select
+                            class="timeline-range"
+                            id="timelineRangeSelect"
+                            aria-label="Timeline range"
+                        >
+                        <option value="all">All time</option>
+                        <option value="today">Today</option>
+                        <option value="7d">Last 7 days</option>
+                        <option value="30d">Last 30 days</option>
+                    </select>
+                    </div>
+                </div>
+                <div class="timeline-insights" id="timelineInsights">
+                    <div
+                        class="timeline-insights__refresh"
+                        id="refreshVersionsBtn"
+                        aria-label="Refresh timeline"
+                        title="Refresh timeline"
+                    >↻</div>
+                    <div class="timeline-insights__content">
+                        <div class="timeline-insights__labels">
+                            <span id="timelineStorageSummary">0 files · 0 B</span>
+                            <span id="timelineRetentionSummary">—</span>
+                        </div>
+                        <div class="timeline-insights__track" aria-hidden="true">
+                            <div
+                                class="timeline-insights__fill"
+                                id="timelineUsageFill"
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="timeline-bulk" id="timelineBulkBar" hidden>
+                    <span class="timeline-bulk__count" id="timelineSelectionCount">0 selected</span>
+                    <button class="btn btn--ghost btn--micro" id="bulkCopyPathsBtn">Copy paths</button>
+                    <button class="btn btn--ghost btn--micro" id="bulkDelBtn">Remove</button>
+                    <button class="btn btn--ghost btn--micro" id="bulkClearBtn">Clear</button>
+                </div>
+                <div class="table-toggles" id="timelineToggles">
+                        <button class="table-toggle" id="timelinePinnedOnlyToggle" type="button" aria-pressed="false" title="Pinned only" aria-label="Pinned only">
+                            <span class="svg-icon icon-pin" aria-hidden="true"></span>
+                        </button>
+                        <button class="table-toggle" id="timelineCompactToggle" type="button" aria-pressed="false" title="Compact rows" aria-label="Compact rows">
+                            <span class="svg-icon icon-compact" aria-hidden="true"></span>
+                        </button>
+                        <button class="table-toggle" id="autoRefreshTimelineToggle" type="button" aria-pressed="true" title="Auto-refresh" aria-label="Auto-refresh">
+                            <span class="svg-icon icon-refresh" aria-hidden="true"></span>
+                        </button>
+                        <div class="table-actions">
+                            <button class="table-toggle table-action" id="exportTimelineBtn" type="button" title="Export CSV" aria-label="Export CSV">
+                                <span class="svg-icon icon-download" aria-hidden="true"></span>
+                            </button>
+                            <button class="table-toggle table-select-all" id="timelineSelectAllToggle" type="button" aria-pressed="false" title="Select all" aria-label="Select all">
+                                <span class="svg-icon icon-circle" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                <div class="version-list" id="versionList">
+                    <div class="empty-state">No snapshots loaded.</div>
+                </div>
+            </div>
+        </details>
+
+        <details class="drawer" id="recoveryCenterDrawer">
+            <summary>
+                <span>Recovery Center</span>
+                <span
+                    class="drawer__meta drawer__counter"
+                    id="recoveryCandidateCount"
+                >0</span>
+            </summary>
+            <div class="drawer__body">
+                <div class="timeline-search">
+                    <input
+                        class="timeline-filter"
+                        type="text"
+                        id="recoveryFilterInput"
+                        placeholder="Filter recovery entries"
+                    />
+                    <div class="select-wrapper">
+                        <select class="timeline-sort" id="recoverySortSelect">
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                            <option value="name">Name A-Z</option>
+                        </select>
+                    </div>
+                    <div class="select-wrapper">
+                        <select
+                            class="timeline-range"
+                            id="recoveryRangeSelect"
+                            aria-label="Recovery range"
+                        >
+                        <option value="all">All time</option>
+                        <option value="today">Today</option>
+                        <option value="7d">Last 7 days</option>
+                        <option value="30d">Last 30 days</option>
+                    </select>
+                    </div>
+                </div>
+                <div class="timeline-bulk" id="recoveryBulkBar" hidden>
+                    <span class="timeline-bulk__count" id="recoverySelectionCount">0 selected</span>
+                    <button class="btn btn--ghost btn--micro" id="recoveryBulkCopyPathsBtn">Copy paths</button>
+                    <button class="btn btn--ghost btn--micro" id="recoveryBulkDelBtn">Remove</button>
+                    <button class="btn btn--ghost btn--micro" id="recoveryBulkClearBtn">Clear</button>
+                </div>
+                <div class="table-toggles" id="recoveryToggles">
+                        <button class="table-toggle" id="recoveryPinnedOnlyToggle" type="button" aria-pressed="false" title="Pinned only" aria-label="Pinned only">
+                            <span class="svg-icon icon-pin" aria-hidden="true"></span>
+                        </button>
+                        <button class="table-toggle" id="recoveryCompactToggle" type="button" aria-pressed="false" title="Compact rows" aria-label="Compact rows">
+                            <span class="svg-icon icon-compact" aria-hidden="true"></span>
+                        </button>
+                        <div class="table-actions">
+                            <button class="table-toggle table-action" id="recoveryExportCsvBtn" type="button" title="Export CSV" aria-label="Export CSV">
+                                <span class="svg-icon icon-download" aria-hidden="true"></span>
+                            </button>
+                            <button class="table-toggle table-select-all" id="recoverySelectAllToggle" type="button" aria-pressed="false" title="Select all" aria-label="Select all">
+                                <span class="svg-icon icon-circle" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                <div class="version-list" id="recoveryCandidateList">
+                    <div class="empty-state">No recovery history yet.</div>
+                </div>
+            </div>
+        </details>
+
+        <details class="drawer" id="openDocsDrawer">
+            <summary>
+                <span>Open documents</span>
+                <span
+                    class="drawer__meta drawer__counter"
+                    id="openDocsCount"
+                >0</span>
+            </summary>
+            <div class="drawer__body">
+                <div class="timeline-search">
+                    <input
+                        class="timeline-filter"
+                        type="text"
+                        id="openDocsFilterInput"
+                        placeholder="Filter documents"
+                    />
+                    <div class="select-wrapper">
+                        <select class="timeline-sort" id="openDocsSortSelect">
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                            <option value="name">Name A-Z</option>
+                        </select>
+                    </div>
+                    <div class="select-wrapper">
+                        <select
+                            class="timeline-range"
+                            id="openDocsRangeSelect"
+                            aria-label="Open documents range"
+                        >
+                            <option value="all">All time</option>
+                            <option value="today">Today</option>
+                            <option value="7d">Last 7 days</option>
+                            <option value="30d">Last 30 days</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="timeline-bulk" id="openDocsBulkBar" hidden>
+                    <span class="timeline-bulk__count" id="openDocsSelectionCount">0 selected</span>
+                    <button class="btn btn--ghost btn--micro" id="openDocsBulkOnBtn">Dejavu on</button>
+                    <button class="btn btn--ghost btn--micro" id="openDocsBulkOffBtn">Dejavu off</button>
+                    <span class="open-doc__split-action open-doc__split-action--bulk" id="openDocsBulkSaveSplit">
+                        <button class="btn btn--ghost btn--micro open-doc__bulk-save-main" id="openDocsBulkSaveBtn">Save</button>
+                        <button class="btn btn--ghost btn--micro open-doc__bulk-save-arrow" id="openDocsBulkSaveMenuBtn" type="button" aria-label="Save and close" aria-expanded="false">
+                            <span class="select-chevron open-doc__chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6l6 4 6-4"/></svg></span>
+                        </button>
+                    </span>
+                </div>
+                <div class="table-toggles" id="openDocsToggles">
+                    <button class="table-toggle" id="openDocsUnsavedOnlyToggle" type="button" aria-pressed="false" title="Show only documents with unsaved changes" aria-label="Show only documents with unsaved changes">
+                        <span class="svg-icon icon-unsaved" aria-hidden="true"></span>
+                    </button>
+                    <button class="table-toggle table-select-all" id="openDocsSelectAllToggle" type="button" aria-pressed="false" title="Select all documents" aria-label="Select all documents">
+                        <span class="svg-icon icon-circle" aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="open-docs" id="openDocsList">
+                    <div class="empty-state">No documents open.</div>
+                </div>
+            </div>
+        </details>
+
+        <details class="drawer settings-drawer" id="advancedDrawer">
+            <summary><span>Advanced</span></summary>
+            <div class="drawer__body drawer__body--settings">
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="recoveryCheckToggle" checked />
+                        <span>Warn when a newer dejavu exists</span>
+                    </label>
+                    <p class="field-hint">
+                        Shows a warning when opening a document that has a newer dejavu.
+                    </p>
+                </section>
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="autoRecoverCrashToggle" checked />
+                        <span>Open recent dejavus after an unexpected shutdown</span>
+                    </label>
+                    <p class="field-hint">
+                        Opens the latest dejavu for up to five documents,
+                        then creates a fresh recovery copy.
+                    </p>
+                </section>
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="backupOriginalToggle" />
+                        <span>Copy the current saved file before autosaving</span>
+                    </label>
+                    <p class="field-hint">
+                        Creates a backup of the original file before each dejavu.
+                    </p>
+                </section>
+                <section class="field-group field-group--embedded">
+                    <label class="mini-field mini-field--wide">
+                        <span>Automatically pin every Nth dejavu (0 disables)</span>
+                        <div class="number-input-group">
+                            <div class="number-spin-buttons">
+                                <div class="number-spin-button" data-target="autoPinEveryInput" data-action="up">
+                                    <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                </div>
+                                <div class="number-spin-button" data-target="autoPinEveryInput" data-action="down">
+                                    <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                </div>
+                            </div>
+                            <input type="number" id="autoPinEveryInput" min="0" step="1" />
+                        </div>
+                    </label>
+                    <p class="field-hint">
+                        Automatically pins snapshots at regular intervals to prevent cleanup.
+                    </p>
+                </section>
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="saveOnEnableToggle" checked />
+                        <span>Save immediately when dejavu is enabled</span>
+                    </label>
+                    <p class="field-hint">
+                        Prevents waiting a full interval after turning dejavu on.
+                    </p>
+                </section>
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="saveOnDocumentSwitchToggle" />
+                        <span>Run a check shortly after switching documents</span>
+                    </label>
+                    <p class="field-hint">
+                        Useful when open documents use different dejavu rules.
+                    </p>
+                </section>
+
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="checkForUpdatesToggle" checked />
+                        <span>Check for new updates</span>
+                    </label>
+                    <p class="field-hint">
+                        Periodically checks GitHub Releases and shows a banner when a
+                        newer version of DejaVu is available.
+                    </p>
+                </section>
+
+
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="overwriteToggle" checked />
+                        <span>Overwrite previous dejavu copy (same filename)</span>
+                    </label>
+                    <p class="field-hint">
+                        When enabled, reuses the same filename instead of creating unique copies.
+                    </p>
+                </section>
+
+                <section class="field-group field-group--embedded field-group--row">
+                    <label class="checkbox">
+                        <input type="checkbox" id="onlyIfChangedToggle" checked />
+                        <span>Only save when content changed since last save</span>
+                    </label>
+                    <p class="field-hint">
+                        Skips dejavu if the document hasn't been modified since the last save.
+                    </p>
+                </section>
+
+                <section class="field-group field-group--embedded field-group--compact">
+                    <div class="mini-grid mini-grid--three">
+                        <label class="mini-field">
+                            <span>Keep</span>
+                            <div class="number-input-group">
+                                <div class="number-spin-buttons">
+                                    <div class="number-spin-button" data-target="keepCountInput" data-action="up">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                    </div>
+                                    <div class="number-spin-button" data-target="keepCountInput" data-action="down">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                    </div>
+                                </div>
+                                <input type="number" id="keepCountInput" min="0" step="1" />
+                            </div>
+                        </label>
+                        <label class="mini-field">
+                            <span>Days</span>
+                            <div class="number-input-group">
+                                <div class="number-spin-buttons">
+                                    <div class="number-spin-button" data-target="keepDaysInput" data-action="up">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                    </div>
+                                    <div class="number-spin-button" data-target="keepDaysInput" data-action="down">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                    </div>
+                                </div>
+                                <input type="number" id="keepDaysInput" min="0" step="1" />
+                            </div>
+                        </label>
+                        <label class="mini-field">
+                            <span>Max MB</span>
+                            <div class="number-input-group">
+                                <div class="number-spin-buttons">
+                                    <div class="number-spin-button" data-target="maxFolderSizeInput" data-action="up">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                    </div>
+                                    <div class="number-spin-button" data-target="maxFolderSizeInput" data-action="down">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                    </div>
+                                </div>
+                                <input type="number" id="maxFolderSizeInput" min="0" step="10" />
+                            </div>
+                        </label>
+                    </div>
+                    <p class="field-hint">
+                        Set 0 to disable a limit. Cleanup runs after each
+                        dejavu or from Timeline.
+                    </p>
+                </section>
+
+                <section class="field-group field-group--embedded cache-health">
+                    <div class="cache-health__summary" id="cacheHealthSummary">
+                        <span>Cache not checked yet.</span>
+                    </div>
+                    <div
+                        class="cache-health__warning"
+                        id="cacheHealthWarning"
+                        hidden
+                    ></div>
+                    <div class="mini-grid mini-grid--three">
+                        <label class="mini-field">
+                            <span>Low disk MB</span>
+                            <div class="number-input-group">
+                                <div class="number-spin-buttons">
+                                    <div class="number-spin-button" data-target="diskSpaceWarningInput" data-action="up">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                    </div>
+                                    <div class="number-spin-button" data-target="diskSpaceWarningInput" data-action="down">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                    </div>
+                                </div>
+                                <input type="number" id="diskSpaceWarningInput" min="0" step="256" />
+                            </div>
+                        </label>
+                        <label class="mini-field">
+                            <span>Unsaved versions</span>
+                            <div class="number-input-group">
+                                <div class="number-spin-buttons">
+                                    <div class="number-spin-button" data-target="recoveryVersionsInput" data-action="up">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                    </div>
+                                    <div class="number-spin-button" data-target="recoveryVersionsInput" data-action="down">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                    </div>
+                                </div>
+                                <input type="number" id="recoveryVersionsInput" min="1" max="20" step="1" />
+                            </div>
+                        </label>
+                        <label class="mini-field">
+                            <span>Recovery cap</span>
+                            <div class="number-input-group">
+                                <div class="number-spin-buttons">
+                                    <div class="number-spin-button" data-target="recoveryMaxEntriesInput" data-action="up">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                                    </div>
+                                    <div class="number-spin-button" data-target="recoveryMaxEntriesInput" data-action="down">
+                                        <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                                    </div>
+                                </div>
+                                <input type="number" id="recoveryMaxEntriesInput" min="10" max="500" step="10" />
+                            </div>
+                        </label>
+                    </div>
+                    <div class="toolbar toolbar--wrap cache-actions">
+                        <button class="btn" id="cacheAuditBtn">Audit cache</button>
+                        <button class="btn" id="cacheRevealBtn">Reveal cache</button>
+                        <button class="btn" id="cacheCleanBtn">Clean now</button>
+                        <button class="btn" id="recoverLatestBtn">Open latest</button>
+                    </div>
+                </section>
+
+                <section class="field-group field-group--embedded">
+                    <div class="toolbar toolbar--wrap advanced-actions">
+                        <button class="btn" id="revealLogBtn">Reveal log</button>
+                        <button class="btn" id="healthCheckBtn">Health check</button>
+                        <button class="btn" id="exportSettingsBtn">Export settings</button>
+                        <button class="btn" id="importSettingsBtn">Import settings</button>
+                        <input
+                            class="hidden-file-input"
+                            type="file"
+                            id="importSettingsInput"
+                            accept="application/json,.json"
+                        />
+                    </div>
+                </section>
+            </div>
+        </details>
+
+        <footer class="app__footer">
+            <div class="footer__message-row">
+                <span
+                    class="footer__hint"
+                    id="footerHint"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                ></span>
+                <button
+                    class="footer__coffee"
+                    id="donationInfoBtn"
+                    type="button"
+                    aria-label="Buy me a coffee"
+                    title="Buy me a coffee — support DejaVu"
+                >
+                    <span class="svg-icon icon-coffee" aria-hidden="true"></span>
+                </button>
+                <button
+                    class="footer__reset"
+                    id="headerResetSettingsBtn"
+                    type="button"
+                    aria-label="Reset settings"
+                    title="Reset settings"
+                >
+                    <span class="svg-icon icon-reset" aria-hidden="true"></span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <div
+        class="donation-modal donation-modal--hidden"
+        id="donationModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="donationTitle"
+        aria-describedby="donationDescription"
+    >
+        <div class="donation-modal__scrim" id="donationScrim"></div>
+        <section class="donation-card">
+            <button
+                class="donation-card__close"
+                id="donationCloseBtn"
+                type="button"
+                aria-label="Close"
+                title="Close"
+            >×</button>
+            <div class="donation-card__badge">DejaVu</div>
+            <div class="donation-card__version" id="donationVersion"></div>
+            <h2 id="donationTitle">
+                <span class="svg-icon donation-card__cup icon-coffee" aria-hidden="true"></span>
+                Buy me a coffee
+            </h2>
+            <p id="donationDescription">
+                Thanks for installing DejaVu. If it saves you time,
+                a small coffee helps support continued fixes and new features.
+            </p>
+            <a
+                class="donation-card__github"
+                id="donationGithubUrl"
+                href="#"
+                target="_blank"
+                rel="noopener"
+            ></a>
+            <div class="donation-form">
+                <label class="donation-field" for="donationAmountInput">
+                    <span>Amount</span>
+                    <div class="number-input-group">
+                        <div class="number-spin-buttons">
+                            <div class="number-spin-button" data-target="donationAmountInput" data-action="up">
+                                <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10l6-4 6 4"/></svg>
+                            </div>
+                            <div class="number-spin-button" data-target="donationAmountInput" data-action="down">
+                                <svg class="spin-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6l6 4 6-4"/></svg>
+                            </div>
+                        </div>
+                        <input
+                            type="number"
+                            id="donationAmountInput"
+                            min="1"
+                            step="1"
+                            value="1"
+                        />
+                    </div>
+                </label>
+                <label class="donation-field" for="donationCurrencySelect">
+                    <span>Currency</span>
+                    <div class="select-wrapper">
+                        <select id="donationCurrencySelect">
+                            <option value="EUR" selected>€ EUR</option>
+                            <option value="USD">$ USD</option>
+                            <option value="GBP">£ GBP</option>
+                        </select>
+                    </div>
+                </label>
+                <label class="donation-field" for="donationPlatformSelect">
+                    <span>Platform</span>
+                    <div class="select-wrapper">
+                        <select id="donationPlatformSelect">
+                            <option value="kofi" selected>Ko-fi</option>
+                            <option value="buymeacoffee">Buy Me a Coffee</option>
+                        </select>
+                    </div>
+                </label>
+            </div>
+            <div class="donation-actions">
+                <button
+                    class="btn btn--primary"
+                    id="donationPayBtn"
+                    type="button"
+                >Open Ko-fi</button>
+                <button
+                    class="btn btn--ghost"
+                    id="donationLaterBtn"
+                    type="button"
+                >Maybe later</button>
+            </div>
+            <p class="donation-note">
+                This appears once per install. You can open it again any time
+                from the coffee button in the footer.
+            </p>
+        </section>
+    </div>
+
+    <div
+        class="update-install-modal update-install-modal--hidden"
+        id="updateInstallModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="updateInstallTitle"
+        aria-describedby="updateInstallDescription"
+    >
+        <div class="update-install-modal__scrim" id="updateInstallScrim"></div>
+        <section class="update-install-card">
+            <button
+                class="update-install-card__close"
+                id="updateInstallCloseBtn"
+                type="button"
+                aria-label="Close"
+                title="Close"
+            >×</button>
+            <div class="update-install-card__badge">Update</div>
+            <h2 id="updateInstallTitle">DejaVu update available</h2>
+            <p id="updateInstallDescription">
+                A newer version is available. Download it and restart the panel
+                to get the latest fixes and features.
+            </p>
+            <div class="update-install-progress" aria-hidden="true">
+                <div class="update-install-progress__bar" id="updateInstallProgressBar" style="width: 0%"></div>
+            </div>
+            <div class="update-install-status" id="updateInstallStatus">Ready to download</div>
+            <div class="update-install-actions">
+                <button
+                    class="btn btn--primary"
+                    id="updateInstallDownloadBtn"
+                    type="button"
+                >Download update</button>
+                <button
+                    class="btn btn--ghost"
+                    id="updateInstallLaterBtn"
+                    type="button"
+                >Later</button>
+                <button
+                    class="btn btn--ghost update-install-actions__hidden"
+                    id="updateInstallRevealBtn"
+                    type="button"
+                >Reveal download</button>
+                <button
+                    class="btn btn--primary update-install-actions__refresh update-install-actions__hidden"
+                    id="updateInstallRefreshBtn"
+                    type="button"
+                >Restart panel</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (() => {
+            const token = window.__DEJAVU_ASSET_RELOAD_TOKEN__;
+            const isCep = typeof window.__adobe_cep__ !== "undefined";
+            const scripts = [
+                isCep ? "./lib/CSInterface.js" : null,
+                isCep ? null : "../host/host.js",
+                "./js/core.js",
+                "./lib/token-input.js",
+                "./js/table.js",
+                "./js/recovery.js",
+                "./js/interval.js",
+                "./js/locations.js",
+                "./js/top.js",
+                "./js/open.js",
+                "./js/bottom.js",
+                "./js/timeline.js",
+                "./js/advanced.js",
+                "./js/main.js",
+                "./js/update-check.js",
+                "./js/update-install.js",
+                "./js/theme.js"
+            ].filter(Boolean);
+            scripts.forEach((scriptPath) => {
+                const fullUrl = `${scriptPath}?reload=${token}`;
+                document.write(
+                    `<script src="${fullUrl}"><\/script>`
+                );
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+{
+  "manifestVersion": 5,
+  "id": "com.joaodev.dejavu",
+  "name": {
+    "default": "DejaVu"
+  },
+  "version": "1.5.1",
+  "main": "client/index.html",
+  "dejavu": {
+    "_comment": "DejaVu runtime config, read by the panel at startup.",
+    "_devMode": "true = force dev aids on, false = force off, null = auto (on only when a .debug file is present; packaged builds omit it).",
+    "devMode": null,
+    "updateCheck": {
+      "enabled": true,
+      "owner": "joaoslopes",
+      "repo": "dejavu",
+      "intervalDays": 7,
+      "includePrereleases": false,
+      "apiBase": "https://api.github.com",
+      "releasesPageUrl": ""
+    }
+  },
+  "host": {
+    "app": "ILST",
+    "minVersion": "26.0.0",
+    "maxVersion": "99.9.0"
+  },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "com.joaodev.dejavu.panel",
+      "label": {
+        "default": "DejaVu"
+      },
+      "minimumSize": {
+        "width": 450,
+        "height": 480
+      },
+      "preferredDockedSize": {
+        "width": 500,
+        "height": 560
+      },
+      "preferredFloatingSize": {
+        "width": 500,
+        "height": 560
+      },
+      "maximumSize": {
+        "width": 600,
+        "height": 1000
+      },
+      "icon": {
+        "width": 23,
+        "height": 23,
+        "path": "icons/icon-normal.png",
+        "scale": [
+          1,
+          2
+        ],
+        "theme": [
+          "lightest",
+          "light",
+          "medium",
+          "dark",
+          "darkest"
+        ],
+        "species": [
+          "toolbar"
+        ]
+      }
+    }
+  ],
+  "icons": [
+    {
+      "width": 24,
+      "height": 24,
+      "path": "icons/plugin-icon-light.svg",
+      "theme": [
+        "light"
+      ],
+      "species": [
+        "pluginList"
+      ]
+    },
+    {
+      "width": 24,
+      "height": 24,
+      "path": "icons/plugin-icon-lightest.svg",
+      "theme": [
+        "lightest"
+      ],
+      "species": [
+        "pluginList"
+      ]
+    },
+    {
+      "width": 24,
+      "height": 24,
+      "path": "icons/plugin-icon-dark.svg",
+      "theme": [
+        "dark"
+      ],
+      "species": [
+        "pluginList"
+      ]
+    },
+    {
+      "width": 24,
+      "height": 24,
+      "path": "icons/plugin-icon-darkest.svg",
+      "theme": [
+        "darkest"
+      ],
+      "species": [
+        "pluginList"
+      ]
+    }
+  ],
+  "requiredPermissions": {
+    "localFileSystem": "fullAccess",
+    "network": {
+      "domains": [
+        "https://api.github.com",
+        "https://github.com"
+      ]
+    },
+    "launchProcess": {
+      "schemes": [
+        "file",
+        "http",
+        "https"
+      ],
+      "extensions": [
+        "ai",
+        "ait",
+        "pdf",
+        "svg",
+        "png",
+        "jpg",
+        "jpeg"
+      ]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+name: Release
+
+# Tag a commit `vX.Y.Z` (matching manifest.json "version") and push the tag —
+# this builds the package and publishes a GitHub Release. The panel's update
+# check (manifest.json → dejavu.updateCheck) reads these releases.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Unit tests
+        run: node --test
+
+      - name: Build package
+        env:
+          # Optional CEP signing — add these repo secrets to emit a signed .zxp.
+          # ZXP_CERT is the path written below; ZXP_PASS is the cert password.
+          ZXP_PASS: ${{ secrets.ZXP_PASS }}
+        run: bash scripts/build.sh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dejavu-package
+          path: |
+            build/DejaVu-*.zip
+            build/DejaVu-*.zxp
+            build/SHA256SUMS.txt
+            build/dejavu-release.json
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/DejaVu-*.zip
+            build/DejaVu-*.zxp
+            build/SHA256SUMS.txt
+            build/dejavu-release.json
+          fail_on_unmatched_files: false
+          generate_release_notes: true
