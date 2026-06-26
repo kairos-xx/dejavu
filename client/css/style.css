@@ -848,12 +848,17 @@ input[type="text"][readonly]:hover {
     color: var(--text-dim);
     font: var(--dimension-11)/var(--dimension-11) var(--sans);
     cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
 }
+
 
 .template-token__remove:hover {
     background: var(--bg-hover);
     color: var(--text-bright);
 }
+
 
 /* ---------------------------------------------------------------- */
 /* TokenInput library (client/lib/token-input.js) â€” themed to the     */

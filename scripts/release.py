@@ -1994,6 +1994,7 @@ def _install_interrupt_handlers() -> None:
         )
         sys_exit(0)
 
+    signal.signal(signal.SIGINT, _handle_interrupt)
     signal.signal(signal.SIGTSTP, _handle_interrupt)
 
 
