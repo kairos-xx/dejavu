@@ -29,5 +29,4 @@ pythonVersion = "3.13"
 typeCheckingMode = "strict"
 extraPaths = [
   "/opt/anaconda3/lib/python3.13/site-packages",
-  "./stubs/rich"
 ]

@@ -4,7 +4,7 @@
   "name": {
     "default": "DejaVu"
   },
-  "version": "1.5.3",
+  "version": "1.5.4",
   "main": "client/index.html",
   "dejavu": {
     "_comment": "DejaVu runtime config, read by the panel at startup.",

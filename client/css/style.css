@@ -664,6 +664,7 @@ select {
     line-height: var(--dimension-19);
     outline: none;
     transition: border-color 0.12s ease, background 0.12s ease;
+    flex: 1;
 }
 
 input.snapshot__note-input {
@@ -1273,6 +1274,7 @@ html[data-skin="lightest"] {
     transition: background 0.12s ease, border-color 0.12s ease,
         color 0.12s ease;
     white-space: nowrap;
+    /* flex: 1; */
 }
 
 .btn:hover {
@@ -1304,6 +1306,7 @@ html[data-skin="lightest"] {
     border-color: var(--accent);
     color: var(--accent-text);
     font-weight: 600;
+    flex: 1;
 }
 
 .btn--primary:hover {
@@ -1468,7 +1471,8 @@ html[data-skin="lightest"] {
 
 .drawer {
     border-bottom: var(--dimension-1) solid var(--border);
-    flex: 0 0 auto;
+    /* flex: 1 1 auto; */
+    display: flex;
 }
 
 .drawer summary {
@@ -1495,7 +1499,7 @@ html[data-skin="lightest"] {
 
 .drawer__body {
     padding: var(--dimension-12) var(--dimension-9);
-    max-height: calc(100vh - var(--dimension-200));
+    /* max-height: calc(100vh - var(--dimension-200)); */
 }
 
 /* ---------------------------------------------------------------- */
@@ -1628,6 +1632,7 @@ html[data-skin="lightest"] {
 
 .drawer__body--settings {
     padding-top: 0;
+    padding-right: var(--dimension-12);
 }
 
 .drawer__body--settings .field-group--embedded:first-child {
@@ -1968,46 +1973,182 @@ select:disabled {
 /* Similarity drawer                                                 */
 /* ---------------------------------------------------------------- */
 
-.similar-settings {
-    margin: var(--dimension-6) 0;
+/* Comparison settings — an inset card, deliberately distinct from the
+   top-level drawers it nests inside (raised surface, framed, tinted
+   summary) so it reads as a sub-panel rather than another drawer. */
+.drawer.similar-settings {
+    display: block;
+    margin: var(--dimension-10) 0 var(--dimension-8);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    background: var(--bg-raised);
+    overflow: hidden;
 }
 
-.similar-cfg__group {
-    margin-bottom: var(--dimension-6);
-}
-
-.similar-cfg__group-title {
-    margin: var(--dimension-6) 0 var(--dimension-4);
-    font-size: var(--dimension-9-5);
+.similar-settings > summary {
+    min-height: var(--dimension-16);
+    padding: var(--dimension-4) var(--dimension-10) var(--dimension-4)
+        var(--dimension-24);
+    background: var(--bg-input-well);
+    color: var(--text-dim);
+    font-size: var(--dimension-10);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+.similar-settings > summary::before {
+    left: var(--dimension-11);
+}
+
+.similar-settings[open] > summary {
+    border-bottom: var(--dimension-1) solid var(--border-soft);
+}
+
+.similar-settings > .drawer__body {
+    padding: var(--dimension-2) var(--dimension-10) var(--dimension-8);
+}
+
+/* Setting groups inside the card */
+.similar-cfg__group-title {
+    margin: var(--dimension-10) 0 var(--dimension-2);
+    font-size: var(--dimension-9-5);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text);
+}
+
+.similar-cfg__group-hint {
+    margin: 0 0 var(--dimension-2);
+    font-size: var(--dimension-9-5);
+    line-height: 1.4;
     color: var(--text-dim);
 }
 
-.similar-cfg__row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--dimension-72);
-    align-items: center;
-    gap: var(--dimension-6);
-    min-height: var(--dimension-22);
+/* Each setting reuses the Advanced field-group / checkbox / mini-field
+   look; only the in-card density and group separators need tuning. */
+.similar-cfg__field {
+    padding: var(--dimension-6) 0;
 }
 
-.similar-cfg__label {
-    overflow: hidden;
+.similar-cfg__field .field-hint {
+    margin-top: var(--dimension-3);
+}
+
+.similar-cfg__group .similar-cfg__field:last-child {
+    border-bottom: 0;
+    padding-bottom: var(--dimension-2);
+}
+
+/* Spin-box width inside the card matches the other mini-field controls. */
+.similar-cfg__field .number-input-group {
+    width: 100%;
+    max-width: var(--dimension-92);
+}
+
+.similar-cfg__field .number-input-group input[type="number"] {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Rows disabled because their controlling checkbox is off. */
+.similar-cfg__field.is-disabled {
+    opacity: 0.4;
+}
+
+.similar-cfg__field.is-disabled .checkbox,
+.similar-cfg__field.is-disabled .ms__trigger {
+    cursor: not-allowed;
+}
+
+/* Multi-select dropdown — collapses inline (no clipping inside the card). */
+.ms {
+    width: 100%;
+    max-width: var(--dimension-92);
+}
+
+.ms__trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-6);
+    width: 100%;
+    min-height: var(--dimension-21);
+    padding: var(--dimension-3) var(--dimension-7);
+    border: var(--dimension-1) solid var(--border-soft);
+    border-radius: var(--radius);
+    background: var(--bg-input);
+    color: var(--text);
     font-family: var(--mono);
     font-size: var(--dimension-10);
-    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.12s ease;
+}
+
+.ms__trigger:hover,
+.ms.is-open .ms__trigger {
+    border-color: var(--accent);
+}
+
+.ms__summary {
+    flex: 1 1 auto;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.similar-cfg__input {
-    width: 100%;
-    box-sizing: border-box;
+.ms__chev {
+    flex: 0 0 auto;
+    display: inline-flex;
+    width: var(--dimension-11);
+    height: var(--dimension-11);
+    color: var(--text-dim);
+    transition: transform 0.12s ease;
 }
 
-.similar-cfg__check {
-    justify-self: end;
+.ms__chev svg {
+    width: 100%;
+    height: 100%;
+}
+
+.ms.is-open .ms__chev {
+    transform: rotate(180deg);
+}
+
+.ms__menu {
+    margin-top: var(--dimension-4);
+    padding: var(--dimension-3);
+    border: var(--dimension-1) solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+    max-height: var(--dimension-120);
+    overflow-y: auto;
+}
+
+.ms__opt {
+    display: flex;
+    align-items: center;
+    gap: var(--dimension-6);
+    padding: var(--dimension-4) var(--dimension-5);
+    border-radius: var(--radius-sm);
+    font-family: var(--mono);
+    font-size: var(--dimension-10);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.ms__opt:hover {
+    background: var(--bg-hover);
+}
+
+.ms__opt input {
+    accent-color: var(--accent);
+    width: var(--dimension-12);
+    height: var(--dimension-12);
+    margin: 0;
+    flex: 0 0 auto;
 }
 
 /* Result rows — compact by default, click to expand the breakdown. */

@@ -6,10 +6,9 @@ import os
 from typing import Any, Callable, IO, Optional, TYPE_CHECKING, Union
 from ._extension import load_ipython_extension
 from .console import Console
-from . import box
 
 """Rich text and beautiful formatting in the terminal."""
-__all__ = ["get_console", "reconfigure", "print", "inspect", "print_json", "box"]
+__all__ = ["get_console", "reconfigure", "print", "inspect", "print_json"]
 if TYPE_CHECKING:
     ...
 _console: Optional[Console] = ...

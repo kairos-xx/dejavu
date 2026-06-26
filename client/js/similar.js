@@ -14,11 +14,41 @@
     const LS_RECURSIVE = "dejavu.similarity.recursive.v1";
     const LS_CONFIG = "dejavu.similarity.config.v1";
     const LS_SORT = "dejavu.similarity.sort.v1";
+    const LS_RANGE = "dejavu.similarity.range.v1";
 
     const ui = {};
     let results = [];
     let okHideTimer = null;
     let busy = false;
+    let folderValid = false;
+
+    // Collapse any open multi-select dropdown.
+    const closeAllMultiselects = () => {
+        const root = ui.settings || document;
+        root.querySelectorAll(".ms.is-open").forEach((ms) => {
+            ms.classList.remove("is-open");
+            const menu = ms.querySelector(".ms__menu");
+            const trigger = ms.querySelector(".ms__trigger");
+            if (menu) menu.hidden = true;
+            if (trigger) trigger.setAttribute("aria-expanded", "false");
+        });
+    };
+
+    // The "Find similar" button stays disabled until a real folder is set
+    // and we are not mid-scan.
+    const updateRunEnabled = () => {
+        if (!ui.run) return;
+        const disabled = busy || !folderValid;
+        ui.run.disabled = disabled;
+        ui.run.setAttribute(
+            "data-tooltip",
+            busy
+                ? "Scanning…"
+                : folderValid
+                    ? "Compare this folder against the active document"
+                    : "Pick a folder that exists first"
+        );
+    };
 
     // ---- small storage helpers --------------------------------------------
     const readJson = (key, fallback) => {
@@ -76,20 +106,36 @@
                 okHideTimer = null;
             }
             setValidity("folder-validity--empty", "No folder set");
+            folderValid = false;
+            updateRunEnabled();
             return;
         }
         let exists = false;
         let resolved = value;
+        let canCheck = true;
         try {
             const fs = require("fs");
             resolved = resolveTildePath(value);
             exists = fs.existsSync(resolved) &&
                 fs.statSync(resolved).isDirectory();
         } catch (e) {
-            exists = false;
+            canCheck = false;
+        }
+        if (!canCheck) {
+            // No Node fs (e.g. a UXP host) — can't verify the path, so stay
+            // neutral and let the search run rather than blocking it.
+            if (okHideTimer) {
+                window.clearTimeout(okHideTimer);
+                okHideTimer = null;
+            }
+            setValidity("", "");
+            folderValid = true;
+            updateRunEnabled();
+            return;
         }
         if (exists) {
             setValidity("folder-validity--ok", `Folder exists · ${resolved}`);
+            folderValid = true;
             if (okHideTimer) window.clearTimeout(okHideTimer);
             okHideTimer = window.setTimeout(() => {
                 okHideTimer = null;
@@ -105,18 +151,304 @@
             }
             setValidity("folder-validity--missing",
                 "Folder not found — nothing to search there yet");
+            folderValid = false;
+        }
+        updateRunEnabled();
+    };
+
+    // ---- settings form, built from the engine defaults -------------------
+    // Each section becomes a labeled group with a one-line description, and
+    // each setting gets a friendly label + a support hint (à la Advanced).
+    const SECTIONS = [
+        {
+            key: "engine",
+            label: "Matching",
+            hint: "How shapes are sampled and matched."
+        },
+        {
+            key: "engine.weights",
+            label: "Comparison weights",
+            hint: "Relative importance of each trait in the score — higher counts for more."
+        },
+        {
+            key: "index",
+            label: "Scanning",
+            hint: "Which files are scanned and how the scan is paced."
+        },
+        {
+            key: "index.externalConverters",
+            label: "External converters",
+            hint: "Tools used to read non-SVG vector files (PDF / AI / EPS)."
+        },
+        {
+            key: "thresholds",
+            label: "Thresholds",
+            hint: "Score cut-offs used to label each match."
+        },
+        {
+            key: "ui",
+            label: "Engine report",
+            hint: "Flags passed to the engine’s own report — this panel renders its own view."
+        }
+    ];
+
+    // Settings handled elsewhere in the UI, so they are hidden from the form.
+    const SKIP = new Set(["index.recursive"]);
+
+    // Friendly label + support text per config path. Anything missing falls
+    // back to a humanized key (and, for weights, an auto-generated hint).
+    const META = {
+        "engine.samplesPerElement": {
+            label: "Sample points per shape",
+            hint: "Points sampled along each shape. More points = finer detail, slower scans."
+        },
+        "engine.maxSamples": {
+            label: "Max total samples",
+            hint: "Hard cap on sample points per document to keep large files fast."
+        },
+        "engine.rotationInvariant": {
+            label: "Ignore rotation",
+            hint: "Treat a rotated copy of a shape as the same shape."
+        },
+        "engine.scaleInvariant": {
+            label: "Ignore scale",
+            hint: "Treat a resized copy of a shape as the same shape."
+        },
+        "engine.translationInvariant": {
+            label: "Ignore position",
+            hint: "Treat a moved copy of a shape as the same shape."
+        },
+        "engine.mirrorInvariant": {
+            label: "Match mirrored shapes",
+            hint: "Treat a flipped or mirrored copy as the same shape."
+        },
+        "engine.includeHidden": {
+            label: "Include hidden elements",
+            hint: "Also compare elements that are hidden in the artwork."
+        },
+        "engine.compareTextAsGeometry": {
+            label: "Compare text as outlines",
+            hint: "Convert text to curves before comparing instead of matching characters."
+        },
+        "engine.compareRasterImagesByBBox": {
+            label: "Compare images by bounds",
+            hint: "Match placed and raster images by their bounding box, not pixels."
+        },
+        "engine.colorTolerance": {
+            label: "Color tolerance",
+            hint: "How far two colors can differ (0–255) and still count as a match.",
+            num: { min: 0, max: 255, step: 1 }
+        },
+        "engine.numericPrecision": {
+            label: "Numeric precision",
+            hint: "Decimal places used when comparing coordinates and values.",
+            num: { min: 0, max: 12, step: 1 }
+        },
+        "engine.elementMatchThreshold": {
+            label: "Element match threshold",
+            hint: "Minimum similarity (0–1) for two elements to be paired up.",
+            num: { min: 0, max: 1, step: 0.01 }
+        },
+        "engine.reportSampleLimit": {
+            label: "Report sample limit",
+            hint: "Maximum element pairs listed in the detailed breakdown."
+        },
+        "engine.pathSampleMinDistance": {
+            label: "Min sample spacing",
+            hint: "Smallest gap between sample points along a path.",
+            num: { min: 0, step: 0.0005 }
+        },
+        "engine.pathSampleRoundToNearest": {
+            label: "Round samples to",
+            hint: "Snap sample coordinates to this grid (0 = no rounding).",
+            num: { min: 0, step: 0.0005 }
+        },
+
+        "engine.weights.canvas": { label: "Canvas / artboard" },
+        "engine.weights.elementTypes": { label: "Element-type mix" },
+        "engine.weights.structure": { label: "Layer structure" },
+        "engine.weights.geometryRaw": { label: "Raw geometry" },
+        "engine.weights.geometryNormalized": { label: "Normalized geometry" },
+        "engine.weights.geometryMultiRotation": { label: "Rotation-tested geometry" },
+        "engine.weights.bbox": { label: "Bounding box" },
+        "engine.weights.fill": { label: "Fill colors" },
+        "engine.weights.stroke": { label: "Stroke colors" },
+        "engine.weights.strokeWidth": { label: "Stroke width" },
+        "engine.weights.opacity": { label: "Opacity" },
+        "engine.weights.pathCommands": { label: "Path commands" },
+        "engine.weights.curvature": { label: "Curvature" },
+        "engine.weights.complexity": { label: "Complexity" },
+        "engine.weights.imageUsage": { label: "Image usage" },
+        "engine.weights.textUsage": { label: "Text usage" },
+        "engine.weights.defsUsage": { label: "Defs / symbols" },
+        "engine.weights.gradientUsage": { label: "Gradients" },
+
+        "index.allowedExtensions": {
+            label: "File types to scan",
+            hint: "Only these extensions are compared (comma-separated)."
+        },
+        "index.maxFileSizeBytes": {
+            label: "Max file size (bytes)",
+            hint: "Skip files larger than this to avoid slow scans.",
+            num: { min: 0, step: 1048576 }
+        },
+        "index.cacheFileName": {
+            label: "Cache file name",
+            hint: "Name of the per-folder fingerprint cache written during scans."
+        },
+        "index.limit": {
+            label: "Max results",
+            hint: "Largest number of matches returned."
+        },
+        "index.shortlistLimit": {
+            label: "Shortlist size",
+            hint: "How many fast-ranked candidates get the deep comparison."
+        },
+        "index.ioConcurrency": {
+            label: "Read concurrency",
+            hint: "How many files are read from disk in parallel."
+        },
+        "index.conversionConcurrency": {
+            label: "Convert concurrency",
+            hint: "How many files are converted to SVG in parallel."
+        },
+        "index.fingerprintConcurrency": {
+            label: "Fingerprint concurrency",
+            hint: "How many fingerprints are computed in parallel."
+        },
+        "index.saveCacheEvery": {
+            label: "Cache save interval",
+            hint: "Write the cache to disk after this many files."
+        },
+        "index.skipFolders": {
+            label: "Folders to skip",
+            hint: "Folder names never scanned (comma-separated)."
+        },
+
+        "index.externalConverters.enabled": {
+            label: "Use external converters",
+            hint: "Let Inkscape / MuPDF / Ghostscript / Illustrator read non-SVG files."
+        },
+        "index.externalConverters.prefer": {
+            label: "Converter order",
+            hint: "Preferred converters, tried in order (comma-separated)."
+        },
+        "index.externalConverters.inkscapePath": {
+            label: "Inkscape path",
+            hint: "Command or full path to the Inkscape executable."
+        },
+        "index.externalConverters.mutoolPath": {
+            label: "MuPDF (mutool) path",
+            hint: "Command or full path to the mutool executable."
+        },
+        "index.externalConverters.ghostscriptPath": {
+            label: "Ghostscript path",
+            hint: "Command or full path to the Ghostscript executable."
+        },
+        "index.externalConverters.allowIllustratorFallback": {
+            label: "Allow Illustrator fallback",
+            hint: "Use Illustrator to convert when the other converters fail."
+        },
+        "index.externalConverters.avoidIllustrator": {
+            label: "Avoid Illustrator",
+            hint: "Never use Illustrator for conversion, even as a fallback."
+        },
+        "index.externalConverters.tryMutoolForEPS": {
+            label: "Use mutool for EPS",
+            hint: "Try mutool when converting EPS files."
+        },
+
+        "thresholds.nearDuplicate": {
+            label: "Near-duplicate ≥",
+            hint: "Score at or above this is treated as a near-duplicate (0–1)."
+        },
+        "thresholds.similar": {
+            label: "Similar ≥",
+            hint: "Score at or above this counts as similar (0–1)."
+        },
+        "thresholds.loose": {
+            label: "Loosely similar ≥",
+            hint: "Lowest score still considered a loose match (0–1)."
+        },
+
+        "ui.showBreakdown": {
+            label: "Show element breakdown",
+            hint: "Include the per-element matched / changed / new / removed counts."
+        },
+        "ui.showConvertedFormat": {
+            label: "Show converted format",
+            hint: "Note which converter produced each compared file."
+        },
+        "ui.openFileOnClick": {
+            label: "Open file on click",
+            hint: "Engine flag: open a result file when its row is clicked."
+        },
+        "ui.showElementReport": {
+            label: "Build element report",
+            hint: "Compute the detailed element-matching report for each result."
+        },
+        "ui.showFileMetadata": {
+            label: "Include file metadata",
+            hint: "Attach size and modified date to each result."
+        },
+        "ui.defaultSearchFolderFromCurrentDocument": {
+            label: "Default to document’s folder",
+            hint: "Engine flag: seed the search folder from the active document."
         }
     };
 
-    // ---- generic settings form, built from the engine defaults -----------
-    const SECTIONS = [
-        { key: "engine", label: "Engine" },
-        { key: "engine.weights", label: "Comparison weights" },
-        { key: "index", label: "Indexing" },
-        { key: "index.externalConverters", label: "External converters" },
-        { key: "thresholds", label: "Thresholds" },
-        { key: "ui", label: "Display" }
-    ];
+    const humanize = (key) =>
+        String(key)
+            .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+            .replace(/[_-]+/g, " ")
+            .replace(/^./, (c) => c.toUpperCase());
+
+    const metaFor = (path, key) => {
+        const m = META[path] || {};
+        return { label: m.label || humanize(key), hint: m.hint || "" };
+    };
+
+    // Array settings with a known option set render as multi-select
+    // dropdowns; anything else (e.g. skipFolders) stays a free-text list.
+    const OPTIONS = {
+        "index.allowedExtensions":
+            [".svg", ".svgz", ".pdf", ".ai", ".eps"],
+        "index.externalConverters.prefer":
+            ["embeddedSVG", "mutool", "inkscape", "ghostscript", "illustrator"]
+    };
+
+    // Settings that are only meaningful while another (boolean) setting is on.
+    // When the controller is off, the dependents are disabled.
+    const DEPENDS = {
+        "index.externalConverters.prefer":
+            "index.externalConverters.enabled",
+        "index.externalConverters.inkscapePath":
+            "index.externalConverters.enabled",
+        "index.externalConverters.mutoolPath":
+            "index.externalConverters.enabled",
+        "index.externalConverters.ghostscriptPath":
+            "index.externalConverters.enabled",
+        "index.externalConverters.allowIllustratorFallback":
+            "index.externalConverters.enabled",
+        "index.externalConverters.avoidIllustrator":
+            "index.externalConverters.enabled",
+        "index.externalConverters.tryMutoolForEPS":
+            "index.externalConverters.enabled"
+    };
+    const CONTROLLERS = new Set(Object.values(DEPENDS));
+
+    // Stepping for spin-box number inputs, by config path / section.
+    const numAttrs = (path, sectionKey) => {
+        const m = META[path];
+        if (m && m.num) return m.num;
+        if (sectionKey === "engine.weights") {
+            return { min: 0, max: 1, step: 0.005 };
+        }
+        if (sectionKey === "thresholds") {
+            return { min: 0, max: 1, step: 0.01 };
+        }
+        return { min: 0, step: 1 };
+    };
 
     const overrides = () => readJson(LS_CONFIG, {});
 
@@ -147,65 +479,281 @@
         if (type === "boolean") value = !!rawValue;
         else if (type === "number") value = Number(rawValue);
         else if (type === "array") {
-            value = String(rawValue).split(",")
-                .map((s) => s.trim()).filter(Boolean);
+            value = Array.isArray(rawValue)
+                ? rawValue.slice()
+                : String(rawValue).split(",")
+                    .map((s) => s.trim()).filter(Boolean);
         }
         const ov = overrides();
         setPath(ov, path, value);
         writeJson(LS_CONFIG, ov);
+        // A toggled controller may enable/disable dependent rows.
+        if (CONTROLLERS.has(path)) applyDependencies();
     };
 
-    const fieldRow = (path, label, value) => {
-        const row = document.createElement("label");
-        row.className = "similar-cfg__row";
-        const name = document.createElement("span");
-        name.className = "similar-cfg__label";
-        name.textContent = label;
-        row.appendChild(name);
+    const tooltipFor = (path, def) => {
+        const shown = Array.isArray(def)
+            ? def.join(", ")
+            : def == null ? "—" : String(def);
+        return `${path}  ·  default: ${shown}`;
+    };
 
-        let input;
-        let type;
-        if (typeof value === "boolean") {
-            type = "boolean";
-            input = document.createElement("input");
-            input.type = "checkbox";
-            input.checked = value;
-            input.className = "similar-cfg__check";
-            input.addEventListener("change",
-                () => onSettingChange(path, input.checked, type));
-        } else if (typeof value === "number") {
-            type = "number";
-            input = document.createElement("input");
-            input.type = "number";
-            input.value = String(value);
-            input.step = "any";
-            input.className = "similar-cfg__input";
-            input.addEventListener("change",
-                () => onSettingChange(path, input.value, type));
-        } else if (Array.isArray(value)) {
-            type = "array";
-            input = document.createElement("input");
-            input.type = "text";
-            input.value = value.join(", ");
-            input.className = "similar-cfg__input";
-            input.addEventListener("change",
-                () => onSettingChange(path, input.value, type));
+    const addHint = (section, hint) => {
+        if (!hint) return;
+        const p = document.createElement("p");
+        p.className = "field-hint";
+        p.textContent = hint;
+        section.appendChild(p);
+    };
+
+    // Boolean → an Advanced-style checkbox row with a support hint.
+    const makeBoolRow = (path, label, hint, value, tip) => {
+        const section = document.createElement("section");
+        section.className =
+            "field-group field-group--embedded field-group--row similar-cfg__field";
+        const lab = document.createElement("label");
+        lab.className = "checkbox";
+        lab.setAttribute("data-tooltip", tip);
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = !!value;
+        input.addEventListener("change",
+            () => onSettingChange(path, input.checked, "boolean"));
+        const span = document.createElement("span");
+        span.textContent = label;
+        lab.appendChild(input);
+        lab.appendChild(span);
+        section.appendChild(lab);
+        addHint(section, hint);
+        return section;
+    };
+
+    const fieldLabel = (label, tip) => {
+        const lab = document.createElement("label");
+        lab.className = "mini-field mini-field--wide";
+        lab.setAttribute("data-tooltip", tip);
+        const span = document.createElement("span");
+        span.textContent = label;
+        lab.appendChild(span);
+        return lab;
+    };
+
+    const valueRowSection = () => {
+        const section = document.createElement("section");
+        section.className =
+            "field-group field-group--embedded similar-cfg__field";
+        return section;
+    };
+
+    // ---- spin-box number inputs -------------------------------------------
+    // Self-wired because main.js only scans the static DOM once at init, so
+    // these dynamically-built rows would otherwise have inert spin buttons.
+    const stepInput = (input, action, factor) => {
+        const min = parseFloat(input.getAttribute("min"));
+        const max = parseFloat(input.getAttribute("max"));
+        const step = (parseFloat(input.getAttribute("step")) || 1) *
+            (factor || 1);
+        let v = parseFloat(input.value) || 0;
+        v += action === "up" ? step : -step;
+        if (!isNaN(min) && v < min) v = min;
+        if (!isNaN(max) && v > max) v = max;
+        v = Math.round(v * 1e6) / 1e6;
+        input.value = v;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+
+    const NS_SVG = "http://www.w3.org/2000/svg";
+    const spinChevron = (action) => {
+        const svg = document.createElementNS(NS_SVG, "svg");
+        svg.setAttribute("class", "spin-chevron");
+        svg.setAttribute("viewBox", "0 0 16 16");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2.5");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+        const path = document.createElementNS(NS_SVG, "path");
+        path.setAttribute("d",
+            action === "up" ? "M2 10l6-4 6 4" : "M2 6l6 4 6-4");
+        svg.appendChild(path);
+        return svg;
+    };
+
+    const spinButton = (input, action) => {
+        const btn = document.createElement("div");
+        btn.className = "number-spin-button";
+        btn.setAttribute("data-action", action);
+        btn.appendChild(spinChevron(action));
+        btn.addEventListener("click", (evt) => {
+            evt.preventDefault();
+            if (input.disabled) return;
+            stepInput(input, action, 1);
+        });
+        return btn;
+    };
+
+    const makeSpinbox = (value, attrs) => {
+        const group = document.createElement("div");
+        group.className = "number-input-group";
+        const input = document.createElement("input");
+        input.type = "number";
+        if (attrs.min != null) input.min = String(attrs.min);
+        if (attrs.max != null) input.max = String(attrs.max);
+        input.step = String(attrs.step != null ? attrs.step : "any");
+        input.value = String(value);
+        const buttons = document.createElement("div");
+        buttons.className = "number-spin-buttons";
+        const up = spinButton(input, "up");
+        const down = spinButton(input, "down");
+        buttons.appendChild(up);
+        buttons.appendChild(down);
+        group.appendChild(buttons);
+        group.appendChild(input);
+        // Keyboard arrows mirror the buttons; Shift steps 10x.
+        input.addEventListener("keydown", (evt) => {
+            if (evt.key !== "ArrowUp" && evt.key !== "ArrowDown") return;
+            evt.preventDefault();
+            const action = evt.key === "ArrowUp" ? "up" : "down";
+            stepInput(input, action, evt.shiftKey ? 10 : 1);
+            const flash = action === "up" ? up : down;
+            flash.classList.add("is-active");
+            window.setTimeout(() => flash.classList.remove("is-active"), 140);
+        });
+        return { group, input };
+    };
+
+    // Number → spin-box; text / free-form array → a plain text field.
+    const makeValueRow = (path, label, hint, value, tip, sectionKey) => {
+        const section = valueRowSection();
+        const lab = fieldLabel(label, tip);
+
+        if (typeof value === "number") {
+            const built = makeSpinbox(value, numAttrs(path, sectionKey));
+            built.input.addEventListener("change",
+                () => onSettingChange(path, built.input.value, "number"));
+            lab.appendChild(built.group);
         } else {
-            type = "string";
-            input = document.createElement("input");
+            const input = document.createElement("input");
             input.type = "text";
-            input.value = value == null ? "" : String(value);
-            input.className = "similar-cfg__input";
+            const type = Array.isArray(value) ? "array" : "string";
+            input.value = Array.isArray(value)
+                ? value.join(", ")
+                : value == null ? "" : String(value);
             input.addEventListener("change",
                 () => onSettingChange(path, input.value, type));
+            lab.appendChild(input);
         }
-        row.appendChild(input);
-        return row;
+        section.appendChild(lab);
+        addHint(section, hint);
+        return section;
+    };
+
+    // ---- multi-select dropdown (known option sets) ------------------------
+    const summarize = (picked, options) => {
+        if (!picked.length) return "None selected";
+        if (picked.length === options.length) return `All (${options.length})`;
+        if (picked.length <= 2) return picked.join(", ");
+        return `${picked.slice(0, 2).join(", ")} +${picked.length - 2}`;
+    };
+
+    const makeMultiRow = (path, label, hint, value, tip, options) => {
+        const section = valueRowSection();
+        const lab = fieldLabel(label, tip);
+
+        // Canonical options first, then any custom values already saved.
+        const opts = options.slice();
+        (value || []).forEach((v) => {
+            if (opts.indexOf(v) < 0) opts.push(v);
+        });
+        const selected = new Set(value || []);
+
+        const ms = document.createElement("div");
+        ms.className = "ms";
+
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "ms__trigger";
+        trigger.setAttribute("aria-expanded", "false");
+        const summary = document.createElement("span");
+        summary.className = "ms__summary";
+        const chev = document.createElement("span");
+        chev.className = "ms__chev";
+        chev.innerHTML = "<svg viewBox=\"0 0 16 16\" fill=\"none\" " +
+            "stroke=\"currentColor\" stroke-width=\"2.5\" " +
+            "stroke-linecap=\"round\" stroke-linejoin=\"round\">" +
+            "<path d=\"M2 6l6 4 6-4\"/></svg>";
+        trigger.appendChild(summary);
+        trigger.appendChild(chev);
+
+        const menu = document.createElement("div");
+        menu.className = "ms__menu";
+        menu.hidden = true;
+
+        const refresh = () => {
+            summary.textContent =
+                summarize(opts.filter((o) => selected.has(o)), opts);
+        };
+
+        opts.forEach((opt) => {
+            const optRow = document.createElement("label");
+            optRow.className = "ms__opt";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.checked = selected.has(opt);
+            cb.addEventListener("change", () => {
+                if (cb.checked) selected.add(opt);
+                else selected.delete(opt);
+                refresh();
+                onSettingChange(
+                    path, opts.filter((o) => selected.has(o)), "array");
+            });
+            const txt = document.createElement("span");
+            txt.textContent = opt;
+            optRow.appendChild(cb);
+            optRow.appendChild(txt);
+            menu.appendChild(optRow);
+        });
+
+        trigger.addEventListener("click", () => {
+            if (trigger.disabled) return;
+            const open = menu.hidden;
+            closeAllMultiselects();
+            menu.hidden = !open;
+            ms.classList.toggle("is-open", open);
+            trigger.setAttribute("aria-expanded", open ? "true" : "false");
+        });
+
+        refresh();
+        ms.appendChild(trigger);
+        ms.appendChild(menu);
+        lab.appendChild(ms);
+        section.appendChild(lab);
+        addHint(section, hint);
+        return section;
+    };
+
+    // Disable rows whose controlling checkbox is off (e.g. converter
+    // options when "Use external converters" is unchecked).
+    const applyDependencies = () => {
+        if (!ui.settings) return;
+        const cfg = buildConfig();
+        ui.settings.querySelectorAll("[data-dep-on]").forEach((section) => {
+            const on = !!getPath(cfg, section.getAttribute("data-dep-on"));
+            section.classList.toggle("is-disabled", !on);
+            section.querySelectorAll("input, button").forEach((ctl) => {
+                ctl.disabled = !on;
+            });
+            if (!on) closeAllMultiselects();
+        });
     };
 
     const renderSettings = () => {
         if (!ui.settings) return;
         const cfg = buildConfig();
+        const defs = (typeof SVGSimilarityConfig !== "undefined")
+            ? SVGSimilarityConfig.defaults()
+            : {};
         ui.settings.innerHTML = "";
         SECTIONS.forEach((section) => {
             const node = getPath(cfg, section.key);
@@ -216,14 +764,44 @@
             title.className = "similar-cfg__group-title";
             title.textContent = section.label;
             group.appendChild(title);
+            if (section.hint) {
+                const gh = document.createElement("p");
+                gh.className = "similar-cfg__group-hint";
+                gh.textContent = section.hint;
+                group.appendChild(gh);
+            }
+            const isWeights = section.key === "engine.weights";
             Object.keys(node).forEach((k) => {
                 const v = node[k];
                 if (v && typeof v === "object" && !Array.isArray(v)) return;
-                if (String(k).startsWith("$") || String(k).startsWith("_")) return;
-                group.appendChild(fieldRow(`${section.key}.${k}`, k, v));
+                if (String(k).startsWith("$") ||
+                    String(k).startsWith("_")) return;
+                const path = `${section.key}.${k}`;
+                if (SKIP.has(path)) return;
+                const meta = metaFor(path, k);
+                let hint = meta.hint;
+                if (!hint && isWeights) {
+                    hint = `Relative weight of ${meta.label.toLowerCase()} ` +
+                        `in the similarity score.`;
+                }
+                const tip = tooltipFor(path, getPath(defs, path));
+                let row;
+                if (typeof v === "boolean") {
+                    row = makeBoolRow(path, meta.label, hint, v, tip);
+                } else if (Array.isArray(v) && OPTIONS[path]) {
+                    row = makeMultiRow(
+                        path, meta.label, hint, v, tip, OPTIONS[path]);
+                } else {
+                    row = makeValueRow(
+                        path, meta.label, hint, v, tip, section.key);
+                }
+                row.dataset.path = path;
+                if (DEPENDS[path]) row.dataset.depOn = DEPENDS[path];
+                group.appendChild(row);
             });
             ui.settings.appendChild(group);
         });
+        applyDependencies();
     };
 
     // ---- results rendering -------------------------------------------------
@@ -346,26 +924,44 @@
         return row;
     };
 
+    // Modified-date window for the results filter.
+    const rangeMatches = (ms, range) => {
+        range = String(range || "all");
+        if (range === "all") return true;
+        if (!ms) return false;
+        const now = Date.now();
+        if (range === "today") {
+            const start = new Date(now);
+            start.setHours(0, 0, 0, 0);
+            return ms >= start.getTime();
+        }
+        const days = parseInt(range, 10) || 0;
+        if (!days) return true;
+        return ms >= now - days * 86400000;
+    };
+
     const render = () => {
         if (!ui.list) return;
         const filter = ((ui.filter && ui.filter.value) || "").toLowerCase();
         const sort = (ui.sort && ui.sort.value) || "similar";
-        let visible = sortResults(results, sort);
-        if (filter) {
-            visible = visible.filter((r) => {
-                const doc = (r.report && r.report.documents &&
-                    r.report.documents.b) || {};
-                return String(doc.name || r.filePath || "")
-                    .toLowerCase().includes(filter);
-            });
-        }
+        const range = (ui.range && ui.range.value) || "all";
+        const docOf = (r) => (r.report && r.report.documents &&
+            r.report.documents.b) || {};
+        const visible = sortResults(results, sort).filter((r) => {
+            const doc = docOf(r);
+            if (filter) {
+                const nm = String(doc.name || r.filePath || "").toLowerCase();
+                if (!nm.includes(filter)) return false;
+            }
+            return rangeMatches(doc.mtimeMs, range);
+        });
         ui.list.innerHTML = "";
         if (ui.count) ui.count.textContent = String(results.length);
         if (!visible.length) {
             const empty = document.createElement("div");
             empty.className = "empty-state";
             empty.textContent = results.length
-                ? "No results match the filter."
+                ? "No results match the current filters."
                 : "Pick a folder and click “Find similar”.";
             ui.list.appendChild(empty);
             return;
@@ -398,7 +994,7 @@
         config.index.recursive = recursive;
 
         busy = true;
-        if (ui.run) ui.run.disabled = true;
+        updateRunEnabled();
         setHint("Scanning for similar files…");
 
         let index;
@@ -413,7 +1009,7 @@
             });
         } catch (e) {
             busy = false;
-            if (ui.run) ui.run.disabled = false;
+            updateRunEnabled();
             setHint(`Similarity failed: ${e.message || e}`, "warn");
             return;
         }
@@ -436,7 +1032,7 @@
             );
         }).then(() => {
             busy = false;
-            if (ui.run) ui.run.disabled = false;
+            updateRunEnabled();
         });
     };
 
@@ -451,6 +1047,7 @@
         ui.settings = document.getElementById("similaritySettings");
         ui.filter = document.getElementById("similarityFilterInput");
         ui.sort = document.getElementById("similaritySortSelect");
+        ui.range = document.getElementById("similarityRangeSelect");
         ui.list = document.getElementById("similarityList");
         ui.count = document.getElementById("similarityCount");
         if (!ui.folder || !ui.run) return;
@@ -460,6 +1057,8 @@
         ui.recursive.checked = readJson(LS_RECURSIVE, false) === true;
         const savedSort = window.localStorage.getItem(LS_SORT);
         if (savedSort && ui.sort) ui.sort.value = savedSort;
+        const savedRange = window.localStorage.getItem(LS_RANGE);
+        if (savedRange && ui.range) ui.range.value = savedRange;
 
         validateFolder();
         renderSettings();
@@ -492,6 +1091,16 @@
                 render();
             });
         }
+        if (ui.range) {
+            ui.range.addEventListener("change", () => {
+                window.localStorage.setItem(LS_RANGE, ui.range.value);
+                render();
+            });
+        }
+        // Collapse open multi-selects when clicking outside of one.
+        document.addEventListener("click", (evt) => {
+            if (!evt.target.closest(".ms")) closeAllMultiselects();
+        });
     };
 
     if (document.readyState === "loading") {

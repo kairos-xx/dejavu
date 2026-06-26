@@ -3,7 +3,8 @@
    ================================================================ */
 
 .version-list {
-    max-height: var(--dimension-280);
+    /* max-height: var(--dimension-280); */
+    margin-top: var(--dimension-4);
 }
 
 .timeline-day {
