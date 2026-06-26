@@ -22,16 +22,33 @@
     let busy = false;
     let folderValid = false;
 
-    // Collapse any open multi-select dropdown.
+    // The multi-select menu is appended to <body> and fixed-positioned so it
+    // floats above everything and is never clipped by the .app scroll box.
+    let msOpen = null;
+
     const closeAllMultiselects = () => {
-        const root = ui.settings || document;
-        root.querySelectorAll(".ms.is-open").forEach((ms) => {
-            ms.classList.remove("is-open");
-            const menu = ms.querySelector(".ms__menu");
-            const trigger = ms.querySelector(".ms__trigger");
-            if (menu) menu.hidden = true;
-            if (trigger) trigger.setAttribute("aria-expanded", "false");
-        });
+        if (!msOpen) return;
+        msOpen.menu.hidden = true;
+        msOpen.ms.classList.remove("is-open");
+        msOpen.trigger.setAttribute("aria-expanded", "false");
+        msOpen = null;
+    };
+
+    const positionMsMenu = (trigger, menu) => {
+        const r = trigger.getBoundingClientRect();
+        const gap = 2;
+        const below = window.innerHeight - r.bottom - 4;
+        const above = r.top - 4;
+        const openBelow = below >= Math.min(menu.scrollHeight, 220) ||
+            below >= above;
+        const maxH = Math.max(80, Math.min(240, openBelow ? below : above));
+        menu.style.left = `${Math.round(r.left)}px`;
+        menu.style.minWidth = `${Math.round(r.width)}px`;
+        menu.style.maxHeight = `${Math.round(maxH)}px`;
+        menu.style.top = openBelow
+            ? `${Math.round(r.bottom + gap)}px`
+            : `${Math.round(Math.max(4,
+                r.top - Math.min(menu.scrollHeight, maxH) - gap))}px`;
     };
 
     // The "Find similar" button stays disabled until a real folder is set
@@ -722,16 +739,20 @@
 
         trigger.addEventListener("click", () => {
             if (trigger.disabled) return;
-            const open = menu.hidden;
+            const isOpen = msOpen && msOpen.menu === menu;
             closeAllMultiselects();
-            menu.hidden = !open;
-            ms.classList.toggle("is-open", open);
-            trigger.setAttribute("aria-expanded", open ? "true" : "false");
+            if (!isOpen) {
+                menu.hidden = false;
+                positionMsMenu(trigger, menu);
+                ms.classList.add("is-open");
+                trigger.setAttribute("aria-expanded", "true");
+                msOpen = { ms, trigger, menu };
+            }
         });
 
         refresh();
         ms.appendChild(trigger);
-        ms.appendChild(menu);
+        document.body.appendChild(menu);
         lab.appendChild(ms);
         section.appendChild(lab);
         addHint(section, hint);
@@ -760,13 +781,17 @@
         let unit = unitById(window.localStorage.getItem(LS_SIZE_UNIT)) ||
             bestByteUnit(Number(value) || 0);
 
-        const wrap = document.createElement("div");
-        wrap.className = "bytesize";
+        // Same number-input-group + select-wrapper layout as the save
+        // interval's pills, so it reads identically.
+        const pills = document.createElement("div");
+        pills.className = "settings-row__pills";
 
         const built = makeSpinbox(
             trimNum((Number(value) || 0) / unit.factor), { min: 0, step: 1 });
         const input = built.input;
 
+        const selWrap = document.createElement("div");
+        selWrap.className = "select-wrapper";
         const sel = document.createElement("select");
         sel.className = "unit-select";
         BYTE_UNITS.forEach((u) => {
@@ -776,6 +801,7 @@
             if (u.id === unit.id) o.selected = true;
             sel.appendChild(o);
         });
+        selWrap.appendChild(sel);
 
         input.addEventListener("change", () => {
             const bytes = Math.round(
@@ -791,9 +817,9 @@
             input.value = String(trimNum(bytes / unit.factor));
         });
 
-        wrap.appendChild(built.group);
-        wrap.appendChild(sel);
-        lab.appendChild(wrap);
+        pills.appendChild(built.group);
+        pills.appendChild(selWrap);
+        lab.appendChild(pills);
         section.appendChild(lab);
         addHint(section, hint);
         return section;
@@ -801,8 +827,9 @@
 
     // ---- token / chip editors --------------------------------------------
     // opts: { fixed: string[]|null, reorder: bool, allowFinder: bool }
-    //   fixed  → only these values (add from remaining, no free typing)
-    //   null   → free text + an "Add folder…" picker
+    //   fixed  → only these values; chosen chips (reorderable) + an available
+    //            pool below; picking one moves it out of the pool.
+    //   null   → free text chips + an "Add folder…" picker.
     const makeTokenRow = (path, label, hint, value, tip, opts) => {
         opts = opts || {};
         const fixed = opts.fixed || null;
@@ -812,7 +839,6 @@
 
         let tokens = (value || []).slice();
         let dragIndex = -1;
-        let refreshAdd = () => {};
         const persist = () => onSettingChange(path, tokens.slice(), "array");
 
         const tok = document.createElement("div");
@@ -828,6 +854,28 @@
             textInput.placeholder = "Type a name, Enter to add…";
         }
 
+        // Available pool (fixed sets): the tokens not currently chosen.
+        let avail = null;
+        const renderAvail = () => {
+            if (!avail) return;
+            const remaining = fixed.filter((f) => tokens.indexOf(f) < 0);
+            avail.innerHTML = "";
+            avail.hidden = remaining.length === 0;
+            if (!remaining.length) return;
+            const cap = document.createElement("span");
+            cap.className = "tok__avail-label";
+            cap.textContent = "Available";
+            avail.appendChild(cap);
+            remaining.forEach((opt) => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "tok__add-chip";
+                chip.textContent = `+ ${opt}`;
+                chip.addEventListener("click", () => addToken(opt));
+                avail.appendChild(chip);
+            });
+        };
+
         const addToken = (raw) => {
             const v = String(raw || "").trim();
             if (!v) return;
@@ -835,7 +883,7 @@
             if (tokens.indexOf(v) >= 0) return;
             tokens.push(v);
             renderChips();
-            refreshAdd();
+            renderAvail();
             persist();
         };
 
@@ -882,7 +930,7 @@
                 rm.addEventListener("click", () => {
                     tokens = tokens.filter((x) => x !== t);
                     renderChips();
-                    refreshAdd();
+                    renderAvail();
                     persist();
                 });
                 chip.appendChild(rm);
@@ -914,46 +962,18 @@
             });
         }
 
-        const addRow = document.createElement("div");
-        addRow.className = "tok__add-row";
-        const addBtn = document.createElement("button");
-        addBtn.type = "button";
-        addBtn.className = "btn btn--ghost btn--micro tok__add";
-        let addMenu = null;
+        tok.appendChild(chips);
 
         if (fixed) {
-            addBtn.textContent = "Add…";
-            addMenu = document.createElement("div");
-            addMenu.className = "ms__menu tok__add-menu";
-            addMenu.hidden = true;
-            refreshAdd = () => {
-                const remaining = fixed.filter((f) => tokens.indexOf(f) < 0);
-                addBtn.disabled = remaining.length === 0;
-                addMenu.innerHTML = "";
-                remaining.forEach((opt) => {
-                    const item = document.createElement("button");
-                    item.type = "button";
-                    item.className = "select-menu__item";
-                    item.setAttribute("role", "option");
-                    const sp = document.createElement("span");
-                    sp.className = "select-menu__check";
-                    const lb = document.createElement("span");
-                    lb.className = "select-menu__label";
-                    lb.textContent = opt;
-                    item.appendChild(sp);
-                    item.appendChild(lb);
-                    item.addEventListener("click", () => {
-                        addToken(opt);
-                        addMenu.hidden = true;
-                    });
-                    addMenu.appendChild(item);
-                });
-            };
-            addBtn.addEventListener("click", () => {
-                if (addBtn.disabled || !addMenu.children.length) return;
-                addMenu.hidden = !addMenu.hidden;
-            });
+            avail = document.createElement("div");
+            avail.className = "tok__avail";
+            tok.appendChild(avail);
         } else {
+            const addRow = document.createElement("div");
+            addRow.className = "tok__add-row";
+            const addBtn = document.createElement("button");
+            addBtn.type = "button";
+            addBtn.className = "btn btn--ghost btn--micro tok__add";
             addBtn.textContent = "Add folder…";
             addBtn.addEventListener("click", () => {
                 Promise.resolve(callHost("dejavu_chooseFolder", [""]))
@@ -961,15 +981,12 @@
                         if (r && r.ok && r.path) addToken(r.path);
                     });
             });
+            addRow.appendChild(addBtn);
+            tok.appendChild(addRow);
         }
 
-        addRow.appendChild(addBtn);
-        if (addMenu) addRow.appendChild(addMenu);
-
         renderChips();
-        refreshAdd();
-        tok.appendChild(chips);
-        tok.appendChild(addRow);
+        renderAvail();
         lab.appendChild(tok);
         section.appendChild(lab);
         addHint(section, hint);

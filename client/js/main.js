@@ -1022,7 +1022,9 @@ const bindEvents = () => {
 
     // Give every <select> a real chevron and replace the native popup with a
     // themed menu that can show the selected checkmark consistently in CEF.
-    document.querySelectorAll(".select-wrapper").forEach((wrap) => {
+    // Extracted so dynamically-rendered selects (e.g. the Similarity drawer)
+    // can be enhanced after the fact via window.dejavuEnhanceSelects(root).
+    const enhanceSelectWrapper = (wrap) => {
         if (!wrap.querySelector(".select-chevron")) {
             const chevron = document.createElement("span");
             chevron.className = "select-chevron";
@@ -1081,7 +1083,13 @@ const bindEvents = () => {
                 }
             });
         }
-    });
+    };
+    window.dejavuEnhanceSelects = (root) => {
+        (root || document)
+            .querySelectorAll(".select-wrapper")
+            .forEach(enhanceSelectWrapper);
+    };
+    window.dejavuEnhanceSelects(document);
 
     el.modeSegButtons.forEach((btn) => {
         btn.addEventListener("click", () => {

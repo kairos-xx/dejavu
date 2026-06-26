@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import signal
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -14,6 +15,7 @@ from logging import INFO, Formatter, Logger, StreamHandler, getLogger
 from mimetypes import guess_type
 from os import environ
 from pathlib import Path
+from re import compile as re_compile
 from re import findall as re_findall
 from re import split as re_split
 from re import sub as re_sub
@@ -86,9 +88,11 @@ HTTP_OK: int = 200
 HTTP_CREATED: int = 201
 HTTP_NOT_FOUND: int = 404
 VERSION_PARTS: int = 3
+REPO_PARTS: int = 2
 BYTES_PER_KB: int = 1024
 PACKAGE_NAME: str = "DejaVu"
 EXTENSION_DIR_NAME: str = "DejaVu"
+ANSI_ESCAPE_RE = re_compile(r"\x1b\[[0-9;]*[A-Za-z]")
 STAGE_DIR: Path = BUILD_DIR / "staging"
 CHECKSUMS_PATH: Path = BUILD_DIR / "SHA256SUMS.txt"
 RELEASE_INFO_PATH: Path = BUILD_DIR / "dejavu-release.json"
@@ -98,6 +102,15 @@ STATE_FILE: Path = Path.home() / ".dejavu_release_state.json"
 def _state_key() -> str:
     """Return a stable key for the current project in the global state file."""
     return str(ROOT.resolve())
+
+
+def sanitize_input(value: str) -> str:
+    """Strip ANSI escape sequences and control characters from a string."""
+    value = ANSI_ESCAPE_RE.sub(repl="", string=value)
+    value = "".join(
+        char for char in value if char.isprintable() or char in " \t"
+    )
+    return value.strip()
 
 
 def load_release_state() -> dict[str, Json]:
@@ -155,8 +168,8 @@ def persist_token(token: str) -> None:
 def save_release_state(args: Args) -> None:
     """Persist release settings (not the token) for later runs."""
     state: dict[str, Json] = load_release_state()
-    state["repo"] = args.repo
-    state["branch"] = args.branch
+    state["repo"] = sanitize_input(value=str(args.repo or "")) or None
+    state["branch"] = sanitize_input(value=str(args.branch or "")) or "main"
     state["private"] = args.private
     state["bump"] = args.bump
     state["prerelease"] = args.prerelease
@@ -168,16 +181,23 @@ def apply_release_state(args: Args) -> None:
     """Fill missing CLI defaults from previously saved release settings."""
     state: dict[str, Json] = load_release_state()
     if args.repo is None and isinstance(state.get("repo"), str):
-        args.repo = str(state["repo"]).strip() or None
+        repo = sanitize_input(value=str(state["repo"]))
+        if repo and len([p for p in repo.split("/") if p]) == REPO_PARTS:
+            args.repo = repo
     if args.branch == "main" and isinstance(state.get("branch"), str):
-        args.branch = str(state["branch"]).strip() or "main"
-    if state.get("bump") in {"patch", "minor", "major", "none"}:
+        args.branch = sanitize_input(value=str(state["branch"])) or "main"
+    if args.bump == "patch" and state.get("bump") in {
+        "patch",
+        "minor",
+        "major",
+        "none",
+    }:
         args.bump = str(state["bump"])
-    if isinstance(state.get("private"), bool):
+    if not args.private and isinstance(state.get("private"), bool):
         args.private = bool(state["private"])
-    if isinstance(state.get("prerelease"), bool):
+    if not args.prerelease and isinstance(state.get("prerelease"), bool):
         args.prerelease = bool(state["prerelease"])
-    if isinstance(state.get("no_sign"), bool):
+    if not args.no_sign and isinstance(state.get("no_sign"), bool):
         args.no_sign = bool(state["no_sign"])
 
 
@@ -226,12 +246,14 @@ def section(title: str) -> None:
 
 def tui_input(label: str, default: str = "", *, secret: bool = False) -> str:
     """Prompt for text in the release TUI."""
+    default = sanitize_input(value=default)
     suffix: str = f" [{default}]" if default else ""
     prompt: str = f"{label}{suffix}: "
     if secret:
         value: str = getpass(prompt=prompt).strip()
     else:
         value = _CONSOLE.input(prompt).strip()
+    value = sanitize_input(value=value)
     return value or default
 
 
@@ -1955,8 +1977,25 @@ def run_tui(args: Args) -> None:
         _ = input("Press Enter to continue...")
 
 
+def _install_interrupt_handlers() -> None:
+    """Make Ctrl+C and Ctrl+Z print the rich INTERRUPTED panel and exit."""
+
+    def _handle_interrupt(_signum: int, _frame: object) -> None:
+        _CONSOLE.print("")
+        _CONSOLE.print(
+            Panel(
+                Text("INTERRUPTED", style="bold yellow", justify="center"),
+                border_style="yellow",
+            ),
+        )
+        sys_exit(0)
+
+    signal.signal(signal.SIGTSTP, _handle_interrupt)
+
+
 def main() -> None:
     """Parse arguments and run the release pipeline."""
+    _install_interrupt_handlers()
     args: Args = _parse_args()
     apply_release_state(args=args)
     if args.tui or len(sys_argv) == 1:
