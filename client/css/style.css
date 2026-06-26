@@ -2522,6 +2522,19 @@ select:disabled {
     white-space: nowrap;
 }
 
+/* Clickable file name: open in Illustrator / shift-click to reveal. */
+.similar-row__name--link {
+    cursor: pointer;
+}
+
+.similar-row__name--link:hover {
+    color: var(--text-bright);
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--accent);
+    text-underline-offset: var(--dimension-3);
+}
+
 .similar-row__score {
     font-family: var(--mono);
     font-size: var(--dimension-11);
@@ -2555,6 +2568,16 @@ select:disabled {
 
 .similar-row.is-expanded .similar-row__detail {
     display: block;
+}
+
+/* Extended view: the graphs/details are shown for every row at once. */
+.version-list.is-extended .similar-row__detail {
+    display: block;
+}
+
+#similarityToggles {
+    justify-content: flex-end;
+    margin: var(--dimension-4) 0 var(--dimension-2);
 }
 
 .similar-row__counts {

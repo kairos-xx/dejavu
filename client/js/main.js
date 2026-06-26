@@ -271,38 +271,45 @@ const installDevelopmentReloadWatcher = () => {
         const extensionRoot = csInterface.getSystemPath(
             SystemPath.EXTENSION
         );
-        const watchedFiles = [
-            "client/index.html",
-            "client/css/style.css",
-            "client/js/main.js",
-            "client/js/top.js",
-            "client/js/interval.js",
-            "client/js/locations.js",
-            "client/js/timeline.js",
-            "client/js/recovery.js",
-            "client/js/open.js",
-            "client/js/advanced.js",
-            "client/js/bottom.js",
-            "client/js/theme.js",
-            "host/host.jsx",
-            "host/host.js",
-            "manifest.json",
-            "CSXS/manifest.xml"
-        ];
+        // Recursively fingerprint every source file so any edit triggers a
+        // reload. Skip build output, dependencies and any dot-folder/file —
+        // their churn (a release build, .git, etc.) is not "extension content".
+        const IGNORED_DIRS = { build: 1, "node_modules": 1 };
+        const isIgnoredName = (name) =>
+            !name || name.charAt(0) === "." || IGNORED_DIRS[name] === 1;
+
+        const collectSignature = (dir, parts, depth) => {
+            if (depth > 8) return;
+            let entries;
+            try {
+                entries = fs.readdirSync(dir);
+            } catch (eRead) {
+                return;
+            }
+            for (let iEntry = 0; iEntry < entries.length; iEntry++) {
+                const name = entries[iEntry];
+                if (isIgnoredName(name)) continue;
+                const fullPath = path.join(dir, name);
+                let stat;
+                try {
+                    stat = fs.statSync(fullPath);
+                } catch (eStat) {
+                    continue;
+                }
+                if (stat.isDirectory()) {
+                    collectSignature(fullPath, parts, depth + 1);
+                } else {
+                    parts.push(
+                        `${fullPath}:${stat.mtime.getTime()}:${stat.size}`
+                    );
+                }
+            }
+        };
 
         const getDevelopmentSignature = () => {
             const parts = [];
-            for (let iWatch = 0; iWatch < watchedFiles.length; iWatch++) {
-                const fullPath = path.join(extensionRoot, watchedFiles[iWatch]);
-                try {
-                    const stat = fs.statSync(fullPath);
-                    parts.push(
-                        `${watchedFiles[iWatch]}:${stat.mtime.getTime()}:${stat.size}`
-                    );
-                } catch (eStat) {
-                    parts.push(`${watchedFiles[iWatch]}:missing`);
-                }
-            }
+            collectSignature(extensionRoot, parts, 0);
+            parts.sort();
             return parts.join("|");
         };
 
@@ -2101,11 +2108,15 @@ const initPanelAutoSize = () => {
     el.app = el.app || document.querySelector(".app");
     if (!el.app || typeof window.MutationObserver !== "function") return;
     panelObserver = new MutationObserver(schedulePanelAutoSize);
+    // Only watch attributes that actually change the panel's height (drawers
+    // opening, elements hiding). Watching "class"/"style" across the whole
+    // subtree made every hover, dropdown toggle and animated width write force
+    // a synchronous reflow + host resize, which made the panel feel sluggish.
     panelObserver.observe(el.app, {
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ["open", "hidden", "class", "style"]
+        attributeFilter: ["open", "hidden"]
     });
     schedulePanelAutoSize();
 };

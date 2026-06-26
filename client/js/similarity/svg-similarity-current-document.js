@@ -4,7 +4,7 @@
   function SVGSimilarityCurrentDocument() {}
 
   SVGSimilarityCurrentDocument._cepBridgeReadyPromise = null;
-  SVGSimilarityCurrentDocument.BRIDGE_VERSION = 2;
+  SVGSimilarityCurrentDocument.BRIDGE_VERSION = 4;
 
   SVGSimilarityCurrentDocument.hasCEPBridge = function hasCEPBridge() {
     return !!(
@@ -103,29 +103,36 @@
       return SVGSimilarityCurrentDocument._cepBridgeReadyPromise;
     }
 
-    SVGSimilarityCurrentDocument._cepBridgeReadyPromise = SVGSimilarityCurrentDocument.bridgeFileExists().then(function (exists) {
-      if (exists) return true;
+    var extensionPath = SVGSimilarityCurrentDocument.getExtensionPath();
+    if (!extensionPath) {
+      return Promise.reject(new Error(
+        "Could not locate the CEP extension folder to load " +
+        "jsx/svg_similarity_bridge.jsx."));
+    }
 
-      var extensionPath = SVGSimilarityCurrentDocument.getExtensionPath();
-      if (!extensionPath) {
-        throw new Error("Could not locate the CEP extension folder to load jsx/svg_similarity_bridge.jsx.");
-      }
+    var jsxPath = extensionPath.replace(/[\\\/]$/, "") +
+      "/jsx/svg_similarity_bridge.jsx";
+    var escaped = SVGSimilarityCurrentDocument.escapeExtendScriptString(jsxPath);
+    // ALWAYS re-evaluate the bridge on each panel load. Illustrator's
+    // ExtendScript engine persists across panel reloads, so a previously
+    // loaded (stale) bridge would otherwise keep running its old code even
+    // after the JSX file on disk was updated. Re-evaluating is cheap (it only
+    // redefines functions) and guarantees the on-disk bridge is what runs.
+    var script = "$.evalFile(new File(\"" + escaped + "\")); " +
+      "typeof SVGSim_getCurrentDocumentInfo";
 
-      var jsxPath = extensionPath.replace(/[\\\/]$/, "") + "/jsx/svg_similarity_bridge.jsx";
-      var escaped = SVGSimilarityCurrentDocument.escapeExtendScriptString(jsxPath);
-      var script = "$.evalFile(new File(\"" + escaped + "\")); typeof SVGSim_getCurrentDocumentInfo + '|' + (typeof SVGSim_bridgeVersion === 'function' ? SVGSim_bridgeVersion() : 0)";
-
-      return SVGSimilarityCurrentDocument.evalCEPRaw(script).then(function (result) {
-        var parts = String(result).trim().split("|");
-        if (parts[0] !== "function" || Number(parts[1] || 0) < SVGSimilarityCurrentDocument.BRIDGE_VERSION) {
-          throw new Error("Could not load Illustrator JSX bridge from: " + jsxPath + ". Result: " + result);
+    SVGSimilarityCurrentDocument._cepBridgeReadyPromise =
+      SVGSimilarityCurrentDocument.evalCEPRaw(script).then(function (result) {
+        if (String(result).trim() !== "function") {
+          throw new Error(
+            "Could not load Illustrator JSX bridge from: " + jsxPath +
+            ". Result: " + result);
         }
         return true;
+      }).catch(function (error) {
+        SVGSimilarityCurrentDocument._cepBridgeReadyPromise = null;
+        throw error;
       });
-    }).catch(function (error) {
-      SVGSimilarityCurrentDocument._cepBridgeReadyPromise = null;
-      throw error;
-    });
 
     return SVGSimilarityCurrentDocument._cepBridgeReadyPromise;
   };

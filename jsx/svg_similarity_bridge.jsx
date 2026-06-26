@@ -1,5 +1,5 @@
 function SVGSim_bridgeVersion() {
-    return 2;
+    return 4;
 }
 
 function SVGSim_escapeJSONString(value) {
@@ -117,22 +117,30 @@ function SVGSim_findOpenDocByPath(path) {
     return null;
 }
 
-function SVGSim_closeActiveDocumentIfPath(path, protectedDoc) {
+// Snapshot of the currently-open documents (by path token), so any document
+// that appears afterwards can be identified and closed.
+function SVGSim_openDocTokens() {
+    var tokens = {};
     try {
-        if (!path || !app.documents.length) return false;
-        var active = app.activeDocument;
-        // Never close the user's own document. After exportFile() some
-        // Illustrator versions report the active document's fullName as the
-        // export target, which previously matched the temp path and closed
-        // the real open document. Guard by object identity.
-        if (protectedDoc && active === protectedDoc) return false;
-        var token = SVGSim_documentToken(active);
-        if (token && String(token) === String(path)) {
-            SVGSim_closeDocumentNoSave(active);
-            return true;
+        for (var i = 0; i < app.documents.length; i += 1) {
+            tokens[String(SVGSim_documentToken(app.documents[i]))] = true;
         }
     } catch (ignored) {}
-    return false;
+    return tokens;
+}
+
+// Close any document that was NOT in the given snapshot — e.g. the exported
+// temp SVG if Illustrator opened it as a side effect of exportFile(). Never
+// closes the document matching keepToken (the user's original).
+function SVGSim_closeStrayDocuments(knownTokens, keepToken) {
+    try {
+        for (var i = app.documents.length - 1; i >= 0; i -= 1) {
+            var d = app.documents[i];
+            var t = String(SVGSim_documentToken(d));
+            if (t === String(keepToken)) continue;
+            if (!knownTokens[t]) SVGSim_closeDocumentNoSave(d);
+        }
+    } catch (ignored) {}
 }
 
 function SVGSim_withRecentFilesSuppressed(work) {
@@ -187,19 +195,42 @@ function SVGSim_tempSVGFile(prefix) {
 }
 
 function SVGSim_exportOptions() {
+    // Minimal, defensive options. We only need geometry for fingerprinting,
+    // so raster embedding is OFF — embedding fails ("An unknown error
+    // occurred") whenever a placed image is linked/missing. Each property is
+    // guarded so an unsupported one on a given Illustrator version can't break
+    // the whole export.
     var options = new ExportOptionsSVG();
-    options.embedRasterImages = true;
-    options.fontSubsetting = SVGFontSubsetting.None;
-    options.documentEncoding = SVGDocumentEncoding.UTF8;
-    options.coordinatePrecision = 5;
-    options.cssProperties = SVGCSSPropertyLocation.STYLEATTRIBUTES;
-    options.preserveEditability = false;
-    try { options.responsive = false; } catch (ignored) {}
+    try { options.embedRasterImages = false; } catch (e1) {}
+    try { options.fontSubsetting = SVGFontSubsetting.None; } catch (e2) {}
+    try { options.coordinatePrecision = 3; } catch (e3) {}
+    try { options.cssProperties = SVGCSSPropertyLocation.STYLEATTRIBUTES; } catch (e4) {}
+    try { options.preserveEditability = false; } catch (e5) {}
     return options;
 }
 
 function SVGSim_exportDocumentToFile(doc, outFile) {
-    doc.exportFile(outFile, ExportType.SVG, SVGSim_exportOptions());
+    // Suppress the modal "unknown error" dialog so a failure never blocks the
+    // scan, and try our tuned options first, then fall back to stock defaults
+    // (option-specific failures are the most common cause of export errors).
+    var prev = null;
+    try { prev = app.userInteractionLevel; } catch (eGet) {}
+    try {
+        try {
+            app.userInteractionLevel =
+                UserInteractionLevel.DONTDISPLAYALERTS;
+        } catch (eSet) {}
+        try {
+            doc.exportFile(outFile, ExportType.SVG, SVGSim_exportOptions());
+        } catch (eFirst) {
+            try { if (outFile.exists) outFile.remove(); } catch (eRm) {}
+            doc.exportFile(outFile, ExportType.SVG, new ExportOptionsSVG());
+        }
+    } finally {
+        if (prev !== null) {
+            try { app.userInteractionLevel = prev; } catch (eRestore) {}
+        }
+    }
     return outFile.fsName;
 }
 
@@ -208,24 +239,27 @@ function SVGSim_exportCurrentDocumentAsTempSVG() {
     var originalDoc = null;
     var originalToken = "";
     var out = null;
+    var known = null;
 
     try {
         if (!app.documents.length) return "ERROR: No active document.";
         originalDoc = app.activeDocument;
         originalToken = SVGSim_documentToken(originalDoc);
+        known = SVGSim_openDocTokens();
         out = SVGSim_tempSVGFile("svgsim_current");
-        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
         SVGSim_exportDocumentToFile(originalDoc, out);
-        // Exporting writes a file; it never opens a document, so there is
-        // nothing to close here. The user's document stays open.
+        // Defensive: some Illustrator setups open the exported file as a new
+        // tab. Close anything that appeared, keeping the user's original.
+        SVGSim_closeStrayDocuments(known, originalToken);
         SVGSim_restoreOriginalDocument(originalDoc, originalToken);
         app.userInteractionLevel = previousInteraction;
         return out.fsName;
     } catch (error) {
+        try { SVGSim_closeStrayDocuments(known || {}, originalToken); } catch (ignoredStray) {}
         try { SVGSim_restoreOriginalDocument(originalDoc, originalToken); } catch (ignoredRestore) {}
         try { app.userInteractionLevel = previousInteraction; } catch (ignoredInteraction) {}
         try { if (out && out.exists) out.remove(); } catch (ignoredRemove) {}
-        return "ERROR: " + error;
+        return "ERROR: Current-document SVG export failed: " + error;
     }
 }
 
@@ -233,8 +267,8 @@ function SVGSim_convertFileToTempSVG(filePath) {
     var previousInteraction = app.userInteractionLevel;
     var originalDoc = null;
     var originalToken = "";
-    var target = null;
     var out = null;
+    var known = null;
 
     try {
         if (app.documents.length) {
@@ -245,30 +279,34 @@ function SVGSim_convertFileToTempSVG(filePath) {
         var input = new File(filePath);
         if (!input.exists) return "ERROR: File not found: " + filePath;
 
-        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
-        // Reuse the document if it is already open, otherwise open it.
-        target = SVGSim_findOpenDocByPath(input.fsName) ||
-            SVGSim_openFileSilently(input);
-        if (!target) return "ERROR: Could not open file: " + filePath;
-        out = SVGSim_tempSVGFile("svgsim_convert");
-        SVGSim_exportDocumentToFile(target, out);
-        // Any document that is part of the search is closed afterward. The
-        // active/origin document is excluded from the candidate list upstream
-        // and guarded here by path so it is never closed.
-        if (String(SVGSim_documentToken(target)) !== String(originalToken)) {
-            SVGSim_closeDocumentNoSave(target);
+        // Snapshot the open set up front. Anything not in it afterwards (the
+        // file we open to convert, plus any temp the export side-opens) is
+        // closed at the end; documents already open — including the user's —
+        // are in the snapshot and are never touched.
+        known = SVGSim_openDocTokens();
+
+        var alreadyOpen = SVGSim_findOpenDocByPath(input.fsName);
+        if (alreadyOpen) {
+            out = SVGSim_tempSVGFile("svgsim_convert");
+            SVGSim_exportDocumentToFile(alreadyOpen, out);
+            SVGSim_closeStrayDocuments(known, originalToken);
+            SVGSim_restoreOriginalDocument(originalDoc, originalToken);
+            app.userInteractionLevel = previousInteraction;
+            return out.fsName;
         }
-        target = null;
+
+        app.userInteractionLevel = UserInteractionLevel.DONTDISPLAYALERTS;
+        SVGSim_openFileSilently(input);
+        var doc = SVGSim_findOpenDocByPath(input.fsName) || app.activeDocument;
+        if (!doc) return "ERROR: Could not open file: " + filePath;
+        out = SVGSim_tempSVGFile("svgsim_convert");
+        SVGSim_exportDocumentToFile(doc, out);
+        SVGSim_closeStrayDocuments(known, originalToken);
         SVGSim_restoreOriginalDocument(originalDoc, originalToken);
         app.userInteractionLevel = previousInteraction;
         return out.fsName;
     } catch (error) {
-        try {
-            if (target && String(SVGSim_documentToken(target)) !==
-                    String(originalToken)) {
-                SVGSim_closeDocumentNoSave(target);
-            }
-        } catch (ignoredClose) {}
+        try { SVGSim_closeStrayDocuments(known || {}, originalToken); } catch (ignoredStray) {}
         try { SVGSim_restoreOriginalDocument(originalDoc, originalToken); } catch (ignoredRestore) {}
         try { app.userInteractionLevel = previousInteraction; } catch (ignoredInteraction) {}
         try { if (out && out.exists) out.remove(); } catch (ignoredRemove) {}

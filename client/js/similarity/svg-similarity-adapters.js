@@ -33,9 +33,109 @@
     this.path = require("path");
     this.os = require("os");
     this.zlib = require("zlib");
+    try { this.cp = require("child_process"); } catch (eCp) { this.cp = null; }
     this.external = (((this.config || {}).index || {}).externalConverters) || {};
     this._lastConversionPlan = [];
+    this._binCache = {};
   }
+
+  // True if a command runs (resolves its --version). Works for both bare names
+  // on PATH and absolute paths.
+  SVGSimilarityCEPAdapter.prototype.binaryRuns = function binaryRuns(cmd) {
+    if (!cmd || !this.cp || typeof this.cp.spawnSync !== "function") return false;
+    if (this._binCache[cmd] != null) return this._binCache[cmd];
+    var ok = false;
+    try {
+      var res = this.cp.spawnSync(cmd, ["--version"],
+        { encoding: "utf8", timeout: 8000, windowsHide: true });
+      ok = !!(res && !res.error && (res.status === 0 || res.status === null &&
+        String(res.stdout || res.stderr || "").length > 0));
+      if (res && res.status !== 0 && res.error) ok = false;
+    } catch (e) { ok = false; }
+    this._binCache[cmd] = ok;
+    return ok;
+  };
+
+  // Locate an Inkscape binary: the configured path, PATH, then the usual
+  // per-OS install locations (Inkscape is rarely on PATH on macOS/Windows).
+  SVGSimilarityCEPAdapter.prototype.resolveInkscapeBinary =
+      function resolveInkscapeBinary() {
+    if (this._inkscapeBin !== undefined) return this._inkscapeBin;
+    var candidates = [];
+    var configured = this.external && this.external.inkscapePath;
+    if (configured) candidates.push(configured);
+    candidates.push("inkscape");
+    var platform = (this.os && this.os.platform && this.os.platform()) || "";
+    if (platform === "darwin") {
+      candidates.push("/Applications/Inkscape.app/Contents/MacOS/inkscape");
+      candidates.push("/opt/homebrew/bin/inkscape");
+      candidates.push("/usr/local/bin/inkscape");
+    } else if (platform === "win32") {
+      candidates.push("C:\\Program Files\\Inkscape\\bin\\inkscape.exe");
+      candidates.push("C:\\Program Files\\Inkscape\\inkscape.exe");
+    } else {
+      candidates.push("/usr/bin/inkscape");
+      candidates.push("/usr/local/bin/inkscape");
+      candidates.push("/snap/bin/inkscape");
+    }
+    var found = null;
+    for (var i = 0; i < candidates.length; i += 1) {
+      if (this.binaryRuns(candidates[i])) { found = candidates[i]; break; }
+    }
+    this._inkscapeBin = found;
+    return found;
+  };
+
+  // Convert any vector file (AI/PDF/EPS/SVG) to plain SVG via Inkscape — no
+  // Illustrator involved, so nothing opens or closes. Handles both the
+  // Inkscape 1.x and 0.92 command-line syntaxes.
+  SVGSimilarityCEPAdapter.prototype.convertWithInkscape =
+      function convertWithInkscape(filePath) {
+    var self = this;
+    return new Promise(function (resolve, reject) {
+      var bin = self.resolveInkscapeBinary();
+      if (!bin) { reject(new Error("Inkscape not found.")); return; }
+      var out = self.tempSVGPath("svgsim_inkscape");
+      var argSets = [
+        ["--export-type=svg", "--export-plain-svg",
+          "--export-filename=" + out, filePath],
+        ["--export-plain-svg=" + out, filePath]
+      ];
+      var tried = 0;
+      var attempt = function () {
+        if (tried >= argSets.length) {
+          reject(new Error("Inkscape produced no SVG output."));
+          return;
+        }
+        var args = argSets[tried];
+        tried += 1;
+        try {
+          self.cp.spawnSync(bin, args,
+            { encoding: "utf8", timeout: 90000, windowsHide: true });
+        } catch (e) { attempt(); return; }
+        var exists = false;
+        try { exists = self.fs.existsSync(out); } catch (eEx) {}
+        if (exists) {
+          var text = "";
+          try { text = self.readTextAndDelete(out); } catch (eRead) {
+            reject(eRead);
+            return;
+          }
+          if (text && text.indexOf("<svg") !== -1) { resolve(text); return; }
+        }
+        attempt();
+      };
+      attempt();
+    });
+  };
+
+  // Can this file be turned into SVG without Illustrator?
+  SVGSimilarityCEPAdapter.prototype.canConvertWithoutIllustrator =
+      function canConvertWithoutIllustrator(filePath) {
+    var ext = extOf(filePath);
+    if (ext === ".svg" || ext === ".svgz") return true;
+    return !!this.resolveInkscapeBinary();
+  };
 
   SVGSimilarityCEPAdapter.prototype.deleteFileQuietly = function deleteFileQuietly(filePath) {
     if (!filePath) return false;
@@ -148,6 +248,7 @@
 
     supported.embeddedSVG = true;
     supported.illustrator = true;
+    if (this.resolveInkscapeBinary()) supported.inkscape = true;
 
     var out = [];
     for (var i = 0; i < prefer.length; i += 1) {
@@ -183,6 +284,7 @@
           errors.push(previous.message || String(previous));
         }
         if (name === "embeddedSVG") return self.extractEmbeddedSVGText(filePath);
+        if (name === "inkscape") return self.convertWithInkscape(filePath);
         if (name === "illustrator") return self.convertWithIllustrator(filePath);
         return Promise.reject(new Error("Unknown converter: " + name));
       });

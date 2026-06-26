@@ -4,7 +4,7 @@
   "name": {
     "default": "DejaVu"
   },
-  "version": "1.18.0",
+  "version": "1.19.0",
   "main": "client/index.html",
   "dejavu": {
     "_comment": "DejaVu runtime config, read by the panel at startup.",
@@ -15,7 +15,7 @@
       "owner": "kairos-xx",
       "repo": "dejavu",
       "intervalDays": 7,
-      "includePrereleases": false,
+      "includePrereleases": true,
       "apiBase": "https://api.github.com",
       "releasesPageUrl": ""
     }

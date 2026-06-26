@@ -15,6 +15,7 @@
     const LS_CONFIG = "dejavu.similarity.config.v1";
     const LS_SORT = "dejavu.similarity.sort.v1";
     const LS_RANGE = "dejavu.similarity.range.v1";
+    const LS_VIEW = "dejavu.similarity.view.v1";
 
     const ui = {};
     let results = [];
@@ -1349,10 +1350,25 @@
         head.className = "similar-row__head";
         head.setAttribute("aria-expanded", "false");
 
+        const filePath = doc.path || result.filePath || "";
         const nm = document.createElement("span");
         nm.className = "similar-row__name";
         nm.textContent = doc.name || result.filePath || "Untitled";
-        nm.title = doc.path || result.filePath || "";
+        if (filePath) {
+            nm.classList.add("similar-row__name--link");
+            nm.title =
+                "Open in Illustrator  ·  Shift-click to reveal in Finder/Explorer";
+            nm.addEventListener("click", (evt) => {
+                evt.stopPropagation();
+                if (evt.shiftKey) {
+                    if (typeof revealPath === "function") revealPath(filePath);
+                } else if (typeof callHost === "function") {
+                    callHost("dejavu_openPath", [filePath]);
+                }
+            });
+        } else {
+            nm.title = doc.name || "";
+        }
 
         const score = document.createElement("span");
         score.className = "similar-row__score";
@@ -1371,8 +1387,8 @@
         const top = document.createElement("div");
         top.className = "similar-row__top";
         top.appendChild(nm);
-        top.appendChild(score);
         top.appendChild(date);
+        top.appendChild(score);
         head.appendChild(top);
 
         // Always-visible match summary: common / changed / added / removed.
@@ -1432,24 +1448,14 @@
         meta.textContent = bits.join("  ·  ");
         detail.appendChild(meta);
 
-        if (doc.path) {
-            const actions = document.createElement("div");
-            actions.className = "similar-row__actions";
-            const reveal = document.createElement("button");
-            reveal.type = "button";
-            reveal.className = "btn btn--ghost btn--micro";
-            reveal.textContent = "Reveal";
-            reveal.addEventListener("click", (evt) => {
-                evt.stopPropagation();
-                if (typeof revealPath === "function") revealPath(doc.path);
-            });
-            actions.appendChild(reveal);
-            detail.appendChild(actions);
-        }
-
         head.addEventListener("click", () => {
             const open = row.classList.toggle("is-expanded");
             head.setAttribute("aria-expanded", open ? "true" : "false");
+            // Height changed — refit the panel (the observer no longer
+            // watches class changes, for performance).
+            if (typeof schedulePanelAutoSize === "function") {
+                schedulePanelAutoSize();
+            }
         });
 
         row.appendChild(head);
@@ -1573,6 +1579,23 @@
         });
     };
 
+    // Compact (graphs hidden) vs extended (graphs shown for every row).
+    const setView = (extended) => {
+        if (ui.list) ui.list.classList.toggle("is-extended", !!extended);
+        if (ui.compact) {
+            if (typeof setToggleIcon === "function") {
+                setToggleIcon(ui.compact, !!extended);
+            } else {
+                ui.compact.setAttribute(
+                    "aria-pressed", extended ? "true" : "false");
+                ui.compact.classList.toggle("is-on", !!extended);
+            }
+        }
+        if (typeof schedulePanelAutoSize === "function") {
+            schedulePanelAutoSize();
+        }
+    };
+
     // ---- init -------------------------------------------------------------
     const init = () => {
         ui.folder = document.getElementById("similarityFolderInput");
@@ -1587,6 +1610,7 @@
         ui.range = document.getElementById("similarityRangeSelect");
         ui.list = document.getElementById("similarityList");
         ui.count = document.getElementById("similarityCount");
+        ui.compact = document.getElementById("similarityCompactToggle");
         ui.progress = document.getElementById("similarityProgress");
         ui.progressLabel = document.getElementById("similarityProgressLabel");
         ui.progressCount = document.getElementById("similarityProgressCount");
@@ -1606,6 +1630,7 @@
 
         validateFolder();
         renderSettings();
+        setView(window.localStorage.getItem(LS_VIEW) === "extended");
 
         ui.folder.addEventListener("input", () => {
             window.localStorage.setItem(LS_FOLDER, ui.folder.value);
@@ -1628,7 +1653,22 @@
             });
         }
         ui.run.addEventListener("click", run);
-        if (ui.filter) ui.filter.addEventListener("input", render);
+        if (ui.filter) {
+            let filterTimer = null;
+            ui.filter.addEventListener("input", () => {
+                if (filterTimer) window.clearTimeout(filterTimer);
+                filterTimer = window.setTimeout(render, 140);
+            });
+        }
+        if (ui.compact) {
+            ui.compact.addEventListener("click", () => {
+                const next = !(ui.list &&
+                    ui.list.classList.contains("is-extended"));
+                window.localStorage.setItem(
+                    LS_VIEW, next ? "extended" : "compact");
+                setView(next);
+            });
+        }
         if (ui.sort) {
             ui.sort.addEventListener("change", () => {
                 window.localStorage.setItem(LS_SORT, ui.sort.value);

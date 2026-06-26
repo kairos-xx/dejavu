@@ -277,7 +277,41 @@
   };
 
   SVGSimilarityIndex.prototype.exportCurrentDocumentSVGWithMeta = function exportCurrentDocumentSVGWithMeta(options) {
-    return SVGSimilarityCurrentDocument.exportSVGWithMeta(this.adapter, options || {});
+    var self = this, adapter = this.adapter;
+    var illustratorExport = function () {
+      return SVGSimilarityCurrentDocument.exportSVGWithMeta(adapter, options || {});
+    };
+    // If the active document is saved AND we can convert it without Illustrator
+    // (Inkscape, or it is already an SVG), do that instead of exporting the
+    // live document. This keeps Illustrator completely out of the similarity
+    // run, so no document is ever opened, closed or re-tabbed.
+    if (!adapter ||
+        typeof adapter.canConvertWithoutIllustrator !== "function" ||
+        typeof adapter.normalizeToSVG !== "function") {
+      return illustratorExport();
+    }
+    return SVGSimilarityCurrentDocument.getCurrentDocumentInfo(adapter)
+      .then(function (info) {
+        if (!info || !info.ok || !info.path || info.saved === false ||
+            !adapter.canConvertWithoutIllustrator(info.path)) {
+          return illustratorExport();
+        }
+        return adapter.normalizeToSVG({ path: info.path }).then(function (norm) {
+          if (!norm || !norm.svgText) return illustratorExport();
+          return {
+            ok: true,
+            name: info.name,
+            path: info.path,
+            sourcePath: info.path,
+            folder: info.folder || null,
+            sizeBytes: info.sizeBytes || null,
+            mtimeMs: info.mtimeMs || null,
+            modifiedAt: info.modifiedAt || null,
+            svgText: norm.svgText
+          };
+        }).catch(illustratorExport);
+      })
+      .catch(illustratorExport);
   };
 
   SVGSimilarityIndex.prototype.getCurrentDocumentInfo = function getCurrentDocumentInfo() {
