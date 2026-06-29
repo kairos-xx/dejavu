@@ -876,7 +876,6 @@ input:focus {
     right: var(--select-chevron-right);
     top: var(--select-chevron-top);
     bottom: var(--select-chevron-bottom);
-    padding: var(--select-chevron-padding);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1029,18 +1028,20 @@ input:focus {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--tok__input-background);
+    background: var(--scrollbar-track-background);
 }
 
 ::-webkit-scrollbar-thumb {
     border-color: var(--border-strong);
     border-radius: var(--root-rule-border-radius);
     border: var(--root-rule-border);
+    background: var(--scrollbar-thumb-background);
     background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     border-color: var(--border-strong);
+    background: var(--scrollbar-thumb-background);
     background-clip: content-box;
 }
 
@@ -1085,6 +1086,7 @@ input:focus {
     display: flex;
     align-items: center;
     gap: var(--panel-nav-gap);
+    margin-top: var(--panel-nav-margin-top);
     padding: var(--panel-nav-padding);
     position: sticky;
     top: 0;
@@ -1116,7 +1118,12 @@ input:focus {
 }
 
 .panel-view {
-    padding: var(--panel-view-padding);
+    flex-direction: column;
+    gap: var(--layout-gap);
+}
+
+.panel-view.is-active {
+    display: flex;
 }
 
 .panel-view--vertical {
@@ -1161,6 +1168,7 @@ input:focus {
 .btn--micro {
     padding: var(--btn-micro-padding);
     flex: var(--btn-micro-flex);
+    background: var(--btn-micro-background);
 }
 
 .btn--danger-armed {

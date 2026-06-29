@@ -23,11 +23,13 @@
         return (n < 10 ? "0" : "") + n;
     };
 
-    /** Human-readable byte size: "0 KB", "512 KB", "3.4 MB". */
+    /** Human-readable byte size: "0 KB", "512 KB", "3.4 MB", "1.2 GB", "3.4 TB". */
     DEJAVU.formatBytes = function (bytes) {
         if (!bytes || bytes <= 0) return "0 KB";
         if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
-        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        if (bytes < 1024 * 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+        return (bytes / (1024 * 1024 * 1024 * 1024)).toFixed(2) + " TB";
     };
 
     /** "HH:MM:SS" from a Date. */

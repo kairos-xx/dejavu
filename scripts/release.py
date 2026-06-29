@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-from _hashlib import HASH
 from argparse import ArgumentParser, Namespace
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from getpass import getpass
@@ -36,6 +36,10 @@ from typing import (
     TypedDict,
     cast,
 )
+
+if TYPE_CHECKING:
+    from _hashlib import HASH
+    from collections.abc import Callable
 from urllib.parse import SplitResult, urlsplit
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -452,6 +456,7 @@ def gh_cli_token() -> str:
 
 def discover_token(*, prompt: bool) -> tuple[str, str | None]:
     """Return (token, login), asking only when requested.
+
     A token entered via prompt is stored in the current process environment
     under GITHUB_TOKEN so the rest of the script and any child processes can
     reuse it without asking again. It is also persisted to the release state
@@ -647,6 +652,24 @@ class Args:
     prerelease: bool = False
     tui: bool = False
     auto: bool = False
+
+
+@dataclass
+class GitHubAuth:
+    """GitHub authentication and repository information."""
+
+    owner: str
+    repo: str
+    token: str
+
+
+@dataclass
+class UploadContext:
+    """Context for uploading assets to a GitHub release."""
+
+    artifacts: list[Path]
+    existing: dict[str, int]
+    upload_base: str
 
 
 def gh(
@@ -897,21 +920,21 @@ def _stage_files(stage: Path) -> None:
 
 def _remove_stage_dir() -> None:
     """Remove the staging tree, retrying if macOS recreates metadata files."""
-    for attempt in range(3):
+    max_attempts: Final[int] = 3
+    for attempt in range(max_attempts):
         if not STAGE_DIR.exists():
             return
         try:
             rmtree(path=STAGE_DIR)
-            return
         except OSError:
             if STAGE_DIR.exists():
                 for leftover in STAGE_DIR.rglob(pattern=".DS_Store"):
-                    try:
+                    with suppress(OSError):
                         leftover.unlink()
-                    except OSError:
-                        pass
-            if attempt == 2:
+            if attempt == max_attempts - 1:
                 raise
+        else:
+            return
 
 
 def _prune_dead_files(stage: Path) -> None:
@@ -984,7 +1007,7 @@ def _update_vendor_hashes(vendor_zip: Path, target: str) -> None:
         try:
             with hashes_file.open("r", encoding="utf-8") as f:
                 hashes = loads(s=f.read())
-        except Exception as e:
+        except (OSError, ValueError) as e:
             warn(msg=f"Failed to load vendor-hashes.json: {e}")
     # Compute hash
     hash_value: str = _compute_file_hash(path=vendor_zip)
@@ -994,12 +1017,12 @@ def _update_vendor_hashes(vendor_zip: Path, target: str) -> None:
         with hashes_file.open("w", encoding="utf-8") as f:
             f.write(dumps(obj=hashes, indent=2, sort_keys=True))
         ok(msg=f"Updated vendor-hashes.json for {target}: {hash_value}")
-    except Exception as e:
+    except OSError as e:
         warn(msg=f"Failed to write vendor-hashes.json: {e}")
 
 
 def _build_vendor_zip(version: str) -> list[Path]:
-    """Create separate zips for the vendor folder (Inkscape binaries) for all platforms."""
+    """Create separate zips for the vendor folder (Inkscape binaries)."""
     vendor_src: Path = ROOT / "vendor"
     if not vendor_src.exists() or not vendor_src.is_dir():
         return []
@@ -1024,7 +1047,14 @@ def _build_vendor_zip(version: str) -> list[Path]:
             mode="w",
             compression=ZIP_DEFLATED,
         ) as zf:
-            for path in vendor_src.rglob(pattern="*"):
+            vendor_paths: list[Path]
+            if binary_path.is_dir():
+                vendor_paths = list(
+                    binary_path.rglob(pattern="*"),
+                )
+            else:
+                vendor_paths = [binary_path]
+            for path in vendor_paths:
                 if path.is_file():
                     arcname: str = str(path.relative_to(vendor_src))
                     zf.write(filename=path, arcname=arcname)
@@ -1353,9 +1383,7 @@ def get_or_create_release(
 
 
 def upload_assets(
-    owner: str,
-    repo: str,
-    token: str,
+    auth: GitHubAuth,
     release: dict[str, Json],
     artifacts: list[Path],
     progress_cb: Callable[[str], None] | None = None,
@@ -1371,6 +1399,11 @@ def upload_assets(
     }
     upload_url: str = cast(typ="str", val=release["upload_url"])
     upload_base: str = upload_url.split(sep="{")[0]
+    ctx: UploadContext = UploadContext(
+        artifacts=artifacts,
+        existing=existing,
+        upload_base=upload_base,
+    )
     if progress_cb is None:
         with _make_progress() as progress:
             task: TaskID = progress.add_task(
@@ -1379,41 +1412,29 @@ def upload_assets(
                 status="",
             )
             _upload_assets_loop(
-                artifacts=artifacts,
-                existing=existing,
-                upload_base=upload_base,
-                owner=owner,
-                repo=repo,
-                token=token,
+                ctx=ctx,
+                auth=auth,
                 progress=progress,
                 task=task,
             )
     else:
         _upload_assets_loop(
-            artifacts=artifacts,
-            existing=existing,
-            upload_base=upload_base,
-            owner=owner,
-            repo=repo,
-            token=token,
+            ctx=ctx,
+            auth=auth,
             progress_cb=progress_cb,
         )
 
 
 def _upload_assets_loop(
-    artifacts: list[Path],
-    existing: dict[str, int],
-    upload_base: str,
-    owner: str,
-    repo: str,
-    token: str,
+    ctx: UploadContext,
+    auth: GitHubAuth,
     progress: Progress | None = None,
     task: TaskID | None = None,
     progress_cb: Callable[[str], None] | None = None,
 ) -> None:
     """Inner upload loop shared by standalone and global progress modes."""
     path: Path
-    for path in artifacts:
+    for path in ctx.artifacts:
         name: str = path.name
         size: str = format_size(size=path.stat().st_size)
         status: str = f"{name} ({size})"
@@ -1421,19 +1442,19 @@ def _upload_assets_loop(
             progress.update(task_id=task, status=status)
         if progress_cb is not None:
             progress_cb(f"Uploading {status}")
-        if name in existing:
+        if name in ctx.existing:
             _ = gh(
                 method="DELETE",
-                url=f"/repos/{owner}/{repo}/releases/assets/{existing[name]}",
-                token=token,
+                url=f"/repos/{auth.owner}/{auth.repo}/releases/assets/{ctx.existing[name]}",
+                token=auth.token,
             )
         ctype: str = guess_type(url=name)[0] or "application/octet-stream"
         code: int
         body: dict[str, Json] | str
         code, body = gh(
             method="POST",
-            url=f"{upload_base}?name={name}",
-            token=token,
+            url=f"{ctx.upload_base}?name={name}",
+            token=auth.token,
             options={
                 "raw": path.read_bytes(),
                 "base": "",
@@ -1779,9 +1800,7 @@ def run_release_pipeline(
         advance()
         step(label="Uploading assets")
         upload_assets(
-            owner=owner,
-            repo=repo,
-            token=token,
+            auth=GitHubAuth(owner=owner, repo=repo, token=token),
             release=release,
             artifacts=artifacts,
             progress_cb=step,
@@ -2150,7 +2169,12 @@ def main() -> None:
         section(title="DejaVu autopilot")
         token, login = discover_token(prompt=False)
         if not token:
-            die(msg="GitHub auth is required for autopilot. Set $GITHUB_TOKEN.")
+            die(
+                msg=(
+                    "GitHub auth is required for autopilot. "
+                    "Set $GITHUB_TOKEN."
+                ),
+            )
         repo_arg: str = args.repo or default_repo_for_login(login=login)
         owner, repo = split_repo(repo_arg=repo_arg, login=login)
         args.repo = f"{owner}/{repo}"

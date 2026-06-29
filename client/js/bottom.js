@@ -129,6 +129,23 @@ const setDotState = (stateName) => {
 };
 
 /**
+ * Swaps the header project mark between the static and running SVG.
+ * The icon injector prioritizes data-icon over legacy classes, so
+ * this must update the explicit icon name instead of only toggling a class.
+ * @param {boolean} active True while a dejavu save is in flight.
+ */
+const setAppLogoSaving = (active) => {
+    if (!el.appLogo) return;
+    const iconName = active ? "app-logo-anim-css" : "app-logo";
+    if (el.appLogo.getAttribute("data-icon") === iconName) return;
+    el.appLogo.setAttribute("data-icon", iconName);
+    el.appLogo.classList.toggle("app__logo--anim", !!active);
+    if (window.dejavu && window.dejavu.injectIcon) {
+        window.dejavu.injectIcon(el.appLogo);
+    }
+};
+
+/**
  * Reflects the active save mode in the status area. Native dejavus
  * save the original and copy it to the snapshot path, so the active
  * document always stays attached to its original file.
@@ -141,13 +158,7 @@ const updateModeIndicator = () => {
         "status__value--warn",
         !isDejavuEnabledForCurrent()
     );
-    // Toggle animated logo when dejavu is ON
-    if (el.appLogo) {
-        el.appLogo.classList.toggle("app__logo--anim", isDejavuEnabledForCurrent());
-        if (window.dejavu && window.dejavu.injectIcon) {
-            window.dejavu.injectIcon(el.appLogo);
-        }
-    }
+    setAppLogoSaving(!!state.isSaving);
 };
 
 /**
@@ -440,6 +451,7 @@ const setSaving = (active) => {
  * @param {boolean} active
  */
 const applySavingVisuals = (active) => {
+    setAppLogoSaving(!!active);
     if (el.savingBar) {
         el.savingBar.classList.toggle("is-active", !!active);
         el.savingBar.setAttribute(

@@ -460,16 +460,6 @@ html.theme-light .mode-seg__btn--on {
     border: var(--status__value-path-border);
 }
 
-.status__value:not(#lastSavedValue):not(#sessionStatsValue):not(
-        .status__value--countdown
-    ),
-.preview,
-.snapshot {
-    border-radius: var(
-        --status-value-badge-border-radius
-    );
-}
-
 .snapshot__name,
 .recovery-item__name,
 .recovery-item__path,

@@ -9,6 +9,17 @@
 let timelineTable = null;
 let recoveryTable = null;
 
+const makeRadioSelectIcon = () => {
+    const icon = document.createElement("span");
+    icon.className = "svg-icon row-select__icon";
+    icon.dataset.icon = "circle-radio";
+    icon.setAttribute("aria-hidden", "true");
+    if (window.dejavu && window.dejavu.injectIcon) {
+        window.dejavu.injectIcon(icon);
+    }
+    return icon;
+};
+
 /** Returns the shared table controller for the Timeline panel. */
 const getTimelineTable = () => {
     if (!timelineTable && window.DejaVuTable) {
@@ -755,6 +766,9 @@ const exportTimelineCsv = () => {
     });
 };
 
+window.dejavu = window.dejavu || {};
+window.dejavu.exportTimelineCsv = exportTimelineCsv;
+
 const getProtectedSnapshotPaths = () => {
     const protectedSnapshots = state.settings.protectedSnapshots || {};
     const paths = [];
@@ -841,14 +855,24 @@ const updateTimelineInsights = () => {
     el.timelineUsageFill.style.width = hasMeasurableLimit
         ? `${Math.min(100, Math.round(ratio * 100))}%`
         : "0%";
-    el.timelineUsageFill.classList.toggle(
-        "timeline-insights__fill--warn",
-        ratio >= 0.8 && ratio < 1
+    el.timelineUsageFill.classList.remove(
+        "timeline-insights__fill--step-1",
+        "timeline-insights__fill--step-2",
+        "timeline-insights__fill--step-3"
     );
-    el.timelineUsageFill.classList.toggle(
-        "timeline-insights__fill--over",
-        ratio >= 1
-    );
+    const pct = hasMeasurableLimit ? Math.min(100, Math.round(ratio * 100)) : 0;
+    let fillColor = "var(--timeline-insights__fill-background)";
+    if (pct >= 70) {
+        el.timelineUsageFill.classList.add("timeline-insights__fill--step-3");
+        fillColor = "var(--timeline-insights__fill-over-background)";
+    } else if (pct >= 30) {
+        el.timelineUsageFill.classList.add("timeline-insights__fill--step-2");
+        fillColor = "var(--timeline-insights__fill-warn-background)";
+    } else {
+        el.timelineUsageFill.classList.add("timeline-insights__fill--step-1");
+        fillColor = "var(--timeline-insights__fill-background)";
+    }
+    el.timelineRetentionSummary.style.setProperty("--timeline-retention-summary-color", fillColor);
     el.timelineInsights.title = state.settings.keepDays > 0
         ? `Age cleanup is also enabled: ${state.settings.keepDays} day(s).`
         : "Retention usage uses the stricter of Keep and Max MB.";
@@ -1113,6 +1137,7 @@ const renderVersions = (items) => {
                 evt.preventDefault();
             });
             selectLabel.appendChild(selectInput);
+            selectLabel.appendChild(makeRadioSelectIcon());
             rightGroup.appendChild(selectLabel);
 
             topLine.appendChild(rightGroup);
@@ -1163,7 +1188,7 @@ const renderVersions = (items) => {
                 !inlineNoteText && "snapshot__note--empty"
             );
             noteEl.textContent = inlineNoteText || "Note";
-            noteEl.title = "Double-click to edit note";
+            noteEl.title = "Click to edit note";
 
             // Disable note editing for missing files
             if (item.exists === false) {
@@ -1172,7 +1197,7 @@ const renderVersions = (items) => {
                 noteEl.tabIndex = 0;
                 noteEl.setAttribute("role", "button");
                 noteEl.setAttribute("aria-label", "Edit snapshot note");
-                noteEl.addEventListener("dblclick", (evt) => {
+                noteEl.addEventListener("click", (evt) => {
                     evt.stopPropagation();
                     editSnapshotNote(item, noteEl);
                 });

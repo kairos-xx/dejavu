@@ -57,7 +57,6 @@
 .cache-health__summary {
     min-height: var(--cache-health__summary-min-height);
     border: var(--cache-health__summary-border);
-    border-radius: var(--cache-health__summary-border-radius);
     background: var(--bg-input-well);
     color: var(--text-dim);
     font-family: var(--font-family-code);

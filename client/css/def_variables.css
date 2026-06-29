@@ -104,6 +104,9 @@
     --open-doc__action-transition:
         color var(--base-time-100ms) var(--base-ease-standard),
         background var(--base-time-100ms) var(--base-ease-standard);
+    --open-doc__dot-animation: var(--base-animation-name-refresh-spin)
+        var(--base-time-2s) var(--base-ease-linear)
+        var(--base-animation-iteration-infinite);
     --open-doc__select-transition: opacity var(--base-time-100ms)
         var(--base-ease-standard);
     --saving-bar-is-active-saving-bar__pulse-animation: var(
@@ -277,6 +280,7 @@
     --number-spin-button-line-height: var(--base-line-height-solid);
     --open-doc__bulk-save-main-font-size: var(--base-font-sm);
     --open-doc__name-font-size: var(--base-font-sm);
+    --open-doc__pill-font-size: var(--base-font-2xs);
     --open-doc__pill-font-weight: var(--base-font-weight-semibold);
     --open-doc__rel-font-size: var(--base-font-sm);
     --preset-chip-font-size: var(--base-font-sm);
@@ -356,6 +360,10 @@
     );
     --snapshot__note-font-size: var(--base-font-sm);
     --snapshot__note-input-font-size: var(--base-font-sm);
+    --snapshot__note-color: var(--color-action-accent);
+    --snapshot__note-border-left-color: var(--color-effect-accent-glow);
+    --snapshot__note-font-weight: var(--base-font-weight-bold);
+    --snapshot__note-letter-spacing: var(--base-letter-spacing-soft);
     --snapshot__path-font-size: var(--base-font-sm);
     --file-path-underline-offset: var(
         --base-text-underline-offset-tight
@@ -386,6 +394,7 @@
     --timeline-day__label-font-size: var(--base-font-sm);
     --timeline-day__label-font-weight: var(--base-font-weight-semibold);
     --timeline-day__label-letter-spacing: var(--base-letter-spacing-label);
+    --timeline-day__label-color: var(--base-color-input-focus-text);
     --timeline-insights__labels-font-size: var(--base-font-sm);
     --timeline-insights__refresh-font-size: var(--base-font-sm);
     --timeline-insights__refresh-line-height: var(--base-line-height-control);
@@ -483,9 +492,9 @@
     --snapshot-pinned-comment-box-shadow:
         inset var(--base-border-w) var(--base-space-0) var(--base-space-0)
             var(--base-color-accent-dim),
-        inset var(--base-size-4) var(--base-space-0) var(--base-space-0)
+        inset var(--base-size-3) var(--base-space-0) var(--base-space-0)
             var(--base-color-format-eps),
-        inset var(--base-size-2) var(--base-space-0) var(--base-space-0)
+        inset var(--base-size-6) var(--base-space-0) var(--base-space-0)
             var(--base-color-format-svg);
     --snapshot-selected-pinned-box-shadow:
         inset var(--base-border-w) var(--base-space-0) var(--base-space-0)
@@ -571,7 +580,8 @@
     --border-strong: var(--base-color-border-strong);
     --menu-border: var(--base-color-border-strong);
     --btn-border: var(--base-border-w) solid var(--base-color-border);
-    --btn-background: var(--base-color-transparent);
+    --btn-background: var(--base-color-accent);
+    --btn-micro-background: var(--base-color-input);
     --border-none: var(--base-border-none);
     --btn-border-radius: var(--base-radius);
     --app__dot-background: var(--base-color-input-well);
@@ -759,6 +769,8 @@
     --mini-field-input-border-radius: var(--base-radius);
 
     --menu-bg: var(--base-color-raised);
+    --radio-inner: var(--base-color-transparent);
+    --radio-outer: var(--base-color-text-dim);
     --menu-border: var(--base-color-border-strong);
 
     --modal-border: var(--base-border-w) solid var(--base-color-border-strong);
@@ -845,6 +857,8 @@
     --recovery-item__path-border-bottom: var(--base-border-w) dotted
         var(--base-color-transparent);
 
+    --scrollbar-thumb-background: var(--base-color-border-strong);
+    --scrollbar-track-background: var(--base-color-input-well);
     --root-rule-border: var(--base-space-1) solid var(--base-color-transparent);
     --root-rule-border-radius: var(--base-radius-md);
 
@@ -1003,6 +1017,7 @@
     --timeline-day__count-border-radius: var(--base-radius-lg);
     --timeline-day__header-border-bottom: var(--base-border-w) solid
         var(--base-color-border-soft);
+    --timeline-day__header-background: var(--base-color-border-strong);
     --timeline-day__header-box-shadow: inset 0 var(--base-space-neg-1) 0
         var(--base-color-border-soft);
     --timeline-filter-min-width: var(--base-size-106);
@@ -1014,8 +1029,13 @@
         var(--base-color-border);
     --timeline-insights__refresh-color: var(--base-color-timeline-refresh);
     --timeline-insights__fill-background: var(--base-color-accent);
+    --timeline-insights__fill-step-1-background: var(--base-color-accent);
+    --timeline-insights__fill-step-2-background: var(--base-color-accent-dim);
+    --timeline-insights__fill-step-3-background: var(--base-color-warn);
+    --timeline-insights__fill-step-4-background: var(--base-color-warn-gold);
     --timeline-insights__fill-over-background: var(--base-color-danger);
     --timeline-insights__fill-warn-background: var(--base-color-warn);
+    --timeline-insights__fill-refreshing-background: var(--base-color-border-strong);
     --timeline-insights__track-border-radius: var(--base-radius-sm);
     --timeline-search-table-filters-gap: var(--base-space-3);
 
@@ -1292,11 +1312,13 @@
     --panel-view-gap: var(--base-space-4-5);
     --panel-view-active-gap: var(--base-space-7);
     --panel-view-active-padding: var(--base-space-0);
+    --layout-gap: var(--base-space-1);
     --similarity-search-gap: var(--base-space-4);
     --similarity-index-controls-display: var(--base-display-flex);
     --similarity-index-controls-flex-direction: var(--base-flex-direction-column);
     --similarity-index-controls-gap: var(--base-space-7);
     --panel-nav-gap: var(--base-space-7);
+    --panel-nav-margin-top: var(--base-size-20);
     --panel-nav-padding: var(--base-space-6) var(--base-space-4)
         var(--base-space-4);
     --panel-nav-z-index: var(--base-z-index-panel-nav);
@@ -1490,7 +1512,7 @@
     --open-doc__action-width: var(--base-size-22);
     --open-doc__actions-gap: var(--base-space-1);
     --open-doc__actions-flex: var(--base-flex-none);
-    --open-doc__bulk-save-arrow-flex: 0 0 var(--base-space-5);
+    --open-doc__bulk-save-arrow-flex: 0 0 var(--base-size-20);
     --open-doc__bulk-save-arrow-border-bottom-left-radius: var(--base-space-0);
     --open-doc__bulk-save-arrow-border-top-left-radius: var(--base-space-0);
     --open-doc__bulk-save-arrow-margin-left: var(--base-space-0);
@@ -1590,7 +1612,7 @@
     --select-chevron-svg-width: var(--base-grid-auto);
     --select-chevron-bottom: var(--base-space-0);
     --select-chevron-padding: var(--base-space-3);
-    --select-chevron-right: var(--base-space-0);
+    --select-chevron-right: var(--base-space-3);
     --select-chevron-top: var(--base-space-0);
     --select-wrapper-open-background: var(--base-color-segment-active);
     --select-menu-padding: var(--base-space-2) 0;
@@ -1792,8 +1814,8 @@
     --debug-skin-padding: var(--base-size-3) var(--base-space-3);
     --debug-skin__label-letter-spacing: var(--base-letter-spacing-badge);
 
-    --snapshot-padding: var(--base-space-2) var(--base-space-6)
-        var(--base-space-2) var(--base-space-7);
+    --snapshot-padding: var(--base-space-2) var(--base-space-4-5)
+        var(--base-space-2) var(--base-size-28);
     --snapshot__actions-gap: var(--base-space-2);
     --snapshot__actions-height: var(--base-size-22);
     --snapshot__actions-margin-top: var(--base-space-3);
@@ -1805,19 +1827,19 @@
     --snapshot__note-input-flex: var(--base-flex-fluid-auto);
     --snapshot__path-padding: var(--base-space-0);
     --file-status-pill-padding: var(
-            --base-space-0
+            --base-space-1
         )
-        var(--base-space-3);
+        var(--base-space-2);
     --snapshot__body-gap: var(--base-space-1);
     --snapshot__delta-flex: 0 0 var(--base-space-9);
     --snapshot__delta-min-width: var(--base-size-58);
     --snapshot__delta-padding: 0 var(--base-space-2);
     --snapshot__dot-height: var(--base-size-9);
     --snapshot__dot-inset: var(--base-space-neg-2);
-    --snapshot__dot-left: var(--base-space-4);
+    --snapshot__dot-left: var(--base-size-12);
     --snapshot__dot-outline: var(--base-border-w) solid var(--base-color-accent);
     --snapshot__dot-outline-offset: var(--base-space-1);
-    --snapshot__dot-top: var(--base-space-3);
+    --snapshot__dot-top: var(--base-size-8);
     --snapshot__dot-width: var(--base-size-9);
     --snapshot__meta-gap: var(--base-space-4);
     --snapshot__meta-margin-top: var(--base-space-1);
@@ -1845,6 +1867,10 @@
         --base-space-1
     );
     --row-select-control-width: var(--base-size-12);
+    --row-select-input-inset: var(--base-space-0);
+    --row-select-input-opacity: var(--base-opacity-hidden);
+    --row-select-icon-height: var(--base-size-16);
+    --row-select-icon-width: var(--base-size-16);
     --file-status-pill-flex: var(--base-flex-none);
     --snapshot__size-flex: 0 0 var(--base-space-9);
     --snapshot__size-min-width: var(--base-size-54);
@@ -1894,7 +1920,7 @@
     --switch__thumb-top: var(--base-space-0);
     --switch__thumb-width: var(--base-size-12);
 
-    --table-action-svg-icon-size: var(--base-size-16);
+    --table-action-svg-icon-size: var(--base-size-12);
     --table-actions-gap: var(--base-space-3);
     --table-actions-compact-gap: var(--base-space-1);
     --table-filter-min-width: var(--base-space-0);
@@ -1909,6 +1935,14 @@
     --table-select-all-icon-circle-height: var(--base-size-6);
     --table-select-all-icon-circle-icon-size: var(--base-size-12);
     --table-select-all-icon-circle-left: var(--base-pct-50);
+    --table-select-all-icon-circle-mixed-border-color: var(--base-color-accent);
+    --table-select-all-icon-circle-mixed-fill: var(--base-color-transparent);
+    --table-select-all-icon-circle-none-border-color: var(
+        --base-color-text-dim
+    );
+    --table-select-all-icon-circle-none-fill: var(--base-color-transparent);
+    --table-select-all-icon-circle-selected-border-color: var(--base-color-accent);
+    --table-select-all-icon-circle-selected-fill: var(--base-color-accent);
     --table-select-all-icon-circle-size: var(--base-size-12);
     --table-select-all-icon-circle-top: var(--base-pct-50);
     --table-select-all-icon-circle-width: var(--base-size-6);
@@ -1936,6 +1970,7 @@
     --table-toggles-compact-gap: var(--base-space-1);
     --table-toggles-margin-left: var(--base-space-3);
     --table-toggles-width: var(--base-pct-100);
+    --table-select-all-margin-right: var(--base-space-3);
 
     --template-editor-folder-gap: var(--base-space-1);
     --template-editor-min-height: var(--base-size-30);
@@ -1969,7 +2004,7 @@
     --timeline-day-padding: var(--base-space-0);
     --timeline-day__header-gap: var(--base-space-4);
     --timeline-day__header-height: var(--base-size-26);
-    --timeline-day__header-padding: var(--base-space-4);
+    --timeline-day__header-padding: var(--base-space-3) var(--base-space-3);
     --timeline-day__header-top: var(--base-space-0);
     --timeline-filter-flex: var(--base-flex-fluid-auto);
     --timeline-insights-content-min-width: var(--base-space-0);
@@ -1991,6 +2026,8 @@
     --timeline-insights__labels-gap: var(--base-space-4);
     --timeline-insights__labels-span-min-width: var(--base-space-0);
     --timeline-insights__labels-span-last-child-flex: var(--base-flex-none);
+    --timeline-retention-summary-color: var(--base-color-text-dim);
+    --cache-disk-space-percent-color: var(--base-color-text-dim);
     --timeline-insights__refresh-height: var(--base-align-self-stretch);
     --timeline-insights__refresh-width: var(--base-size-20);
     --timeline-insights__track-height: var(--base-size-3);
@@ -2003,10 +2040,16 @@
     --timeline-options__actions-flex: var(--base-flex-fill);
     --timeline-options__actions-gap: var(--base-space-2);
     --timeline-range-flex: var(--base-flex-none);
-    --timeline-rail-left: var(--base-space-5);
-    --timeline-rail-bottom: var(--base-space-0);
+    --timeline-rail-left: var(--base-size-16);
+    --timeline-rail-background: var(--base-color-border);
+    --timeline-rail-light-background: var(--base-color-border-strong);
+    --timeline-rail-bottom: calc(
+        var(--base-size-8) + (var(--base-size-9) / 2)
+    );
     --timeline-rail-padding: var(--base-space-2) 0;
-    --timeline-rail-top: var(--base-space-0);
+    --timeline-rail-top: calc(
+        var(--base-size-8) + (var(--base-size-9) / 2)
+    );
     --timeline-rail-width: var(--base-size-1);
     --timeline-range-min-width: var(--base-size-100);
     --timeline-responsive-breakpoint: var(--base-size-500);
@@ -2174,7 +2217,7 @@
     --update-install-status-margin: var(--base-space-4) 0 0;
     --update-install-status-min-height: var(--base-size-14);
 
-    --version-list-compact-snapshot__dot-top: var(--base-space-3);
+    --version-list-compact-snapshot__dot-top: var(--base-size-8);
     --version-list-margin-top: var(--base-space-2);
     --version-list-recovery-list-margin-top: var(--base-space-7);
     --version-list-recovery-list-open-docs-max-height: var(--base-size-280);

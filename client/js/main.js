@@ -1530,7 +1530,13 @@ const bindEvents = () => {
         refreshVersions(true);
     });
 
-    el.exportTimelineBtn.addEventListener("click", exportTimelineCsv);
+    el.exportTimelineBtn.addEventListener("click", () => {
+        if (window.dejavu && window.dejavu.exportTimelineCsv) {
+            window.dejavu.exportTimelineCsv();
+            return;
+        }
+        setHint("Timeline export is not available yet.", "warn");
+    });
     el.bulkCopyPathsBtn.addEventListener(
         "click",
         copySelectedSnapshotPaths
@@ -2615,6 +2621,7 @@ const init = () => {
         syncInstallSignatureAndSplash();
         refreshDocStatus().then(() => {
             checkRecoveryWarning();
+            auditCacheHealth({ quiet: true });
         }).then(() => {
             if (
                 crashDetected &&

@@ -4,10 +4,12 @@
     const ICON_FILES = {
         "app-logo": "icons/app-logo.svg",
         "app-logo-anim": "icons/app-logo-anim.svg",
+        "app-logo-anim-css": "icons/app-logo-anim-css.svg",
         "chevron-down": "icons/icon-chevron-down.svg",
         "chevron-up": "icons/icon-chevron-up.svg",
         "check-corner": "icons/icon-check-corner.svg",
         "circle": "icons/icon-circle.svg",
+        "circle-radio": "icons/icon-circle-radio.svg",
         "close": "icons/icon-close.svg",
         "close-circle": "icons/icon-close-circle.svg",
         "coffee": "icons/icon-coffee.svg",
@@ -34,8 +36,8 @@
     };
     const LEGACY_ICON_CLASSES = {
         "app__logo": "app-logo",
-        "app__logo--anim": "app-logo-anim",
-        "icon-circle": "circle",
+        "app__logo--anim": "app-logo-anim-css",
+        "icon-circle": "circle-radio",
         "icon-coffee": "coffee",
         "icon-compact": "compact",
         "icon-download": "download",

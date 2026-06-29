@@ -31,6 +31,17 @@ const isSavedDocumentInfo = (info) => {
     return !!(info && (info.hasPath || info.fullPath));
 };
 
+const makeRecoveryRadioSelectIcon = () => {
+    const icon = document.createElement("span");
+    icon.className = "svg-icon row-select__icon";
+    icon.dataset.icon = "circle-radio";
+    icon.setAttribute("aria-hidden", "true");
+    if (window.dejavu && window.dejavu.injectIcon) {
+        window.dejavu.injectIcon(icon);
+    }
+    return icon;
+};
+
 /** Extracts the lowercase file extension from a recovery candidate's path. */
 const recoveryCandidateExtension = (candidate) => {
     const path = candidate && candidate.path ? String(candidate.path) : "";
@@ -428,6 +439,7 @@ const renderRecoveryCenter = () => {
                 evt.preventDefault();
             });
             selectLabel.appendChild(selectInput);
+            selectLabel.appendChild(makeRecoveryRadioSelectIcon());
             rightGroup.appendChild(selectLabel);
 
             topLine.appendChild(rightGroup);
@@ -442,7 +454,7 @@ const renderRecoveryCenter = () => {
                 !note && "snapshot__note--empty"
             );
             noteEl.textContent = note || "Note";
-            noteEl.title = "Double-click to edit note";
+            noteEl.title = "Click to edit note";
 
             if (candidate.exists === false) {
                 noteEl.title = "File no longer exists - cannot edit note";
@@ -451,7 +463,7 @@ const renderRecoveryCenter = () => {
                 noteEl.tabIndex = 0;
                 noteEl.setAttribute("role", "button");
                 noteEl.setAttribute("aria-label", "Edit snapshot note");
-                noteEl.addEventListener("dblclick", (evt) => {
+                noteEl.addEventListener("click", (evt) => {
                     evt.stopPropagation();
                     editSnapshotNoteForRecovery(candidate, noteEl);
                 });
@@ -559,7 +571,7 @@ const checkMissingFilesInRecoveryCenter = () => {
                         if (relEl) relEl.textContent = formatRelativeTime(candidate.timestamp);
                         if (noteEl) {
                             noteEl.classList.remove("snapshot__note--missing");
-                            noteEl.title = "Double-click to edit note";
+                            noteEl.title = "Click to edit note";
                         }
                         if (nameEl) nameEl.title = "Open this recovery file  ·  Shift-click to reveal in Finder";
                         if (pathEl) pathEl.title = "Reveal in Finder or File Explorer";

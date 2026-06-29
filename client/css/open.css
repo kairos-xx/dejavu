@@ -49,6 +49,10 @@
     --icon-size: var(--open-doc__dot-svg-icon-icon-size);
 }
 
+.open-doc__dot--unsaved .svg-icon {
+    animation: var(--open-doc__dot-animation);
+}
+
 .open-doc__main {
     flex: var(--open-doc-main-flex);
     min-width: var(--open-doc-main-min-width);
@@ -270,7 +274,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--open-doc__action-width);
     height: var(--open-doc__action-height);
     padding: var(--open-doc__action-padding);
     border: var(--open-doc__action-border);

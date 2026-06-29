@@ -289,18 +289,26 @@
     const findVendorAsset = (release, target) => {
         if (!release || !release.assets) return null;
         const assets = release.assets;
-        // Look for vendor zip matching the platform target
-        // Pattern: DejaVu-vendor-{version}-{target}.zip
         const version = (release.tag_name || release.name || "").replace(/^v/, "");
-        const pattern = new RegExp(`DejaVu-vendor-${version}-${target}\\.zip`, "i");
+        const targetName = target.replace("-", "_");
+        const patterns = [
+            new RegExp(`DejaVu-vendor-${version}-${target}\\.zip`, "i"),
+            new RegExp(`DejaVu-vendor-.*-${target}\\.zip`, "i"),
+            new RegExp(`Inkscape_${targetName}\\.zip`, "i"),
+            new RegExp(`Inkscape_${targetName}\\.app\\.zip`, "i")
+        ];
         for (const asset of assets) {
-            if (pattern.test(asset.name)) {
+            if (patterns.some((pattern) => pattern.test(asset.name))) {
                 return asset;
             }
         }
-        // Fallback: look for any vendor zip with the target in the name
         for (const asset of assets) {
             if (asset.name.includes("vendor") && asset.name.includes(target) && asset.name.endsWith(".zip")) {
+                return asset;
+            }
+        }
+        for (const asset of assets) {
+            if (asset.name.includes("Inkscape") && asset.name.includes(targetName) && asset.name.endsWith(".zip")) {
                 return asset;
             }
         }
@@ -434,7 +442,7 @@
 
             const asset = findVendorAsset(release, target);
             if (!asset) {
-                throw new Error(`No vendor zip found for platform ${target} in release ${version}`);
+                throw new Error(`No vendor asset found for platform ${target} in release ${version}`);
             }
 
             console.log(`Found asset: ${asset.name} (${asset.browser_download_url})`);

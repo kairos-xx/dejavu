@@ -405,10 +405,23 @@ const renderCacheDiskSpace = (disk, folder) => {
         ? `${freePct}% free`
         : "Measured";
     el.cacheDiskSpaceFill.style.width = totalBytes > 0 ? `${usedPct}%` : "0%";
-    el.cacheDiskSpaceFill.classList.toggle(
-        "timeline-insights__fill--warn",
-        thresholdBytes > 0 && freeBytes < thresholdBytes
+    el.cacheDiskSpaceFill.classList.remove(
+        "timeline-insights__fill--step-1",
+        "timeline-insights__fill--step-2",
+        "timeline-insights__fill--step-3"
     );
+    let fillColor = "var(--timeline-insights__fill-background)";
+    if (usedPct >= 70) {
+        el.cacheDiskSpaceFill.classList.add("timeline-insights__fill--step-3");
+        fillColor = "var(--timeline-insights__fill-over-background)";
+    } else if (usedPct >= 30) {
+        el.cacheDiskSpaceFill.classList.add("timeline-insights__fill--step-2");
+        fillColor = "var(--timeline-insights__fill-warn-background)";
+    } else {
+        el.cacheDiskSpaceFill.classList.add("timeline-insights__fill--step-1");
+        fillColor = "var(--timeline-insights__fill-background)";
+    }
+    el.cacheDiskSpacePercent.style.setProperty("--cache-disk-space-percent-color", fillColor);
     if (el.cacheDiskSpace) {
         el.cacheDiskSpace.title = folder || "No cache folder resolved yet";
     }
@@ -497,9 +510,7 @@ const renderCacheHealth = (files, result, disk) => {
         : "none";
     const hasDiskMeasurement = diskInfo &&
         Number.isFinite(Number(diskInfo.freeBytes));
-    const freeLabel = hasDiskMeasurement
-        ? ` · free ${formatBytes(diskInfo.freeBytes)}`
-        : "";
+    const freeLabel = "";
     const missingLabel = stats.missing > 0
         ? ` · ${stats.missing} missing`
         : "";

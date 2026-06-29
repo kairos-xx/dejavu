@@ -390,6 +390,7 @@ const renderOpenDocuments = (docs) => {
 // language as the toolbar icons.
 const OPEN_DOC_ICONS = {
     power: "icon-power",
+    radio: "icon-circle-radio",
     save: "icon-save",
     unsaved: "icon-unsaved"
 };
@@ -679,7 +680,10 @@ const buildOpenDocRow = (doc) => {
         state.openDocsLastClickedKey = key;
         syncOpenDocsBulkUi();
     });
+    const selectIcon = makeSvgIcon(OPEN_DOC_ICONS.radio);
+    selectIcon.classList.add("row-select__icon");
     selectLabel.appendChild(selectInput);
+    selectLabel.appendChild(selectIcon);
     row.appendChild(selectLabel);
 
     return row;
