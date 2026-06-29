@@ -1987,6 +1987,7 @@
                     "./js/open.js",
                     "./js/bottom.js",
                     "./js/svg-icon.js",
+                    "./js/sticky-scrollbar.js",
                     "./js/timeline.js",
                     "./js/advanced.js",
                     "./js/similarity/svg-similarity-config.js",
@@ -2231,6 +2232,9 @@
                             similarityPanel.hidden = false;
                             similarityPanel.classList.add("is-active");
                         }
+                    }
+                    if (typeof updateStickyTableScrollbars === "function") {
+                        updateStickyTableScrollbars();
                     }
                 };
 

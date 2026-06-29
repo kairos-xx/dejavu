@@ -2209,6 +2209,7 @@ const activateMainPanel = (panelId) => {
     if (panelId === "openDocumentsPanel") refreshOpenDocuments();
     if (panelId === "timelinePanel") refreshVersions(true);
     if (panelId === "recoveryPanel") renderRecoveryCenter();
+    updateStickyTableScrollbars();
     schedulePanelAutoSize();
 };
 
@@ -2227,6 +2228,7 @@ const activateSettingsPanel = (panelId) => {
             tab.setAttribute("aria-selected", active ? "true" : "false");
         }
     });
+    updateStickyTableScrollbars();
     schedulePanelAutoSize();
 };
 
@@ -2247,6 +2249,23 @@ const bindPanelNavigation = () => {
                 activateMainPanel(panelId);
             }
         });
+    });
+};
+
+const updateStickyTableScrollbars = () => {
+    if (!window.StickyScrollbar) return;
+    [
+        el.versionList,
+        el.recoveryCandidateList,
+        el.openDocsList,
+        el.similarityList
+    ].filter(Boolean).forEach((node) => {
+        const api = window.StickyScrollbar.attach(node, {
+            stickySelector: ".timeline-day__header"
+        });
+        if (api && typeof api.update === "function") {
+            api.update();
+        }
     });
 };
 
@@ -2547,6 +2566,7 @@ const init = () => {
     el.saveOnEnableToggle = document.getElementById("saveOnEnableToggle");
     el.saveOnDocumentSwitchToggle = document.getElementById("saveOnDocumentSwitchToggle");
     el.versionList = document.getElementById("versionList");
+    el.similarityList = document.getElementById("similarityList");
     el.versionCount = document.getElementById("versionCount");
     el.timelineFilterInput = document.getElementById("timelineFilterInput");
     el.timelineSortSelect = document.getElementById("timelineSortSelect");
@@ -2601,6 +2621,7 @@ const init = () => {
     hydrateForm();
     bindEvents();
     bindPanelNavigation();
+    updateStickyTableScrollbars();
     Tooltip.init();
     suppressBrowserContextMenu();
     initFlyoutMenu();

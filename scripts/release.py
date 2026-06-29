@@ -27,6 +27,7 @@ from subprocess import DEVNULL, CompletedProcess
 from subprocess import run as subprocess_run
 from sys import argv as sys_argv
 from sys import exit as sys_exit
+from sys import stdout
 from typing import (
     TYPE_CHECKING,
     Final,
@@ -256,6 +257,19 @@ def die(msg: str) -> NoReturn:
         f"[bold red]  ✗[/bold red] [bold red]{msg}[/bold red]",
     )
     sys_exit(1)
+
+
+def emit_status_progress(value: float) -> None:
+    """Emit machine-readable progress for status-bar integrations.
+
+    The Status Command Button VS Code extension accepts normalized float
+    values between 0 and 1, so --auto prints lines like:
+        progress: 0.4200
+    flush=True is important because the extension reads stdout live.
+    """
+    clamped: float = max(0.0, min(1.0, value))
+    stdout.write(f"progress: {clamped:.4f}\n")
+    stdout.flush()
 
 
 def section(title: str) -> None:
@@ -652,6 +666,7 @@ class Args:
     prerelease: bool = False
     tui: bool = False
     auto: bool = False
+    emit_status_progress: bool = False
 
 
 @dataclass
@@ -670,6 +685,19 @@ class UploadContext:
     artifacts: list[Path]
     existing: dict[str, int]
     upload_base: str
+
+
+@dataclass
+class GitHubOperationsContext:
+    """Context for GitHub release operations."""
+
+    args: Args
+    owner: str
+    repo: str
+    login: str | None
+    token: str
+    new_version: str
+    artifacts: list[Path]
 
 
 def gh(
@@ -1580,6 +1608,7 @@ def _parse_args() -> Args:
         prerelease=cast("bool", ns.prerelease),
         tui=cast("bool", ns.tui),
         auto=cast("bool", ns.auto),
+        emit_status_progress=False,
     )
 
 
@@ -1707,6 +1736,140 @@ def _release_summary_table(
     return Panel(renderable=table, border_style="green")
 
 
+def _setup_progress_tracking(
+    args: Args,
+    progress: Progress,
+    task: TaskID,
+) -> tuple[Callable[[str], None], Callable[[], None]]:
+    """Set up progress tracking with optional status-bar integration."""
+    progress_tick: int = 0
+    progress_total_hint: int = 8 if args.build_only or args.dry_run else 18
+    if args.emit_status_progress:
+        emit_status_progress(value=0.0)
+
+    def step(label: str) -> None:
+        nonlocal progress_tick
+        progress.update(
+            task_id=task,
+            description=f"[bold cyan]{label}[/bold cyan]",
+        )
+        if args.emit_status_progress:
+            progress_tick += 1
+            fraction: float = min(
+                0.98,
+                progress_tick / progress_total_hint,
+            )
+            emit_status_progress(value=fraction)
+
+    def advance() -> None:
+        progress.advance(task_id=task)
+
+    return step, advance
+
+
+def _handle_build_only(
+    args: Args,
+    new_version: str,
+    artifacts: list[Path],
+) -> bool:
+    """Handle build-only mode. Returns True if handled."""
+    if not args.build_only:
+        return False
+    _CONSOLE.print(
+        _build_summary_table(
+            new_version=new_version,
+            artifacts=artifacts,
+        ),
+    )
+    ok(msg="local package build complete")
+    if args.emit_status_progress:
+        emit_status_progress(value=1.0)
+    return True
+
+
+def _handle_dry_run(
+    args: Args,
+    owner: str,
+    repo: str,
+    new_version: str,
+    artifacts: list[Path],
+) -> bool:
+    """Handle dry-run mode. Returns True if handled."""
+    if not args.dry_run:
+        return False
+    _CONSOLE.print(
+        _dry_run_summary_table(
+            owner=owner,
+            repo=repo,
+            new_version=new_version,
+            artifacts=artifacts,
+        ),
+    )
+    warn(msg="Skipping GitHub create/push/release.")
+    if args.emit_status_progress:
+        emit_status_progress(value=1.0)
+    return True
+
+
+def _run_github_operations(
+    ctx: GitHubOperationsContext,
+    step: Callable[[str], None],
+    advance: Callable[[], None],
+) -> None:
+    """Run GitHub repository and release operations."""
+    step("Ensuring GitHub repository")
+    ensure_repo(
+        owner=ctx.owner,
+        repo=ctx.repo,
+        login=ctx.login,
+        token=ctx.token,
+        private=ctx.args.private,
+    )
+    ensure_git_remote(owner=ctx.owner, repo=ctx.repo)
+    advance()
+    if ctx.args.skip_push:
+        warn("skipping git push (--skip-push)")
+    else:
+        step("Pushing branch and tag")
+        git_push(
+            owner=ctx.owner,
+            repo=ctx.repo,
+            token=ctx.token,
+            branch=ctx.args.branch,
+            version=ctx.new_version,
+        )
+    advance()
+    step("Creating release")
+    release: dict[str, Json] = get_or_create_release(
+        owner=ctx.owner,
+        repo=ctx.repo,
+        token=ctx.token,
+        version=ctx.new_version,
+        prerelease=ctx.args.prerelease,
+    )
+    advance()
+    step("Uploading assets")
+    upload_assets(
+        auth=GitHubAuth(owner=ctx.owner, repo=ctx.repo, token=ctx.token),
+        release=release,
+        artifacts=ctx.artifacts,
+        progress_cb=step,
+    )
+    advance()
+    _CONSOLE.print(
+        _release_summary_table(
+            owner=ctx.owner,
+            repo=ctx.repo,
+            new_version=ctx.new_version,
+            artifacts=ctx.artifacts,
+        ),
+    )
+    ok(msg="release complete")
+    step("Done")
+    if ctx.args.emit_status_progress:
+        emit_status_progress(value=1.0)
+
+
 def run_release_pipeline(
     args: Args,
     owner: str,
@@ -1722,16 +1885,11 @@ def run_release_pipeline(
             total=total_steps,
             status="",
         )
-
-        def step(label: str) -> None:
-            progress.update(
-                task_id=task,
-                description=f"[bold cyan]{label}[/bold cyan]",
-            )
-
-        def advance() -> None:
-            progress.advance(task_id=task)
-
+        step, advance = _setup_progress_tracking(
+            args=args,
+            progress=progress,
+            task=task,
+        )
         if not args.build_only:
             write_update_repo(owner=owner, repo=repo)
         if not args.build_only and not args.skip_commit:
@@ -1743,79 +1901,38 @@ def run_release_pipeline(
             step=step,
             progress_cb=step,
         )
-        step(label="Build complete")
+        step("Build complete")
         advance()
-        if args.build_only:
-            _CONSOLE.print(
-                _build_summary_table(
-                    new_version=new_version,
-                    artifacts=artifacts,
-                ),
-            )
-            ok(msg="local package build complete")
+        if _handle_build_only(
+            args=args,
+            new_version=new_version,
+            artifacts=artifacts,
+        ):
             return
-        if args.dry_run:
-            _CONSOLE.print(
-                _dry_run_summary_table(
-                    owner=owner,
-                    repo=repo,
-                    new_version=new_version,
-                    artifacts=artifacts,
-                ),
-            )
-            warn(msg="Skipping GitHub create/push/release.")
+        if _handle_dry_run(
+            args=args,
+            owner=owner,
+            repo=repo,
+            new_version=new_version,
+            artifacts=artifacts,
+        ):
             return
         if not token:
             die(msg="A GitHub token is required (set $GITHUB_TOKEN).")
-        step(label="Ensuring GitHub repository")
-        ensure_repo(
+        ctx: GitHubOperationsContext = GitHubOperationsContext(
+            args=args,
             owner=owner,
             repo=repo,
             login=login,
             token=token,
-            private=args.private,
-        )
-        ensure_git_remote(owner=owner, repo=repo)
-        advance()
-        if args.skip_push:
-            warn(msg="skipping git push (--skip-push)")
-        else:
-            step(label="Pushing branch and tag")
-            git_push(
-                owner=owner,
-                repo=repo,
-                token=token,
-                branch=args.branch,
-                version=new_version,
-            )
-        advance()
-        step(label="Creating release")
-        release: dict[str, Json] = get_or_create_release(
-            owner=owner,
-            repo=repo,
-            token=token,
-            version=new_version,
-            prerelease=args.prerelease,
-        )
-        advance()
-        step(label="Uploading assets")
-        upload_assets(
-            auth=GitHubAuth(owner=owner, repo=repo, token=token),
-            release=release,
+            new_version=new_version,
             artifacts=artifacts,
-            progress_cb=step,
         )
-        advance()
-        _CONSOLE.print(
-            _release_summary_table(
-                owner=owner,
-                repo=repo,
-                new_version=new_version,
-                artifacts=artifacts,
-            ),
+        _run_github_operations(
+            ctx=ctx,
+            step=step,
+            advance=advance,
         )
-        ok(msg="release complete")
-        step(label="Done")
 
 
 def tui_status(args: Args) -> None:
@@ -2166,13 +2283,13 @@ def main() -> None:
     args: Args = _parse_args()
     apply_release_state(args=args)
     if args.auto:
+        args.emit_status_progress = True
         section(title="DejaVu autopilot")
         token, login = discover_token(prompt=False)
         if not token:
             die(
                 msg=(
-                    "GitHub auth is required for autopilot. "
-                    "Set $GITHUB_TOKEN."
+                    "GitHub auth is required for autopilot. Set $GITHUB_TOKEN."
                 ),
             )
         repo_arg: str = args.repo or default_repo_for_login(login=login)

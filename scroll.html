@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compact Sticky Scrollbar API</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f2f2f2;
+    }
+
+    .scroll-panel {
+      --sticky-scrollbar-width: 6px;
+      --sticky-scrollbar-right: 4px;
+      --sticky-scrollbar-bottom: 8px;
+      --sticky-scrollbar-extra-top: 10px;
+      --sticky-scrollbar-safe-right: 34px;
+      --sticky-scrollbar-min-thumb-height: 36px;
+      --sticky-scrollbar-min-elastic-thumb-height: 18px;
+      --sticky-scrollbar-elastic-strength: 0.55;
+      --sticky-scrollbar-elastic-track-strength: 1;
+      --sticky-scrollbar-elastic-max: 90px;
+      --sticky-scrollbar-elastic-hold-delay: 0ms;
+      --sticky-scrollbar-auto-hide: 1;
+      --sticky-scrollbar-auto-hide-delay: 750ms;
+      --sticky-scrollbar-fade-duration: 180ms;
+      --sticky-scrollbar-z-index: 2147483647;
+      --sticky-scrollbar-thumb-radius: 999px;
+      --sticky-scrollbar-thumb-background: rgba(0, 0, 0, 0.38);
+      --sticky-scrollbar-thumb-background-dragging: rgba(0, 0, 0, 0.52);
+      --sticky-scrollbar-thumb-box-shadow: none;
+      --sticky-scrollbar-thumb-border: none;
+      --sticky-scrollbar-thumb-opacity: 1;
+      --sticky-scrollbar-thumb-opacity-dragging: 1;
+
+      width: min(560px, calc(100vw - 32px));
+      height: 360px;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: auto;
+      touch-action: none;
+      border: 1px solid #c8c8c8;
+      border-radius: 12px;
+      background: white;
+    }
+
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      background: #eeeeee;
+      border-bottom: 1px solid #d4d4d4;
+      font-weight: 700;
+    }
+
+    .text {
+      padding: 18px;
+      padding-right: var(--custom-scrollbar-safe-right, 18px);
+      line-height: 1.55;
+      border-bottom: 1px solid #eeeeee;
+    }
+
+    .demo-alert-button,
+    .demo-card {
+      appearance: none;
+      border: 1px solid #b8b8b8;
+      border-radius: 8px;
+      background: #f7f7f7;
+      color: #222222;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .demo-alert-button {
+      padding: 8px 12px;
+      font-weight: 600;
+    }
+
+    .demo-card {
+      margin-top: 12px;
+      padding: 12px;
+      user-select: none;
+    }
+
+    .demo-alert-button:hover,
+    .demo-card:hover {
+      background: #eeeeee;
+    }
+
+    .demo-alert-button:active,
+    .demo-card:active {
+      background: #e2e2e2;
+      transform: translateY(1px);
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: rgba(0, 0, 0, 0.06);
+      font-size: 0.92em;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="scroll-panel" id="myScrollElement">
+    <div class="sticky-header">Header A fills the full width</div>
+
+    <div class="text">
+      Pull down at the top on mobile.
+      <br><br>
+      The thumb cannot appear above the bottom of the current visible sticky
+      header.
+      <br><br>
+      The scrollbar always respects <code>--sticky-scrollbar-extra-top</code>,
+      including after elastic return.
+      <br><br>
+      The elastic hold delay is controlled by
+      <code>--sticky-scrollbar-elastic-hold-delay</code>.
+      <br><br>
+      Keep scrolling.
+    </div>
+
+    <div class="sticky-header">Header B fills the full width</div>
+
+    <div class="text">
+      Any element inside the content can receive its own events.
+      <br><br>
+
+      <button class="demo-alert-button" id="demoAlertButton" type="button">
+        Button click event
+      </button>
+
+      <div class="demo-card" id="demoCard" role="button" tabindex="0">
+        Custom div click event
+      </div>
+
+      <br>
+      Dragging starts only after a movement threshold, so normal click/tap
+      events are not blocked.
+      <br><br>
+      Keep scrolling.
+    </div>
+
+    <div class="sticky-header">Header C fills the full width</div>
+
+    <div class="text">
+      During top elastic overscroll, the top of the thumb stays glued below the
+      visible sticky header.
+      <br><br>
+      During bottom elastic overscroll, the bottom of the thumb stays glued to
+      the bottom of the elastically moved content area.
+      <br><br>
+      Keep scrolling.
+    </div>
+
+    <div class="sticky-header">Header D fills the full width</div>
+
+    <div class="text">
+      The scrollbar is hidden completely when the content does not overflow.
+      <br><br>
+      Usage:
+      <br><br>
+      <code>StickyScrollbar.attach("#myScrollElement", ".sticky-header");</code>
+      <br><br>
+      End of demo.
+    </div>
+  </div>
+
+  <script>
+    const StickyScrollbar = (() => {
+      const styleId = "sticky-scrollbar-style";
+      const instances = new WeakMap();
+
+      const defaults = {
+        stickySelector: ".sticky-header",
+        width: 6,
+        right: 4,
+        bottom: 8,
+        extraTop: 10,
+        safeRight: 34,
+        minThumbHeight: 36,
+        minElasticThumbHeight: 18,
+        elasticStrength: 0.55,
+        elasticTrackStrength: 1,
+        elasticMax: 90,
+        elasticHoldDelay: 0,
+        autoHide: true,
+        autoHideDelay: 750,
+        fadeDuration: 180,
+        zIndex: 2147483647,
+        momentum: true,
+        momentumFriction: 0.92,
+        dragThreshold: 6,
+        directionLock: true,
+        allowPointer: null,
+        styles: {
+          content: {},
+          track: {},
+          thumb: {},
+          thumbDragging: {}
+        }
+      };
+
+      const cssKeys = [
+        "width",
+        "right",
+        "bottom",
+        "extraTop",
+        "safeRight",
+        "minThumbHeight",
+        "minElasticThumbHeight",
+        "elasticStrength",
+        "elasticTrackStrength",
+        "elasticMax",
+        "elasticHoldDelay",
+        "autoHide",
+        "autoHideDelay",
+        "fadeDuration",
+        "zIndex"
+      ];
+
+      const timeKeys = new Set([
+        "autoHideDelay",
+        "fadeDuration",
+        "elasticHoldDelay"
+      ]);
+
+      const thumbDefaults = {
+        radius: "999px",
+        background: "rgba(0,0,0,0.38)",
+        backgroundDragging: "rgba(0,0,0,0.52)",
+        boxShadow: "none",
+        border: "none",
+        opacity: 1,
+        opacityDragging: 1
+      };
+
+      const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+      const px = (v) => `${v}px`;
+
+      const dash = (s) => {
+        return s.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+      };
+
+      const cssVar = (key, group = "") => {
+        return `--sticky-scrollbar-${group ? `${group}-` : ""}${dash(key)}`;
+      };
+
+      const set = (el, styles) => {
+        for (const key in styles) {
+          if (styles[key] != null) {
+            el.style[key] = String(styles[key]);
+          }
+        }
+      };
+
+      const cssProp = (key) => {
+        return key.startsWith("-") || key.includes("-") ? key : dash(key);
+      };
+
+      const ruleBody = (styles) => {
+        return Object.keys(styles)
+          .map((key) => `${cssProp(key)}:${styles[key]}`)
+          .join(";");
+      };
+
+      const listen = (items, remove = false) => {
+        const method = remove ? "removeEventListener" : "addEventListener";
+
+        for (const name in items) {
+          let [target, type, handler, options] = items[name];
+
+          if (typeof target === "string") {
+            target = document.querySelector(target);
+          }
+
+          target?.[method](type, handler, options);
+        }
+      };
+
+      const events = (items) => {
+        listen(items);
+
+        return () => {
+          listen(items, true);
+        };
+      };
+
+      const inject = () => {
+        if (document.getElementById(styleId)) {
+          return;
+        }
+
+        const style = document.createElement("style");
+
+        const rules = {
+          ".sticky-scrollbar-hidden": {
+            "scrollbar-width": "none !important",
+            "-ms-overflow-style": "none !important"
+          },
+          ".sticky-scrollbar-hidden::-webkit-scrollbar": {
+            width: "0 !important",
+            height: "0 !important",
+            display: "none !important"
+          },
+          ".sticky-scrollbar-content": {
+            position: "relative",
+            minHeight: "100%"
+          },
+          ".sticky-scrollbar-track": {
+            position: "fixed",
+            display: "none",
+            background: "transparent",
+            opacity: "0",
+            pointerEvents: "none",
+            touchAction: "none",
+            userSelect: "none",
+            "-webkit-user-select": "none"
+          },
+          ".sticky-scrollbar-track.is-visible": {
+            opacity: "1",
+            pointerEvents: "auto"
+          },
+          ".sticky-scrollbar-thumb": {
+            position: "absolute",
+            top: "0",
+            left: "0",
+            right: "0",
+            minHeight: "0",
+            cursor: "grab",
+            touchAction: "none",
+            userSelect: "none",
+            "-webkit-user-select": "none",
+            willChange: "transform,height"
+          },
+          ".sticky-scrollbar-thumb:active": {
+            cursor: "grabbing"
+          }
+        };
+
+        style.id = styleId;
+        document.head.appendChild(style);
+
+        for (const selector in rules) {
+          style.sheet.insertRule(
+            `${selector}{${ruleBody(rules[selector])}}`,
+            style.sheet.cssRules.length
+          );
+        }
+      };
+
+      const css = (el, name) => {
+        const local = getComputedStyle(el).getPropertyValue(name).trim();
+        const root = getComputedStyle(document.documentElement)
+          .getPropertyValue(name)
+          .trim();
+
+        return local || root;
+      };
+
+      const num = (value, fallback) => {
+        const parsed = Number.parseFloat(value);
+
+        return Number.isFinite(parsed) ? parsed : fallback;
+      };
+
+      const ms = (value, fallback) => {
+        const parsed = num(value, NaN);
+        const raw = String(value).trim().toLowerCase();
+
+        if (!Number.isFinite(parsed)) {
+          return fallback;
+        }
+
+        return raw.endsWith("s") && !raw.endsWith("ms")
+          ? parsed * 1000
+          : parsed;
+      };
+
+      const bool = (value, fallback) => {
+        const raw = String(value).trim().toLowerCase();
+
+        if (["0", "false", "off", "no"].includes(raw)) {
+          return false;
+        }
+
+        if (["1", "true", "on", "yes"].includes(raw)) {
+          return true;
+        }
+
+        return fallback;
+      };
+
+      const resolve = (target) => {
+        if (typeof target === "string") {
+          return document.querySelector(target);
+        }
+
+        return target && target.nodeType === 1 ? target : null;
+      };
+
+      const normalize = (options = {}) => {
+        if (typeof options === "string") {
+          return {
+            stickySelector: options
+          };
+        }
+
+        if (options.sticky && !options.stickySelector) {
+          options.stickySelector = options.sticky;
+        }
+
+        return options;
+      };
+
+      const merge = (base, next) => {
+        next = normalize(next);
+
+        return {
+          ...base,
+          ...next,
+          styles: {
+            ...(base.styles || {}),
+            ...(next.styles || {})
+          }
+        };
+      };
+
+      const wheelDelta = (event, el) => {
+        if (event.deltaMode === 1) {
+          return event.deltaY * 16;
+        }
+
+        if (event.deltaMode === 2) {
+          return event.deltaY * el.clientHeight;
+        }
+
+        return event.deltaY;
+      };
+
+      function attach(target, options = {}) {
+        let opt = normalize(options);
+
+        if (
+          document.readyState === "loading" &&
+          typeof target === "string" &&
+          !resolve(target)
+        ) {
+          let api = null;
+          let destroyed = false;
+          let pendingTop = null;
+
+          const start = () => {
+            if (destroyed) {
+              return;
+            }
+
+            api = attachNow(target, opt);
+
+            if (pendingTop != null) {
+              api.scrollTo(pendingTop);
+              pendingTop = null;
+            }
+          };
+
+          const offReady = events({
+            ready: [
+              document,
+              "DOMContentLoaded",
+              start,
+              {
+                once: true
+              }
+            ]
+          });
+
+          return {
+            update() {
+              api?.update();
+            },
+
+            set(next) {
+              if (api) {
+                api.set(next);
+              } else {
+                opt = merge(opt, next);
+              }
+            },
+
+            scrollTo(top) {
+              if (api) {
+                api.scrollTo(top);
+              } else {
+                pendingTop = top;
+              }
+            },
+
+            scrollBy(delta) {
+              api?.scrollBy(delta);
+            },
+
+            state() {
+              return api ? api.state() : null;
+            },
+
+            destroy() {
+              destroyed = true;
+              offReady();
+              api?.destroy();
+            }
+          };
+        }
+
+        return attachNow(target, opt);
+      }
+
+      function attachNow(target, options) {
+        const el = resolve(target);
+
+        if (!el) {
+          throw new TypeError(
+            "StickyScrollbar.attach(target) could not find an element."
+          );
+        }
+
+        instances.get(el)?.destroy();
+        inject();
+
+        let opt = merge(
+          {
+            styles: defaults.styles
+          },
+          options
+        );
+
+        const content = document.createElement("div");
+        const track = document.createElement("div");
+        const thumb = document.createElement("div");
+
+        const saved = {
+          overflowX: el.style.overflowX,
+          overflowY: el.style.overflowY,
+          overscrollBehavior: el.style.overscrollBehavior,
+          touchAction: el.style.touchAction,
+          WebkitOverflowScrolling: el.style.WebkitOverflowScrolling
+        };
+
+        const savedTabIndex = el.getAttribute("tabindex");
+
+        const state = {
+          armed: false,
+          touch: false,
+          thumb: false,
+          cancelClick: false,
+          pointer: null,
+          offset: 0,
+          elastic: 0,
+          startX: 0,
+          startY: 0,
+          lastY: 0,
+          lastTime: 0,
+          velocity: 0,
+          wheelTimer: 0,
+          hideTimer: 0,
+          hideFrame: 0,
+          elasticFrame: 0,
+          elasticHoldTimer: 0,
+          inertiaFrame: 0,
+          updateFrame: 0
+        };
+
+        content.className = "sticky-scrollbar-content";
+        track.className = "sticky-scrollbar-track";
+        thumb.className = "sticky-scrollbar-thumb";
+
+        while (el.firstChild) {
+          content.appendChild(el.firstChild);
+        }
+
+        el.appendChild(content);
+        track.appendChild(thumb);
+        document.body.appendChild(track);
+        el.classList.add("sticky-scrollbar-hidden");
+
+        set(el, {
+          overflowX: "hidden",
+          overflowY: "hidden",
+          overscrollBehavior: "none",
+          touchAction: "none",
+          WebkitOverflowScrolling: "auto"
+        });
+
+        if (!el.hasAttribute("tabindex")) {
+          el.tabIndex = 0;
+        }
+
+        const cfg = (key) => opt[key] ?? defaults[key];
+
+        const setting = (key) => {
+          const raw = opt[key] ?? css(el, cssVar(key));
+
+          if (key === "autoHide") {
+            return bool(raw, defaults[key]);
+          }
+
+          if (timeKeys.has(key)) {
+            return ms(raw, defaults[key]);
+          }
+
+          return num(raw, defaults[key]);
+        };
+
+        const thumbSetting = (key) => {
+          return css(el, cssVar(key, "thumb")) || thumbDefaults[key];
+        };
+
+        const settings = () => {
+          const out = {};
+
+          for (const key of cssKeys) {
+            out[key] = setting(key);
+          }
+
+          for (const key in thumbDefaults) {
+            out[key] = key.includes("opacity")
+              ? num(thumbSetting(key), thumbDefaults[key])
+              : thumbSetting(key);
+          }
+
+          return out;
+        };
+
+        const maxScroll = () => Math.max(0, el.scrollHeight - el.clientHeight);
+        const hasOverflow = () => el.scrollHeight > el.clientHeight + 1;
+
+        const stopElastic = () => {
+          clearTimeout(state.elasticHoldTimer);
+          cancelAnimationFrame(state.elasticFrame);
+          state.elasticHoldTimer = 0;
+          state.elasticFrame = 0;
+        };
+
+        const stopInertia = () => {
+          cancelAnimationFrame(state.inertiaFrame);
+          state.inertiaFrame = 0;
+          state.velocity = 0;
+        };
+
+        const clampScroll = () => {
+          el.scrollTop = clamp(el.scrollTop, 0, maxScroll());
+        };
+
+        const stickyBottom = () => {
+          const rect = el.getBoundingClientRect();
+          const base = rect.top + el.clientTop;
+          const line = base + 1;
+          const headers = content.querySelectorAll(
+            cfg("stickySelector") || defaults.stickySelector
+          );
+
+          let bottom = base;
+          let active = null;
+
+          for (const header of headers) {
+            const box = header.getBoundingClientRect();
+            const style = getComputedStyle(header);
+
+            if (style.display === "none" || style.visibility === "hidden") {
+              continue;
+            }
+
+            if (header.offsetTop <= el.scrollTop + 1) {
+              active = header;
+            }
+
+            if (box.top <= line && box.bottom > line) {
+              bottom = Math.max(bottom, box.bottom);
+            }
+          }
+
+          if (bottom === base && active) {
+            bottom = base + Math.max(0, state.elastic) +
+              active.getBoundingClientRect().height;
+          }
+
+          return Math.min(bottom, rect.bottom);
+        };
+
+        const contentBottom = () => {
+          const rect = el.getBoundingClientRect();
+          const s = settings();
+
+          return rect.top + el.clientTop + el.clientHeight +
+            Math.min(0, state.elastic) * s.elasticTrackStrength;
+        };
+
+        const hide = (instant = false) => {
+          clearTimeout(state.hideTimer);
+          cancelAnimationFrame(state.hideFrame);
+          track.classList.remove("is-visible");
+
+          if (instant) {
+            track.style.display = "none";
+            return;
+          }
+
+          state.hideFrame = requestAnimationFrame(() => {
+            state.hideTimer = setTimeout(() => {
+              if (!track.classList.contains("is-visible")) {
+                track.style.display = "none";
+              }
+            }, settings().fadeDuration + 20);
+          });
+        };
+
+        const show = () => {
+          if (!hasOverflow()) {
+            hide(true);
+            return;
+          }
+
+          clearTimeout(state.hideTimer);
+          cancelAnimationFrame(state.hideFrame);
+
+          track.style.display = "block";
+          track.classList.add("is-visible");
+
+          const s = settings();
+
+          if (
+            s.autoHide &&
+            !state.touch &&
+            !state.thumb &&
+            Math.abs(state.elastic) < 0.5
+          ) {
+            state.hideTimer = setTimeout(hide, s.autoHideDelay);
+          }
+        };
+
+        const styleParts = () => {
+          const s = settings();
+
+          el.style.setProperty(
+            "--custom-scrollbar-safe-right",
+            hasOverflow() ? px(s.safeRight) : "18px"
+          );
+
+          set(content, opt.styles.content);
+          set(content, state.elastic
+            ? {
+              transform: `translate3d(0,${px(state.elastic)},0)`,
+              willChange: "transform"
+            }
+            : {
+              transform: "",
+              willChange: ""
+            }
+          );
+
+          set(track, {
+            width: px(s.width),
+            zIndex: s.zIndex,
+            transition: `opacity ${s.fadeDuration}ms ease`
+          });
+          set(track, opt.styles.track);
+
+          set(thumb, {
+            borderRadius: s.radius,
+            background: state.thumb ? s.backgroundDragging : s.background,
+            boxShadow: s.boxShadow,
+            border: s.border,
+            opacity: state.thumb ? s.opacityDragging : s.opacity
+          });
+          set(thumb, opt.styles.thumb);
+
+          if (state.thumb) {
+            set(thumb, opt.styles.thumbDragging);
+          }
+        };
+
+        const placeTrack = () => {
+          const s = settings();
+          const rect = el.getBoundingClientRect();
+          const top = stickyBottom() + s.extraTop;
+
+          set(track, {
+            left: px(rect.right - s.right - s.width),
+            top: px(top),
+            height: px(Math.max(0, contentBottom() - s.bottom - top))
+          });
+        };
+
+        const placeThumb = () => {
+          if (!hasOverflow()) {
+            hide(true);
+            return;
+          }
+
+          const s = settings();
+          const trackHeight = track.getBoundingClientRect().height;
+
+          if (trackHeight <= 0) {
+            hide(true);
+            return;
+          }
+
+          const base = Math.max(
+            s.minThumbHeight,
+            trackHeight * el.clientHeight / el.scrollHeight
+          );
+
+          const max = maxScroll();
+          const range = Math.max(0, trackHeight - base);
+
+          let height = base;
+          let top = clamp(max ? el.scrollTop / max * range : 0, 0, range);
+
+          if (state.elastic > 0) {
+            const shrink = Math.min(
+              base - s.minElasticThumbHeight,
+              state.elastic * s.elasticStrength
+            );
+
+            height = Math.max(s.minElasticThumbHeight, base - shrink);
+            top = 0;
+          }
+
+          if (state.elastic < 0) {
+            const shrink = Math.min(
+              base - s.minElasticThumbHeight,
+              -state.elastic * s.elasticStrength
+            );
+
+            height = Math.max(s.minElasticThumbHeight, base - shrink);
+            top = trackHeight - height;
+          }
+
+          set(thumb, {
+            height: px(height),
+            transform: `translate3d(0,${px(top)},0)`
+          });
+        };
+
+        const updateNow = () => {
+          styleParts();
+          clampScroll();
+
+          if (!hasOverflow()) {
+            state.elastic = 0;
+            styleParts();
+            hide(true);
+            return;
+          }
+
+          placeTrack();
+          placeThumb();
+
+          if (!settings().autoHide) {
+            show();
+          }
+        };
+
+        const update = () => {
+          cancelAnimationFrame(state.updateFrame);
+          state.updateFrame = requestAnimationFrame(updateNow);
+        };
+
+        const returnElastic = () => {
+          stopElastic();
+          const step = () => {
+            state.elastic *= 0.78;
+            if (Math.abs(state.elastic) < 0.4) {
+              state.elastic = 0;
+              state.elasticFrame = 0;
+              updateNow();
+              show();
+              return;
+            }
+            updateNow();
+            show();
+            state.elasticFrame = requestAnimationFrame(step);
+          };
+          state.elasticFrame = requestAnimationFrame(step);
+        };
+        const scheduleReturnElastic = () => {
+          clearTimeout(state.elasticHoldTimer);
+          cancelAnimationFrame(state.elasticFrame);
+          const delay = settings().elasticHoldDelay;
+          if (delay <= 0 || Math.abs(state.elastic) <= 0.4) {
+            returnElastic();
+            return;
+          }
+          updateNow();
+          show();
+          state.elasticHoldTimer = setTimeout(() => {
+            state.elasticHoldTimer = 0;
+            returnElastic();
+          }, delay);
+        };
+
+        const addElastic = (amount) => {
+          const s = settings();
+
+          state.elastic = clamp(
+            state.elastic + amount * s.elasticStrength,
+            -s.elasticMax,
+            s.elasticMax
+          );
+        };
+
+        const scrollByCustom = (delta) => {
+          if (!hasOverflow()) {
+            state.elastic = 0;
+            updateNow();
+            hide(true);
+            return false;
+          }
+
+          let rest = delta;
+
+          if (state.elastic > 0 && rest > 0) {
+            const used = Math.min(state.elastic, rest);
+
+            state.elastic -= used;
+            rest -= used;
+          }
+
+          if (state.elastic < 0 && rest < 0) {
+            const used = Math.min(-state.elastic, -rest);
+
+            state.elastic += used;
+            rest += used;
+          }
+
+          const max = maxScroll();
+          const next = el.scrollTop + rest;
+          let hitElastic = false;
+
+          if (next < 0) {
+            el.scrollTop = 0;
+            addElastic(-next);
+            hitElastic = true;
+          } else if (next > max) {
+            el.scrollTop = max;
+            addElastic(max - next);
+            hitElastic = true;
+          } else {
+            el.scrollTop = next;
+
+            if (Math.abs(state.elastic) < 0.5) {
+              state.elastic = 0;
+            }
+          }
+
+          updateNow();
+          show();
+
+          return hitElastic;
+        };
+
+        const startInertia = (velocity) => {
+          if (!cfg("momentum") || Math.abs(velocity) < 0.08) {
+            scheduleReturnElastic();
+            return;
+          }
+
+          stopInertia();
+
+          let last = performance.now();
+
+          const step = (now) => {
+            const dt = Math.min(32, now - last);
+            const hit = scrollByCustom(velocity * dt);
+
+            last = now;
+            velocity *= Math.pow(cfg("momentumFriction"), dt / 16.67);
+
+            if (hit) {
+              velocity *= 0.62;
+            }
+
+            if (Math.abs(velocity) < 0.02) {
+              state.inertiaFrame = 0;
+              scheduleReturnElastic();
+              return;
+            }
+
+            state.inertiaFrame = requestAnimationFrame(step);
+          };
+
+          state.inertiaFrame = requestAnimationFrame(step);
+        };
+
+        const scrollToPointer = (clientY) => {
+          const rect = track.getBoundingClientRect();
+          const maxThumbTop = rect.height - thumb.offsetHeight;
+          const max = maxScroll();
+
+          if (maxThumbTop <= 0 || max <= 0) {
+            return;
+          }
+
+          const top = clamp(clientY - rect.top - state.offset, 0, maxThumbTop);
+
+          state.elastic = 0;
+          el.scrollTop = clamp(top / maxThumbTop * max, 0, max);
+
+          updateNow();
+          show();
+        };
+
+        const onScroll = () => {
+          if (el.scrollTop > 0 && el.scrollTop < maxScroll()) {
+            state.elastic = 0;
+          }
+
+          update();
+          show();
+        };
+
+        const onWheel = (event) => {
+          if (event.ctrlKey || !hasOverflow()) {
+            return;
+          }
+
+          event.preventDefault();
+          stopElastic();
+          stopInertia();
+
+          scrollByCustom(wheelDelta(event, el));
+
+          scheduleReturnElastic();
+        };
+
+        const onPointerDown = (event) => {
+          const allowPointer = cfg("allowPointer");
+
+          if (
+            event.pointerType === "mouse" ||
+            !hasOverflow() ||
+            (typeof allowPointer === "function" && allowPointer(event) === false)
+          ) {
+            return;
+          }
+
+          state.armed = true;
+          state.touch = false;
+          state.pointer = event.pointerId;
+          state.startX = event.clientX;
+          state.startY = event.clientY;
+          state.lastY = event.clientY;
+          state.lastTime = performance.now();
+          state.velocity = 0;
+
+          show();
+        };
+
+        const onPointerMove = (event) => {
+          if (
+            (!state.armed && !state.touch) ||
+            event.pointerId !== state.pointer
+          ) {
+            return;
+          }
+
+          const dx = Math.abs(event.clientX - state.startX);
+          const dyTotal = Math.abs(event.clientY - state.startY);
+          const threshold = cfg("dragThreshold");
+
+          if (state.armed && cfg("directionLock") && dx > dyTotal && dx > threshold) {
+            state.armed = false;
+            state.pointer = null;
+            return;
+          }
+
+          if (state.armed && dyTotal < threshold) {
+            return;
+          }
+
+          if (state.armed) {
+            state.armed = false;
+            state.touch = true;
+            state.cancelClick = true;
+
+            stopElastic();
+            stopInertia();
+
+            try {
+              el.setPointerCapture(event.pointerId);
+            } catch (_) {}
+          }
+
+          const now = performance.now();
+          const dy = event.clientY - state.lastY;
+          const dt = Math.max(1, now - state.lastTime);
+          const delta = -dy;
+
+          state.velocity = state.velocity * 0.72 + delta / dt * 0.28;
+          state.lastY = event.clientY;
+          state.lastTime = now;
+
+          scrollByCustom(delta);
+          event.preventDefault();
+        };
+
+        const onPointerUp = (event) => {
+          if (event.pointerId !== state.pointer) {
+            return;
+          }
+
+          if (state.armed) {
+            state.armed = false;
+            state.pointer = null;
+            show();
+            return;
+          }
+
+          if (!state.touch) {
+            return;
+          }
+
+          state.touch = false;
+          state.pointer = null;
+
+          setTimeout(() => {
+            state.cancelClick = false;
+          }, 120);
+
+          startInertia(state.velocity);
+          show();
+          event.preventDefault();
+        };
+
+        const onClickCapture = (event) => {
+          if (!state.cancelClick) {
+            return;
+          }
+
+          state.cancelClick = false;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        };
+
+        const onThumbDown = (event) => {
+          if (!hasOverflow()) {
+            hide(true);
+            return;
+          }
+
+          state.thumb = true;
+          state.elastic = 0;
+          state.offset = event.clientY - thumb.getBoundingClientRect().top;
+
+          stopElastic();
+          stopInertia();
+
+          thumb.setPointerCapture(event.pointerId);
+          updateNow();
+          show();
+
+          event.preventDefault();
+          event.stopPropagation();
+        };
+
+        const onThumbMove = (event) => {
+          if (!state.thumb) {
+            return;
+          }
+
+          scrollToPointer(event.clientY);
+          event.preventDefault();
+          event.stopPropagation();
+        };
+
+        const onThumbUp = (event) => {
+          if (!state.thumb) {
+            return;
+          }
+
+          state.thumb = false;
+          updateNow();
+          show();
+          event?.stopPropagation();
+        };
+
+        const onTrackDown = (event) => {
+          if (event.target === thumb || !hasOverflow()) {
+            return;
+          }
+
+          state.elastic = 0;
+          state.offset = thumb.offsetHeight / 2;
+
+          scrollToPointer(event.clientY);
+          event.preventDefault();
+        };
+
+        const onKey = (event) => {
+          if (!hasOverflow()) {
+            return;
+          }
+
+          const page = el.clientHeight * 0.86;
+
+          const keys = {
+            ArrowDown: 42,
+            ArrowUp: -42,
+            PageDown: page,
+            PageUp: -page,
+            Home: -Infinity,
+            End: Infinity,
+            " ": event.shiftKey ? -page : page
+          };
+
+          if (!(event.key in keys)) {
+            return;
+          }
+
+          event.preventDefault();
+          stopElastic();
+          stopInertia();
+
+          if (event.key === "Home" || event.key === "End") {
+            el.scrollTop = event.key === "Home" ? 0 : maxScroll();
+            state.elastic = 0;
+            updateNow();
+            show();
+            return;
+          }
+
+          scrollByCustom(keys[event.key]);
+
+          clearTimeout(state.wheelTimer);
+          scheduleReturnElastic();
+        };
+
+        const offEvents = events({
+          scroll: [el, "scroll", onScroll, { passive: true }],
+          wheel: [el, "wheel", onWheel, { passive: false }],
+          key: [el, "keydown", onKey],
+          enter: [el, "pointerenter", show],
+          down: [el, "pointerdown", onPointerDown],
+          move: [el, "pointermove", onPointerMove],
+          up: [el, "pointerup", onPointerUp],
+          cancel: [el, "pointercancel", onPointerUp],
+          click: [el, "click", onClickCapture, true],
+          thumbDown: [thumb, "pointerdown", onThumbDown],
+          thumbMove: [thumb, "pointermove", onThumbMove],
+          thumbUp: [thumb, "pointerup", onThumbUp],
+          thumbCancel: [thumb, "pointercancel", onThumbUp],
+          thumbLost: [thumb, "lostpointercapture", onThumbUp],
+          trackDown: [track, "pointerdown", onTrackDown],
+          resize: [window, "resize", update],
+          windowScroll: [window, "scroll", update, { passive: true }]
+        });
+
+        const resizeObserver = "ResizeObserver" in window
+          ? new ResizeObserver(update)
+          : null;
+
+        const mutationObserver = "MutationObserver" in window
+          ? new MutationObserver(update)
+          : null;
+
+        resizeObserver?.observe(el);
+        resizeObserver?.observe(content);
+
+        mutationObserver?.observe(content, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true,
+          attributeFilter: ["class", "style"]
+        });
+
+        updateNow();
+
+        const api = {
+          update: updateNow,
+
+          set(next = {}) {
+            opt = merge(opt, next);
+            updateNow();
+          },
+
+          scrollTo(top) {
+            stopElastic();
+            stopInertia();
+
+            state.elastic = 0;
+            el.scrollTop = clamp(Number(top) || 0, 0, maxScroll());
+
+            updateNow();
+            show();
+          },
+
+          scrollBy(delta) {
+            stopElastic();
+            stopInertia();
+            scrollByCustom(Number(delta) || 0);
+            scheduleReturnElastic();
+          },
+
+          state() {
+            return {
+              scrollTop: el.scrollTop,
+              maxScroll: maxScroll(),
+              elastic: state.elastic,
+              overflow: hasOverflow(),
+              dragging: state.thumb || state.touch
+            };
+          },
+
+          destroy() {
+            clearTimeout(state.hideTimer);
+            clearTimeout(state.wheelTimer);
+            clearTimeout(state.elasticHoldTimer);
+
+            cancelAnimationFrame(state.hideFrame);
+            cancelAnimationFrame(state.updateFrame);
+
+            stopElastic();
+            stopInertia();
+            offEvents();
+
+            el.classList.remove("sticky-scrollbar-hidden");
+            el.style.removeProperty("--custom-scrollbar-safe-right");
+            set(el, saved);
+
+            if (savedTabIndex == null) {
+              el.removeAttribute("tabindex");
+            } else {
+              el.setAttribute("tabindex", savedTabIndex);
+            }
+
+            while (content.firstChild) {
+              el.insertBefore(content.firstChild, content);
+            }
+
+            content.remove();
+            resizeObserver?.disconnect();
+            mutationObserver?.disconnect();
+            track.remove();
+            instances.delete(el);
+          }
+        };
+
+        instances.set(el, api);
+
+        return api;
+      }
+
+      const attachAll = (selector, options) => {
+        return [...document.querySelectorAll(selector)].map((el) => {
+          return attach(el, options);
+        });
+      };
+
+      return {
+        attach,
+        attachAll,
+        events
+      };
+    })();
+
+    StickyScrollbar.attach("#myScrollElement", ".sticky-header");
+
+    StickyScrollbar.events({
+      buttonClick: [
+        document,
+        "click",
+        (event) => {
+          if (event.target.closest?.("#demoAlertButton")) {
+            alert("Button pressed!");
+          }
+        }
+      ],
+
+      cardClick: [
+        document,
+        "click",
+        (event) => {
+          if (event.target.closest?.("#demoCard")) {
+            alert("Custom div pressed!");
+          }
+        }
+      ],
+
+      cardKeydown: [
+        document,
+        "keydown",
+        (event) => {
+          if (
+            event.target.closest?.("#demoCard") &&
+            (event.key === "Enter" || event.key === " ")
+          ) {
+            event.preventDefault();
+            alert("Custom div keyboard event!");
+          }
+        }
+      ]
+    });
+  </script>
+</body>
+
+</html>

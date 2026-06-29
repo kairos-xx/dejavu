@@ -4,7 +4,9 @@
     --primary-time-scale-001: 0.001;
     --primary-time-scale-01: 0.1;
     --primary-time-scale-02: 0.2;
+    --primary-time-scale-018: 0.18;
     --primary-time-scale-05: 0.5;
+    --primary-time-scale-075: 0.75;
     --primary-time-scale-2: 2;
 
     --primary-ease-standard: ease;
@@ -26,8 +28,10 @@
     --base-time-0: calc(var(--primary-time) * var(--primary-time-scale-0));
     --base-time-1ms: calc(var(--primary-time) * var(--primary-time-scale-001));
     --base-time-100ms: calc(var(--primary-time) * var(--primary-time-scale-01));
+    --base-time-180ms: calc(var(--primary-time) * var(--primary-time-scale-018));
     --base-time-200ms: calc(var(--primary-time) * var(--primary-time-scale-02));
     --base-time-500ms: calc(var(--primary-time) * var(--primary-time-scale-05));
+    --base-time-750ms: calc(var(--primary-time) * var(--primary-time-scale-075));
     --base-time-1s: var(--primary-time);
     --base-time-2s: calc(var(--primary-time) * var(--primary-time-scale-2));
 

@@ -10,7 +10,7 @@
     --primary-color-raised: #2c2c2c;
     --primary-color-input: #262626;
     --primary-color-input-well: #292929;
-    --primary-color-input-focus: #c3c3c3;
+    --primary-color-input-focus: #ffffff;
     --primary-color-input-focus-text: #3f3f3f;
     --primary-color-segment-active: #212121;
     --primary-color-number-spin-buttons-background: #242424;
@@ -115,6 +115,8 @@ html[data-skin="darkest"] {
     --primary-color-raised: #2c2c2c;
     --primary-color-input: #262626;
     --primary-color-input-well: #292929;
+    --primary-color-input-focus: #b8b8b8;
+    --primary-color-input-focus-text: #d6d6d6;
     --primary-color-segment-active: #212121;
     --primary-color-number-spin-buttons-background: #242424;
     --primary-color-hover: #3d3d3d;
@@ -142,6 +144,8 @@ html[data-skin="dark"] {
     --primary-color-raised: #4d4d4d;
     --primary-color-input: #474747;
     --primary-color-input-well: #4a4a4a;
+    --primary-color-input-focus: #bcbcbc;
+    --primary-color-input-focus-text: #e0e0e0;
     --primary-color-segment-active: #424242;
     --primary-color-number-spin-buttons-background: #454545;
     --primary-color-hover: #5e5e5e;
@@ -169,6 +173,8 @@ html[data-skin="light"] {
     --primary-color-raised: #c6c6c6;
     --primary-color-input: #d5d5d5;
     --primary-color-input-well: #adadad;
+    --primary-color-input-focus: #d0d0d0;
+    --primary-color-input-focus-text: #3e3e3e;
     --primary-color-segment-active: #a8a8a8;
     --primary-color-number-spin-buttons-background: #d0d0d0;
     --primary-color-hover: #cfcfcf;
@@ -198,7 +204,7 @@ html[data-skin="lightest"] {
     --primary-color-background: #f0f0f0;
     --primary-color-raised: #e6e6e6;
     --primary-color-input: #ffffff;
-    --primary-color-input-well: #d9d9d9;
+    --primary-color-input-well: #d0d0d0;
     --primary-color-segment-active: #d0d0d0;
     --primary-color-number-spin-buttons-background: #eeeeee;
     --primary-color-hover: #e0e0e0;

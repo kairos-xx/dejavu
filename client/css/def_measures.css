@@ -83,6 +83,8 @@
     --primary-z-index-99999: 99999;
     --primary-z-index-100000: 100000;
     --primary-z-index-max: 2147483647;
+    --primary-number-0-55: 0.55;
+    --primary-number-1: 1;
 
     --primary-grid-repeat-3: 3;
     --primary-grid-repeat-4: 4;
@@ -136,6 +138,7 @@
     --primary-size-26: 26;
     --primary-size-28: 28;
     --primary-size-30: 30;
+    --primary-size-34: 34;
     --primary-size-36: 36;
     --primary-size-40: 40;
     --primary-size-42: 42;
@@ -146,6 +149,7 @@
     --primary-size-70: 70;
     --primary-size-72: 72;
     --primary-size-80: 80;
+    --primary-size-90: 90;
     --primary-size-100: 100;
     --primary-size-106: 106;
     --primary-size-180: 180;
@@ -270,6 +274,9 @@
     --base-z-index-token-ghost: var(--primary-z-index-99999);
     --base-z-index-debug-skin: var(--primary-z-index-100000);
     --base-z-index-open-doc-menu: var(--primary-z-index-max);
+    --base-z-index-max: var(--primary-z-index-max);
+    --base-number-0-55: var(--primary-number-0-55);
+    --base-number-1: var(--primary-number-1);
 
     --base-grid-repeat-3: var(--primary-grid-repeat-3);
     --base-grid-repeat-4: var(--primary-grid-repeat-4);
@@ -380,6 +387,9 @@
     --base-size-30: calc(
         var(--primary-size-30) * 1px * var(--base-effective-ui-scale)
     );
+    --base-size-34: calc(
+        var(--primary-size-34) * 1px * var(--base-effective-ui-scale)
+    );
     --base-size-36: calc(
         var(--primary-size-36) * 1px * var(--base-effective-ui-scale)
     );
@@ -409,6 +419,9 @@
     );
     --base-size-80: calc(
         var(--primary-size-80) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-90: calc(
+        var(--primary-size-90) * 1px * var(--base-effective-ui-scale)
     );
     --base-size-100: calc(
         var(--primary-size-100) * 1px * var(--base-effective-ui-scale)

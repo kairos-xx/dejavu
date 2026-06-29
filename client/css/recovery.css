@@ -1,4 +1,11 @@
-.version-list::-webkit-scrollbar-track,
+.version-list::-webkit-scrollbar-track {
+    margin-top: var(--version-list-scrollbar-track-margin-top);
+}
+
+.version-list::-webkit-scrollbar-thumb {
+    border-top: var(--version-list-scrollbar-thumb-border-top);
+}
+
 .recovery-list::-webkit-scrollbar-track {
     margin-top: var(--version-list-recovery-list-margin-top);
 }

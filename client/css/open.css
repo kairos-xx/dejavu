@@ -317,11 +317,20 @@
 }
 
 .open-doc__action--save:hover {
-    color: var(--accent);
+    color: var(--open-doc__action-save-hover-color);
+}
+
+.open-doc__action--save:hover .svg-icon,
+.open-doc__action--save:focus-visible .svg-icon {
+    color: var(--open-doc__action-save-hover-color);
 }
 
 .open-doc__split-action.is-open .open-doc__action--save {
-    color: var(--accent);
+    color: var(--open-doc__action-save-hover-color);
+}
+
+.open-doc__split-action.is-open .open-doc__action--save .svg-icon {
+    color: var(--open-doc__action-save-hover-color);
 }
 
 #openDocsSelectAllToggle {

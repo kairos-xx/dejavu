@@ -4,6 +4,7 @@
 
     --primary-filter-brightness-active: brightness(0.92);
     --primary-filter-brightness-hover: brightness(1.1);
+    --primary-shadow-none: none;
 
     --primary-transform-rotate-neg-90: rotate(-90deg);
     --primary-transform-rotate-neg-45: rotate(-45deg);
@@ -51,6 +52,7 @@
     );
     --base-shadow-menu: 0 calc(var(--primary-space-3) * 1px * var(--base-effective-ui-scale)) calc(var(--primary-space-9) * 1px * var(--base-effective-ui-scale)) var(--primary-color-shadow);
     --base-shadow-ghost: 0 calc(var(--primary-space-2) * 1px * var(--base-effective-ui-scale)) calc(var(--primary-space-6) * 1px * var(--base-effective-ui-scale)) var(--primary-color-shadow);
+    --base-shadow-none: var(--primary-shadow-none);
 
     --base-transform-countdown-pie: var(--primary-transform-rotate-neg-90);
     --base-transform-menu-check: var(--primary-transform-rotate-neg-45);

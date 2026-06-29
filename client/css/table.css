@@ -229,9 +229,6 @@
     --icon-size: var(--row-select-icon-height);
     --radio-outer: var(--table-select-all-icon-circle-none-border-color);
     --radio-inner: var(--table-select-all-icon-circle-none-fill);
-    width: var(--row-select-icon-width);
-    height: var(--row-select-icon-height);
-    min-width: var(--row-select-icon-width);
 }
 
 .snapshot__select input:checked + .row-select__icon,

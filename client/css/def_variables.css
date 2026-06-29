@@ -394,7 +394,7 @@
     --timeline-day__label-font-size: var(--base-font-sm);
     --timeline-day__label-font-weight: var(--base-font-weight-semibold);
     --timeline-day__label-letter-spacing: var(--base-letter-spacing-label);
-    --timeline-day__label-color: var(--base-color-input-focus-text);
+    --timeline-day__label-color: var(--base-color-input-focus);
     --timeline-insights__labels-font-size: var(--base-font-sm);
     --timeline-insights__refresh-font-size: var(--base-font-sm);
     --timeline-insights__refresh-line-height: var(--base-line-height-control);
@@ -816,6 +816,7 @@
     --open-doc__action-arrow-border-radius: 0 var(--base-radius)
         var(--base-radius) 0;
     --open-doc__action-border-radius: var(--base-radius);
+    --open-doc__action-save-hover-color: var(--base-color-accent);
     --open-doc__action-svg-icon-border-radius: var(--base-radius);
     --open-doc__bulk-save-arrow-border-left: var(--base-border-w) solid
         var(--base-color-border);
@@ -859,6 +860,12 @@
 
     --scrollbar-thumb-background: var(--base-color-border-strong);
     --scrollbar-track-background: var(--base-color-input-well);
+    --sticky-scrollbar-thumb-background: var(--base-color-border-strong);
+    --sticky-scrollbar-thumb-background-dragging: var(--base-color-accent);
+    --sticky-scrollbar-thumb-border: var(--base-border-none);
+    --sticky-scrollbar-thumb-box-shadow: var(--base-shadow-none);
+    --sticky-scrollbar-thumb-opacity: var(--base-opacity-full);
+    --sticky-scrollbar-thumb-opacity-dragging: var(--base-opacity-full);
     --root-rule-border: var(--base-space-1) solid var(--base-color-transparent);
     --root-rule-border-radius: var(--base-radius-md);
 
@@ -1814,7 +1821,7 @@
     --debug-skin-padding: var(--base-size-3) var(--base-space-3);
     --debug-skin__label-letter-spacing: var(--base-letter-spacing-badge);
 
-    --snapshot-padding: var(--base-space-2) var(--base-space-4-5)
+    --snapshot-padding: var(--base-space-2) var(--base-space-1)
         var(--base-space-2) var(--base-size-28);
     --snapshot__actions-gap: var(--base-space-2);
     --snapshot__actions-height: var(--base-size-22);
@@ -1870,7 +1877,23 @@
     --row-select-input-inset: var(--base-space-0);
     --row-select-input-opacity: var(--base-opacity-hidden);
     --row-select-icon-height: var(--base-size-16);
-    --row-select-icon-width: var(--base-size-16);
+    --row-select-icon-width: var(--base-size-12);
+    --sticky-scrollbar-auto-hide: var(--base-number-1);
+    --sticky-scrollbar-auto-hide-delay: var(--base-time-750ms);
+    --sticky-scrollbar-bottom: var(--base-size-8);
+    --sticky-scrollbar-elastic-hold-delay: var(--base-time-0);
+    --sticky-scrollbar-elastic-max: var(--base-size-90);
+    --sticky-scrollbar-elastic-strength: var(--base-number-0-55);
+    --sticky-scrollbar-elastic-track-strength: var(--base-number-1);
+    --sticky-scrollbar-extra-top: var(--base-size-10);
+    --sticky-scrollbar-fade-duration: var(--base-time-180ms);
+    --sticky-scrollbar-min-elastic-thumb-height: var(--base-size-18);
+    --sticky-scrollbar-min-thumb-height: var(--base-size-36);
+    --sticky-scrollbar-right: var(--base-size-4);
+    --sticky-scrollbar-safe-right: var(--base-size-34);
+    --sticky-scrollbar-thumb-radius: var(--base-radius-pill);
+    --sticky-scrollbar-width: var(--base-size-6);
+    --sticky-scrollbar-z-index: var(--base-z-index-max);
     --file-status-pill-flex: var(--base-flex-none);
     --snapshot__size-flex: 0 0 var(--base-space-9);
     --snapshot__size-min-width: var(--base-size-54);
@@ -1948,7 +1971,7 @@
     --table-select-all-icon-circle-width: var(--base-size-6);
     --table-select-all-left: var(--base-space-neg-3);
     --table-select-all-margin-left: var(--base-space-4);
-    --table-select-all-margin-right: var(--base-space-6);
+    --table-select-all-margin-right: var(--base-space-5);
     --table-select-all-top: var(--base-pct-50);
     --table-select-input-height: var(
         --base-size-14
@@ -1970,7 +1993,7 @@
     --table-toggles-compact-gap: var(--base-space-1);
     --table-toggles-margin-left: var(--base-space-3);
     --table-toggles-width: var(--base-pct-100);
-    --table-select-all-margin-right: var(--base-space-3);
+    --table-select-all-margin-right: var(--base-space-5);
 
     --template-editor-folder-gap: var(--base-space-1);
     --template-editor-min-height: var(--base-size-30);
@@ -2004,7 +2027,8 @@
     --timeline-day-padding: var(--base-space-0);
     --timeline-day__header-gap: var(--base-space-4);
     --timeline-day__header-height: var(--base-size-26);
-    --timeline-day__header-padding: var(--base-space-3) var(--base-space-3);
+    --timeline-day__header-margin-right: calc(var(--root-rule-width) * -1);
+    --timeline-day__header-padding: var(--base-space-3) var(--base-space-5);
     --timeline-day__header-top: var(--base-space-0);
     --timeline-filter-flex: var(--base-flex-fluid-auto);
     --timeline-insights-content-min-width: var(--base-space-0);
@@ -2046,7 +2070,8 @@
     --timeline-rail-bottom: calc(
         var(--base-size-8) + (var(--base-size-9) / 2)
     );
-    --timeline-rail-padding: var(--base-space-2) 0;
+    --timeline-rail-padding: var(--base-space-2) var(--base-space-6)
+        var(--base-space-2) 0;
     --timeline-rail-top: calc(
         var(--base-size-8) + (var(--base-size-9) / 2)
     );
@@ -2219,6 +2244,9 @@
 
     --version-list-compact-snapshot__dot-top: var(--base-size-8);
     --version-list-margin-top: var(--base-space-2);
+    --version-list-scrollbar-thumb-border-top: var(--base-space-4) solid
+        var(--base-color-transparent);
+    --version-list-scrollbar-track-margin-top: var(--base-space-0);
     --version-list-recovery-list-margin-top: var(--base-space-7);
     --version-list-recovery-list-open-docs-max-height: var(--base-size-280);
 
