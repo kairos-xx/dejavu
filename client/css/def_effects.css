@@ -1,0 +1,148 @@
+:root {
+    --primary-scale-modal: 0.985;
+    --primary-scale-slight: 1.03;
+
+    --primary-filter-brightness-active: brightness(0.92);
+    --primary-filter-brightness-hover: brightness(1.1);
+
+    --primary-transform-rotate-neg-90: rotate(-90deg);
+    --primary-transform-rotate-neg-45: rotate(-45deg);
+    --primary-transform-rotate-45: rotate(45deg);
+    --primary-transform-rotate-180: rotate(180deg);
+    --primary-transform-rotate-360: rotate(360deg);
+    --primary-transform-rotate-neg-18: rotate(-18deg);
+    --primary-transform-similar-summary-closed: translateY(-50%)
+        rotate(-45deg);
+    --primary-transform-similar-summary-open: translateY(-80%) rotate(45deg);
+    --primary-transform-table-center: translate(-50%, -50%);
+    --primary-transform-table-y-center: translateY(-50%);
+    --primary-transform-token-ghost: translate3d(-50%, -50%, 0) scale(1.03);
+    --primary-transform-translate-y-0: translateY(0);
+    --primary-transform-none: none;
+    --primary-transform-scale-1-1: scale(1.1);
+    --primary-transform-scale-1-08: scale(1.08);
+    --primary-angle-horizontal: 90deg;
+
+    --primary-stroke-linecap-round: round;
+    --primary-stroke-linejoin-round: round;
+    --primary-stroke-width-cup: 1.4;
+    --primary-stroke-dash-countdown: 40.84;
+
+    --primary-opacity-0: 0;
+    --primary-opacity-025: 0.25;
+    --primary-opacity-030: 0.3;
+    --primary-opacity-045: 0.45;
+    --primary-opacity-050: 0.5;
+    --primary-opacity-075: 0.75;
+    --primary-opacity-080: 0.8;
+    --primary-opacity-090: 0.9;
+    --primary-opacity-095: 0.95;
+    --primary-opacity-100: 1;
+
+    --base-scale-modal: var(--primary-scale-modal);
+    --base-scale-slight: var(--primary-scale-slight);
+    --base-filter-brightness-active: var(--primary-filter-brightness-active);
+    --base-filter-brightness-hover: var(--primary-filter-brightness-hover);
+    --base-filter-token-ghost: drop-shadow(
+        calc(var(--primary-space-0) * 1px * var(--base-effective-ui-scale))
+            calc(var(--primary-space-4) * 1px * var(--base-effective-ui-scale))
+            calc(var(--primary-space-6) * 1px * var(--base-effective-ui-scale))
+            var(--primary-color-shadow)
+    );
+    --base-shadow-menu: 0 calc(var(--primary-space-3) * 1px * var(--base-effective-ui-scale)) calc(var(--primary-space-9) * 1px * var(--base-effective-ui-scale)) var(--primary-color-shadow);
+    --base-shadow-ghost: 0 calc(var(--primary-space-2) * 1px * var(--base-effective-ui-scale)) calc(var(--primary-space-6) * 1px * var(--base-effective-ui-scale)) var(--primary-color-shadow);
+
+    --base-transform-countdown-pie: var(--primary-transform-rotate-neg-90);
+    --base-transform-menu-check: var(--primary-transform-rotate-neg-45);
+    --base-transform-chevron-open: var(--primary-transform-rotate-180);
+    --base-transform-refresh-spin-from: var(--primary-transform-none);
+    --base-transform-refresh-spin-to: var(--primary-transform-rotate-360);
+    --base-transform-modal-rest: translateY(
+            calc(
+                var(--primary-space-3) * 1px * var(--base-effective-ui-scale)
+            )
+        )
+        scale(var(--primary-scale-modal));
+    --base-transform-similar-summary-closed: var(
+        --primary-transform-similar-summary-closed
+    );
+    --base-transform-similar-summary-open: var(
+        --primary-transform-similar-summary-open
+    );
+    --base-transform-switch-thumb-on: translateX(
+        calc(var(--primary-space-5) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-transform-table-center: var(--primary-transform-table-center);
+    --base-transform-table-y-center: var(--primary-transform-table-y-center);
+    --base-transform-tooltip-visible: var(--primary-transform-translate-y-0);
+    --base-transform-tooltip-rest: translateY(
+        calc(var(--primary-space-1) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-transform-tooltip-below: translateY(
+        calc(var(--primary-space-neg-2) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-transform-token-ghost: var(--primary-transform-token-ghost);
+    --base-transform-modal-open: var(--primary-transform-none);
+    --base-transform-footer-reset-armed: var(--primary-transform-scale-1-1);
+    --base-transform-footer-reset-hover: var(--primary-transform-rotate-neg-18)
+        var(--primary-transform-scale-1-08);
+    --base-angle-horizontal: var(--primary-angle-horizontal);
+
+    --base-stroke-linecap-round: var(--primary-stroke-linecap-round);
+    --base-stroke-linejoin-round: var(--primary-stroke-linejoin-round);
+    --base-stroke-width-cup: var(--primary-stroke-width-cup);
+    --base-stroke-dash-countdown: var(--primary-stroke-dash-countdown);
+
+    --base-opacity-hidden: var(--primary-opacity-0);
+    --base-opacity-disabled: var(--primary-opacity-025);
+    --base-opacity-030: var(--primary-opacity-030);
+    --base-opacity-045: var(--primary-opacity-045);
+    --base-opacity-muted: var(--primary-opacity-050);
+    --base-opacity-subtle: var(--primary-opacity-050);
+    --base-opacity-idle: var(--primary-opacity-075);
+    --base-opacity-visible: var(--primary-opacity-075);
+    --base-opacity-080: var(--primary-opacity-080);
+    --base-opacity-debug-skin: var(--primary-opacity-090);
+    --base-opacity-ghost: var(--primary-opacity-095);
+    --base-opacity-full: var(--primary-opacity-100);
+}
+
+@keyframes dot-saving-pulse {
+    0%,
+    100% {
+        color: var(--ok);
+        box-shadow: var(--dot-saving-pulse-end-box-shadow);
+    }
+
+    50% {
+        color: var(--accent);
+        box-shadow: var(--dot-saving-pulse-mid-box-shadow);
+    }
+}
+
+@keyframes refresh-spin {
+    0% {
+        transform: var(--icon-refresh-spin-from-transform);
+    }
+
+    100% {
+        transform: var(--icon-refresh-spin-to-transform);
+    }
+}
+
+@keyframes progress-indeterminate {
+    0% {
+        margin-left: var(--progress-indeterminate-start-margin-left);
+        margin-right: var(--progress-indeterminate-start-margin-right);
+    }
+
+    50% {
+        margin-left: var(--progress-indeterminate-mid-margin-left);
+        margin-right: var(--progress-indeterminate-mid-margin-right);
+    }
+
+    100% {
+        margin-left: var(--progress-indeterminate-end-margin-left);
+        margin-right: var(--progress-indeterminate-end-margin-right);
+    }
+}

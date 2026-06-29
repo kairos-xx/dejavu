@@ -13,6 +13,11 @@
 
     const DEJAVU = {};
 
+    /** Joins conditional CSS class names while dropping empty values. */
+    DEJAVU.classNames = function () {
+        return Array.prototype.filter.call(arguments, Boolean).join(" ");
+    };
+
     /** Two-digit zero pad: 7 -> "07", 12 -> "12". */
     DEJAVU.pad2 = function (n) {
         return (n < 10 ? "0" : "") + n;

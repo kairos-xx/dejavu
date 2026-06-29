@@ -1,8 +1,8 @@
 /*
- * DejaVu — Similarity drawer controller.
+ * DejaVu — Similarity panel controller.
  *
- * Wraps the bundled SVG similarity engine (client/js/similarity/*) in a panel
- * drawer: pick a folder (validated like the save-folder field), optionally
+ * Wraps the bundled SVG similarity engine (client/js/similarity/*) in a panel:
+ * pick a folder (validated like the save-folder field), optionally
  * recurse, tune every config.json setting inline, then rank the folder's
  * vector files against the active Illustrator document. Results render in a
  * compact list that expands to the full element-matching breakdown.
@@ -26,6 +26,8 @@
     // The multi-select menu is appended to <body> and fixed-positioned so it
     // floats above everything and is never clipped by the .app scroll box.
     let msOpen = null;
+    const classNames = (typeof DEJAVU !== "undefined" && DEJAVU.classNames) ||
+        ((...names) => names.filter(Boolean).join(" "));
 
     const closeAllMultiselects = () => {
         if (!msOpen) return;
@@ -76,6 +78,7 @@
     const resetProgress = (hidden) => {
         if (!ui.progress) return;
         ui.progress.hidden = hidden !== false;
+        ui.progress.classList.remove("is-active");
         if (ui.progressBar) ui.progressBar.style.width = "0%";
         if (ui.progressCount) ui.progressCount.textContent = "0 / 0";
         if (ui.progressLabel) ui.progressLabel.textContent = "Preparing scan…";
@@ -92,6 +95,8 @@
         case "cached": return "Reading cache";
         case "skipped": return "Skipping oversized files";
         case "converting": return "Converting files";
+        case "ai2svg": return "Converting with AI2SVG";
+        case "inkscape": return "Converting with Inkscape";
         case "fingerprinting": return "Fingerprinting files";
         case "indexed": return "Indexing files";
         case "error": return "Skipping unreadable files";
@@ -104,9 +109,28 @@
         if (!ui.progress || !p) return;
         const total = Math.max(0, Number(p.total) || 0);
         const done = Math.min(total, Math.max(0, Number(p.done) || 0));
-        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        const current = Math.min(total, Math.max(done,
+            Number(p.current) || done));
+        const pct = total > 0
+            ? Math.max(done < total ? 2 : 0,
+                Math.round((current / total) * 100))
+            : 0;
+        const visualPct = total > 0 ? pct : 28;
         ui.progress.hidden = false;
-        if (ui.progressBar) ui.progressBar.style.width = `${pct}%`;
+        ui.progress.classList.toggle("is-active",
+            [
+                "listing",
+                "cached",
+                "skipped",
+                "converting",
+                "ai2svg",
+                "inkscape",
+                "fingerprinting",
+                "indexed",
+                "error"
+            ]
+                .indexOf(p.stage) >= 0);
+        if (ui.progressBar) ui.progressBar.style.width = `${visualPct}%`;
         if (ui.progressCount) ui.progressCount.textContent = `${done} / ${total}`;
         if (ui.progressLabel) ui.progressLabel.textContent = progressText(p.stage);
         if (ui.progressTrack) {
@@ -158,11 +182,13 @@
     // ---- folder validation (mirrors the save-folder field) ----------------
     const setValidity = (cls, title) => {
         if (!ui.validity) return;
-        ui.validity.className = `folder-validity ${cls}`;
+        ui.validity.className = classNames("folder-validity", cls);
         ui.validity.title = title || "";
         if (ui.field) {
-            ui.field.className =
-                `folder-field ${cls.replace("folder-validity--", "folder-field--")}`;
+            ui.field.className = classNames(
+                "folder-field",
+                cls.replace("folder-validity--", "folder-field--")
+            );
         }
     };
 
@@ -229,6 +255,11 @@
     // each setting gets a friendly label + a support hint (à la Advanced).
     const SECTIONS = [
         {
+            key: "index",
+            label: "Scanning",
+            hint: "Which files are scanned and how the scan is paced."
+        },
+        {
             key: "engine",
             label: "Matching",
             hint: "How shapes are sampled and matched."
@@ -237,11 +268,6 @@
             key: "engine.weights",
             label: "Comparison weights",
             hint: "Relative importance of each trait in the score — higher counts for more."
-        },
-        {
-            key: "index",
-            label: "Scanning",
-            hint: "Which files are scanned and how the scan is paced."
         },
         {
             key: "index.externalConverters",
@@ -259,13 +285,21 @@
     const SKIP = new Set([
         "index.recursive",
         "engine.includeHidden",
-        "index.externalConverters.enabled"
+        "index.externalConverters.enabled",
+        "index.cacheFileName",
+        "index.shortlistLimit",
+        "index.ioConcurrency",
+        "index.conversionConcurrency",
+        "index.fingerprintConcurrency",
+        "index.saveCacheEvery"
     ]);
-    const ROW_PAIRS = {
-        "engine.samplesPerElement": "engine.maxSamples",
-        "index.allowedExtensions": "index.maxFileSizeBytes"
-    };
-    const ROW_PAIR_ENDS = new Set(Object.values(ROW_PAIRS));
+    const ROW_GROUPS = [
+        ["index.allowedExtensions", "index.maxFileSizeBytes", "index.limit"],
+        ["engine.samplesPerElement", "engine.maxSamples"]
+    ];
+    const ROW_GROUP_START = new Map(
+        ROW_GROUPS.map((g) => [g[0], g])
+    );
 
     // Friendly label + support text per config path. Anything missing falls
     // back to a humanized key (and, for weights, an auto-generated hint).
@@ -454,7 +488,7 @@
         "index.allowedExtensions":
             [".svg", ".svgz", ".pdf", ".ai", ".eps"],
         "index.externalConverters.prefer":
-            ["embeddedSVG", "illustrator"]
+            ["embeddedSVG", "ai2svg", "inkscape", "illustrator"]
     };
 
     // Settings that are only meaningful while another (boolean) setting is on.
@@ -538,7 +572,7 @@
     const makeBoolRow = (path, label, hint, value, tip) => {
         const section = document.createElement("section");
         section.className =
-            "field-group field-group--embedded field-group--row similar-cfg__field";
+            "field-group field-group--embedded field-group--row comparison-settings__field";
         const lab = document.createElement("label");
         lab.className = "checkbox";
         lab.setAttribute("data-tooltip", tip);
@@ -548,6 +582,7 @@
         input.addEventListener("change",
             () => onSettingChange(path, input.checked, "boolean"));
         const span = document.createElement("span");
+        span.className = "settings-field-title";
         span.textContent = label;
         lab.appendChild(input);
         lab.appendChild(span);
@@ -561,6 +596,7 @@
         lab.className = "mini-field mini-field--wide";
         lab.setAttribute("data-tooltip", tip);
         const span = document.createElement("span");
+        span.className = "settings-field-title";
         span.textContent = label;
         lab.appendChild(span);
         return lab;
@@ -569,7 +605,7 @@
     const valueRowSection = () => {
         const section = document.createElement("section");
         section.className =
-            "field-group field-group--embedded similar-cfg__field";
+            "field-group field-group--embedded comparison-settings__field";
         return section;
     };
 
@@ -590,22 +626,15 @@
         input.dispatchEvent(new Event("change", { bubbles: true }));
     };
 
-    const NS_SVG = "http://www.w3.org/2000/svg";
     const spinChevron = (action) => {
-        const svg = document.createElementNS(NS_SVG, "svg");
-        svg.setAttribute("class", "spin-chevron");
-        svg.setAttribute("viewBox", "0 0 16 16");
-        svg.setAttribute("fill", "none");
-        svg.setAttribute("stroke", "currentColor");
-        svg.setAttribute("stroke-width", "2.5");
-        svg.setAttribute("stroke-linecap", "round");
-        svg.setAttribute("stroke-linejoin", "round");
-        svg.setAttribute("aria-hidden", "true");
-        const path = document.createElementNS(NS_SVG, "path");
-        path.setAttribute("d",
-            action === "up" ? "M2 10l6-4 6 4" : "M2 6l6 4 6-4");
-        svg.appendChild(path);
-        return svg;
+        const icon = document.createElement("span");
+        icon.className = "spin-chevron svg-icon";
+        icon.dataset.icon = action === "up" ? "chevron-up" : "chevron-down";
+        icon.setAttribute("aria-hidden", "true");
+        if (window.dejavu && window.dejavu.injectIcon) {
+            window.dejavu.injectIcon(icon);
+        }
+        return icon;
     };
 
     const spinButton = (input, action) => {
@@ -677,99 +706,6 @@
         return section;
     };
 
-    // ---- multi-select dropdown (known option sets) ------------------------
-    const summarize = (picked, options) => {
-        if (!picked.length) return "None selected";
-        if (picked.length === options.length) return `All (${options.length})`;
-        if (picked.length <= 2) return picked.join(", ");
-        return `${picked.slice(0, 2).join(", ")} +${picked.length - 2}`;
-    };
-
-    const makeMultiRow = (path, label, hint, value, tip, options) => {
-        const section = valueRowSection();
-        const lab = fieldLabel(label, tip);
-
-        // Canonical options first, then any custom values already saved.
-        const opts = options.slice();
-        (value || []).forEach((v) => {
-            if (opts.indexOf(v) < 0) opts.push(v);
-        });
-        const selected = new Set(value || []);
-
-        const ms = document.createElement("div");
-        ms.className = "select-wrapper ms";
-
-        const trigger = document.createElement("button");
-        trigger.type = "button";
-        trigger.className = "ms__trigger";
-        trigger.setAttribute("aria-expanded", "false");
-        const summary = document.createElement("span");
-        summary.className = "ms__summary";
-        const chev = document.createElement("span");
-        chev.className = "select-chevron";
-        chev.innerHTML = "<svg viewBox=\"0 0 16 16\" fill=\"none\" " +
-            "stroke=\"currentColor\" stroke-width=\"2.5\" " +
-            "stroke-linecap=\"round\" stroke-linejoin=\"round\">" +
-            "<path d=\"M2 6l6 4 6-4\"/></svg>";
-        trigger.appendChild(summary);
-        trigger.appendChild(chev);
-
-        const menu = document.createElement("div");
-        menu.className = "ms__menu";
-        menu.hidden = true;
-
-        const refresh = () => {
-            summary.textContent =
-                summarize(opts.filter((o) => selected.has(o)), opts);
-        };
-
-        opts.forEach((opt) => {
-            const item = document.createElement("button");
-            item.type = "button";
-            item.className = "select-menu__item";
-            item.setAttribute("role", "option");
-            item.setAttribute("aria-selected", String(selected.has(opt)));
-            const check = document.createElement("span");
-            check.className = "select-menu__check";
-            check.setAttribute("aria-hidden", "true");
-            const label = document.createElement("span");
-            label.className = "select-menu__label";
-            label.textContent = opt;
-            item.appendChild(check);
-            item.appendChild(label);
-            item.addEventListener("click", () => {
-                if (selected.has(opt)) selected.delete(opt);
-                else selected.add(opt);
-                item.setAttribute("aria-selected", String(selected.has(opt)));
-                refresh();
-                onSettingChange(
-                    path, opts.filter((o) => selected.has(o)), "array");
-            });
-            menu.appendChild(item);
-        });
-
-        trigger.addEventListener("click", () => {
-            if (trigger.disabled) return;
-            const isOpen = msOpen && msOpen.menu === menu;
-            closeAllMultiselects();
-            if (!isOpen) {
-                menu.hidden = false;
-                positionMsMenu(trigger, menu);
-                ms.classList.add("is-open");
-                trigger.setAttribute("aria-expanded", "true");
-                msOpen = { ms, trigger, menu };
-            }
-        });
-
-        refresh();
-        ms.appendChild(trigger);
-        document.body.appendChild(menu);
-        lab.appendChild(ms);
-        section.appendChild(lab);
-        addHint(section, hint);
-        return section;
-    };
-
     // ---- byte size with a KB / MB / GB unit selector ---------------------
     const BYTE_UNITS = [
         { id: "KB", factor: 1024 },
@@ -832,177 +768,293 @@
         lab.appendChild(pills);
         section.appendChild(lab);
         addHint(section, hint);
+
         return section;
     };
 
-    const CONVERTER_TRIGGER = "\u200b";
+    // True inside Illustrator (CEP or UXP host); false in a plain browser,
+    // i.e. dev/testing where there is no host bridge.
+    const inHostEnv = () =>
+        typeof window.__adobe_cep__ !== "undefined" ||
+        typeof window.DejaVuHost !== "undefined";
 
-    const converterPartsFromValues = (values) =>
-        (values || []).map((v) => ({
-            type: "token",
-            trigger: CONVERTER_TRIGGER,
-            path: [v]
-        }));
-
-    const converterValuesFromParts = (parts, options) => {
-        const out = [];
-        const add = (v) => {
-            const match = options.filter((opt) =>
-                opt.toLowerCase() === String(v || "").toLowerCase())[0];
-            if (match && out.indexOf(match) < 0) out.push(match);
-        };
-        (parts || []).forEach((part) => {
-            if (part.type === "token") add(part.pathText || part.label);
-            else String(part.value || "")
-                .split(/[\s,]+/)
-                .map((s) => s.trim())
-                .filter(Boolean)
-                .forEach(add);
+    // Folder picker that works in both worlds: the host's native chooser inside
+    // Illustrator, or the browser's native directory <input> when testing in a
+    // plain browser (Finder / File Explorer). The browser can only surface the
+    // chosen folder's name (no absolute path, by design), which is enough for
+    // dev/testing.
+    const pickFolderPath = (start) => {
+        if (inHostEnv()) {
+            return Promise.resolve(
+                callHost("dejavu_chooseFolder", [String(start || "")])
+            ).then((r) => (r && r.ok && r.path) ? r.path : null);
+        }
+        // Browser dev/testing: a real OS folder picker (no file upload). The
+        // browser only exposes the chosen folder's NAME, so we surface it as a
+        // home-relative path "~/<name>" — enough for testing against the tree.
+        if (typeof window.showDirectoryPicker === "function") {
+            return window.showDirectoryPicker()
+                .then((h) => (h && h.name ? "/" + h.name : null))
+                .catch(() => null);
+        }
+        // Fallback (older browsers / file://): directory <input>, name only.
+        return new Promise((resolve) => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.setAttribute("webkitdirectory", "");
+            input.setAttribute("directory", "");
+            input.style.display = "none";
+            let settled = false;
+            const finish = (val) => {
+                if (settled) return;
+                settled = true;
+                if (input.parentNode) input.parentNode.removeChild(input);
+                window.removeEventListener("focus", onRefocus, true);
+                resolve(val || null);
+            };
+            input.addEventListener("change", () => {
+                const f = input.files && input.files[0];
+                const name = f
+                    ? (f.webkitRelativePath
+                        ? f.webkitRelativePath.split("/")[0]
+                        : f.name)
+                    : "";
+                finish(name ? "/" + name : null);
+            }, { once: true });
+            const onRefocus = () => {
+                window.setTimeout(() => {
+                    if (!input.files || !input.files.length) finish(null);
+                }, 300);
+            };
+            window.addEventListener("focus", onRefocus, true);
+            document.body.appendChild(input);
+            input.click();
         });
-        return out;
     };
 
-    const converterTextTokens = (value) =>
-        String(value || "")
-            .split(/[\s,]+/)
-            .map((s) => s.trim())
-            .filter(Boolean);
+    // DEV ONLY: a hardcoded slice of a macOS home folder tree, used for the
+    // autocomplete when running in a plain browser (where we can't read the real
+    // filesystem). Inside Illustrator the suggest function reads the real dirs
+    // via Node instead — see folderSuggest().
+    const DEV_FS_TREE = {
+        Desktop: { Screenshots: {}, Mockups: {} },
+        Documents: { Invoices: {}, Contracts: {}, Personal: {} },
+        Downloads: {
+            AutoSaveAI_new: {
+                client: { css: {}, js: { similarity: {} }, lib: {} },
+                host: {}, icons: {}, scripts: {}, vendor: {}
+            },
+            Archives: {}
+        },
+        Movies: {},
+        Music: {},
+        Pictures: { Wallpapers: {} },
+        Public: {},
+        Applications: {},
+        Library: {
+            Fonts: {},
+            Preferences: {},
+            "Application Support": {},
+            "Application Xxx": {}
+        }
+    };
+    // Shared so other modules (e.g. the folder-template field in interval.js)
+    // can offer the same dev-mode folder autocomplete in a plain browser.
+    if (typeof window !== "undefined") window.__DEJAVU_DEV_FS_TREE__ = DEV_FS_TREE;
 
-    const converterTextState = (parts, options) => {
-        const values = converterValuesFromParts(parts, options);
-        let hasText = false;
-        let hasInvalid = false;
-        let hasExactText = false;
-        let hasPartial = false;
-        (parts || []).forEach((part) => {
-            if (part.type !== "text") return;
-            converterTextTokens(part.value).forEach((token) => {
-                hasText = true;
-                if (options.some((opt) =>
-                    opt.toLowerCase() === token.toLowerCase())) {
-                    hasExactText = true;
-                    return;
-                }
-                const lower = token.toLowerCase();
-                if (options.some((opt) => opt.toLowerCase().startsWith(lower))) {
-                    hasPartial = true;
+    // True when the path is a real, existing folder — the real filesystem when
+    // a Node bridge is present (CEP/UXP), otherwise the hardcoded dev tree.
+    const folderExists = (raw) => {
+        const q = String(raw || "").trim();
+        const lead = q.charAt(0);
+        if (lead !== "/" && lead !== "~") return false;
+        try {
+            const fs = require("fs");
+            const p = lead === "~"
+                ? require("os").homedir() + q.slice(1)
+                : q;
+            return fs.existsSync(p) && fs.statSync(p).isDirectory();
+        } catch (e) {
+            const rest = (lead === "~"
+                ? q.replace(/^~\/?/, "")
+                : q.replace(/^\/+/, "")).replace(/\/+$/, "");
+            if (!rest) return true; // "/" = root, "~" = home
+            const segs = rest.split("/");
+            let node = DEV_FS_TREE;
+            for (let i = 0; i < segs.length; i++) {
+                if (node && typeof node === "object" && node[segs[i]]) {
+                    node = node[segs[i]];
                 } else {
-                    hasInvalid = true;
+                    return false;
                 }
-            });
-        });
-        return { values, hasText, hasInvalid, hasExactText, hasPartial };
+            }
+            return true;
+        }
     };
 
-    const makeConverterSystems = (options) => [{
-        trigger: CONVERTER_TRIGGER,
-        id: "converter",
-        name: "converter",
-        icon: "",
-        items: options.map((opt) => ({
-            key: opt,
-            label: opt,
-            description: "Converter",
-            singleUse: true
-        }))
-    }];
+    // Autocomplete for "~/…" folder paths: lists subfolders of the directory in
+    // the typed path, filtered by the partial last segment. Real FS when a Node
+    // bridge is present (CEP/UXP), the dev tree otherwise.
+    const folderSuggest = (query) => {
+        const q = String(query || "");
+        const lead = q.charAt(0);
+        if (lead !== "/" && lead !== "~") return [];   // "/" = root, "~" = home
+        const rest = lead === "~"
+            ? q.replace(/^~\/?/, "")
+            : q.replace(/^\/+/, "");
+        const segs = rest.split("/");
+        const partial = segs.pop();
+        const base = lead === "~" ? "~/" : "/";
+        const prefix = base + (segs.length ? segs.join("/") + "/" : "");
+        const pl = partial.toLowerCase();
+        // Shown (dimmed) after each suggestion's name — the folder's parent path.
+        const parentLabel = prefix.replace(/\/+$/, "") || "/";
 
-    const makeFixedTokenRow = (path, label, hint, value, tip, options) => {
+        // Real filesystem (CEP/UXP Node): list dirs, and mark which have
+        // subfolders so the menu knows whether clicking descends or commits.
+        try {
+            const fs = require("fs");
+            const dir = lead === "~"
+                ? require("os").homedir() + (segs.length ? "/" + segs.join("/") : "")
+                : "/" + segs.join("/");   // "/" for root
+            const join = (d, n) => (d === "/" ? "/" + n : d + "/" + n);
+            const dirHasSubdir = (p) => {
+                try {
+                    return fs.readdirSync(p).some((c) => {
+                        try { return fs.statSync(join(p, c)).isDirectory(); }
+                        catch (ec) { return false; }
+                    });
+                } catch (ed) { return false; }
+            };
+            return fs.readdirSync(dir)
+                .filter((name) => {
+                    try { return fs.statSync(join(dir, name)).isDirectory(); }
+                    catch (eStat) { return false; }
+                })
+                .filter((n) => n.toLowerCase().indexOf(pl) === 0)
+                .sort()
+                .slice(0, 50)
+                // hasChildren drives the descend-vs-commit choice, so only the
+                // visible rows need the (costly) per-folder readdir; the rest
+                // sit behind the "…" hint.
+                .map((n, i) => ({
+                    value: prefix + n + "/",
+                    label: n,
+                    hint: parentLabel,
+                    hasChildren: i < 16 ? dirHasSubdir(join(dir, n)) : true
+                }));
+        } catch (e) {
+            // Browser dev: walk the hardcoded tree.
+            let node = DEV_FS_TREE;
+            for (let i = 0; i < segs.length; i++) {
+                if (!segs[i]) continue;
+                if (node && typeof node === "object" && node[segs[i]]) {
+                    node = node[segs[i]];
+                } else {
+                    return [];
+                }
+            }
+            if (!node || typeof node !== "object") return [];
+            return Object.keys(node)
+                .filter((n) => n.toLowerCase().indexOf(pl) === 0)
+                .sort()
+                .slice(0, 50)
+                .map((n) => ({
+                    value: prefix + n + "/",
+                    label: n,
+                    hint: parentLabel,
+                    hasChildren: !!(node[n] && typeof node[n] === "object" &&
+                        Object.keys(node[n]).length > 0)
+                }));
+        }
+    };
+
+    const makeFixedTokenRow = (
+        path,
+        label,
+        hint,
+        value,
+        tip,
+        options,
+        rowOpts
+    ) => {
+        rowOpts = rowOpts || {};
         const section = valueRowSection();
-        section.classList.add("similar-cfg__token-field");
+        section.classList.add("comparison-settings__token-field");
 
         const labelId = `${path.replace(/[^a-z0-9]+/gi, "-")}-label`;
         const lab = document.createElement("label");
-        lab.className = "field-label";
+        lab.className = "field-label settings-field-title";
         lab.id = labelId;
         lab.setAttribute("data-tooltip", tip);
         lab.textContent = label;
 
-        const editor = document.createElement("div");
-        editor.className = "similar-token-editor";
-        editor.id = `${labelId}-editor`;
-        editor.setAttribute("aria-labelledby", labelId);
-        const pool = document.createElement("div");
-        pool.className = "tokens similar-token-pool";
-
-        let tokenInput = null;
-        let syncing = false;
-        const renderPool = () => {
-            const picked = tokenInput
-                ? converterValuesFromParts(tokenInput.getParts(), options)
-                : (value || []);
-            pool.innerHTML = "";
-            options.forEach((opt) => {
-                const used = picked.indexOf(opt) >= 0;
-                const btn = document.createElement("button");
-                btn.type = "button";
-                btn.className = "token";
-                btn.disabled = used;
-                btn.classList.toggle("token--used", used);
-                btn.textContent = opt;
-                btn.addEventListener("click", () => addToken(opt));
-                pool.appendChild(btn);
-            });
-        };
-
-        const normalizeConverterEditor = (mode) => {
-            if (!tokenInput || syncing) return;
-            const state = converterTextState(tokenInput.getParts(), options);
-            if (mode !== "final" && state.hasPartial &&
-                !state.hasInvalid && !state.hasExactText) {
-                return;
-            }
-            if (mode !== "final" && !state.hasText && !state.hasInvalid) return;
-            syncing = true;
-            tokenInput.setParts(converterPartsFromValues(state.values));
-            onSettingChange(path, state.values, "array");
-            renderPool();
-            syncing = false;
-        };
-
-        const addToken = (raw) => {
-            if (!tokenInput) return;
-            tokenInput.insertItemAtCaret(CONVERTER_TRIGGER, [raw]);
-        };
-
         section.appendChild(lab);
-        section.appendChild(editor);
-        section.appendChild(pool);
-        addHint(section, hint);
-        if (window.TokenInput) {
-            tokenInput = window.TokenInput.attach(editor, {
-                placeholder: "Converter order — type converter names",
-                autoTokenizeExactOnSpace: true,
-                hideUsedSingleTokens: true,
-                systems: makeConverterSystems(options),
-                initialParts: converterPartsFromValues(value),
-                dropdown: { maxItems: options.length, emptyHtml: "No matching converter." },
-                onChange: (parts) => {
+        if (window.TokenField) {
+            let syncing = false;
+            const orderedValues = (values) => {
+                const seen = {};
+                const picked = [];
+                (values || []).forEach((value) => {
+                    const canonical = options.find((opt) =>
+                        opt.toLowerCase() === String(value).toLowerCase());
+                    if (!canonical) return;
+                    const key = canonical.toLowerCase();
+                    if (seen[key]) return;
+                    seen[key] = true;
+                    picked.push(canonical);
+                });
+                if (path === "index.allowedExtensions") {
+                    return picked.slice().sort((a, b) =>
+                        a.localeCompare(b, undefined, {
+                            sensitivity: "base"
+                        }));
+                }
+                return picked;
+            };
+            const tf = window.TokenField.create({
+                tokens: options.map((opt) => ({
+                    key: opt,
+                    label: opt,
+                    title: opt
+                })),
+                value: orderedValues(value),
+                singleUse: true,
+                allowFreeText: false,
+                allowCustomTokens: false,
+                showPalette: false,
+                reorder: !!rowOpts.reorder,
+                suggest: (query) => {
+                    const q = String(query || "").trim().toLowerCase();
+                    return options
+                        .filter((opt) => !q ||
+                            opt.toLowerCase().indexOf(q) >= 0)
+                        .map((opt) => ({
+                            value: opt,
+                            label: opt,
+                            token: true
+                        }));
+                },
+                hideUsedSuggestions: true,
+                placeholder: "Type to add tokens…",
+                onChange: () => {
                     if (syncing) return;
-                    onSettingChange(
-                        path,
-                        converterValuesFromParts(parts, options),
-                        "array"
-                    );
-                    renderPool();
+                    const values = orderedValues(tf.getValues());
+                    if (path === "index.allowedExtensions" &&
+                            values.join("\u0000") !==
+                            tf.getValues().join("\u0000")) {
+                        syncing = true;
+                        tf.setValue(values);
+                        syncing = false;
+                    }
+                    onSettingChange(path, values, "array");
                 }
             });
-            editor.addEventListener("keydown", (evt) => {
-                if (evt.key === " " || evt.key === "Enter" ||
-                    evt.key === "," || evt.key === "Tab") {
-                    window.setTimeout(() => normalizeConverterEditor("final"), 0);
-                }
-            });
-            editor.addEventListener("input", () => {
-                window.setTimeout(() => normalizeConverterEditor("typing"), 0);
-            });
-            editor.addEventListener("blur",
-                () => normalizeConverterEditor("final"));
-            editor.addEventListener("paste", () => {
-                window.setTimeout(() => normalizeConverterEditor("final"), 0);
-            });
+            tf.element.id = `${labelId}-editor`;
+            tf.element.setAttribute("aria-labelledby", labelId);
+            section.appendChild(tf.element);
         }
-        renderPool();
+        addHint(section, hint);
         return section;
     };
 
@@ -1014,111 +1066,73 @@
     const makeTokenRow = (path, label, hint, value, tip, opts) => {
         opts = opts || {};
         const fixed = opts.fixed || null;
-        if (fixed) return makeFixedTokenRow(path, label, hint, value, tip, fixed);
+        if (fixed) {
+            return makeFixedTokenRow(
+                path,
+                label,
+                hint,
+                value,
+                tip,
+                fixed,
+                opts
+            );
+        }
+
+        // Free-text folder chips use TokenField for custom tokens,
+        // drag-reorder, and a token-shaped "Add folder…" trailing button.
+        if (window.TokenField) {
+            const sectionTF = valueRowSection();
+            // The editor must NOT be nested inside a <label>: a <label>
+            // redirects clicks to its labelable control, and a contenteditable
+            // div isn't one — so the caret never lands and typing is blocked.
+            // Render the caption as a sibling field-label (as makeFixedTokenRow
+            // does) and keep the TokenField as a separate element.
+            const labelId = `${path.replace(/[^a-z0-9]+/gi, "-")}-tf-label`;
+            const labTF = document.createElement("label");
+            labTF.className = "field-label settings-field-title";
+            labTF.id = labelId;
+            labTF.setAttribute("data-tooltip", tip);
+            labTF.textContent = label;
+            const tf = window.TokenField.create({
+                value: (value || []).slice(),
+                allowCustomTokens: true,
+                allowFreeText: false,
+                singleUse: true,
+                reorder: opts.reorder !== false,
+                commitOnSpace: true,
+                suggest: folderSuggest,
+                // Suggestions open once the path starts with "/".
+                suggestTrigger: "/",
+                // Space (or Enter) commits the typed path — but only if the
+                // folder actually exists on disk; otherwise the text is
+                // discarded. Node fs in CEP, host check as a fallback.
+                // Only known folders may become tokens — real FS in-host, the
+                // hardcoded dev tree in a plain browser.
+                validateCustom: (text) => folderExists(text),
+                // Store paths without a trailing slash ("~/Desktop/" → "~/Desktop").
+                normalize: (v) => String(v).replace(/\/+$/, ""),
+                // Double-click a folder token to re-pick it (opens the OS picker
+                // at that location in-host); the chosen folder replaces it.
+                onTokenDblClick: (value) => pickFolderPath(value),
+                placeholder: "Type / to browse folders…",
+                trailingButton: {
+                    label: "Add folder…",
+                    onClick: () => pickFolderPath().then((p) => {
+                        if (p) tf.addCustom(p);
+                    })
+                },
+                onChange: () =>
+                    onSettingChange(path, tf.getValues(), "array")
+            });
+            tf.element.setAttribute("aria-labelledby", labelId);
+            sectionTF.appendChild(labTF);
+            sectionTF.appendChild(tf.element);
+            addHint(sectionTF, hint);
+            return sectionTF;
+        }
+
         const section = valueRowSection();
-        const lab = fieldLabel(label, tip);
-
-        let tokens = (value || []).slice();
-        const persist = () => onSettingChange(path, tokens.slice(), "array");
-
-        const tok = document.createElement("div");
-        tok.className = "tok";
-        const chips = document.createElement("div");
-        chips.className = "tok__chips";
-
-        const textInput = document.createElement("input");
-        textInput.type = "text";
-        textInput.className = "tok__input";
-        textInput.placeholder = "Type a name, Enter to add…";
-
-        const makeAddFolderChip = () => {
-            const addBtn = document.createElement("button");
-            addBtn.type = "button";
-            addBtn.className = "template-token tok__chip tok__add";
-            addBtn.textContent = "Add folder…";
-            addBtn.addEventListener("click", () => {
-                Promise.resolve(callHost("dejavu_chooseFolder", [""]))
-                    .then((r) => {
-                        if (r && r.ok && r.path) addToken(r.path);
-                    });
-            });
-            return addBtn;
-        };
-
-        const folderTokenKey = (raw) =>
-            String(raw || "").trim().replace(/[\\\/]+$/g, "").toLowerCase();
-
-        const addToken = (raw) => {
-            const v = String(raw || "").trim();
-            if (!v) return;
-            const key = folderTokenKey(v);
-            if (tokens.some((x) => folderTokenKey(x) === key)) return;
-            tokens.push(v);
-            renderChips();
-            persist();
-        };
-
-        function renderChips() {
-            chips.innerHTML = "";
-            tokens.forEach((t) => {
-                const chip = document.createElement("span");
-                chip.className = "template-token tok__chip";
-                const text = document.createElement("span");
-                text.className = "template-token__label";
-                text.textContent = t;
-                chip.appendChild(text);
-                const rm = document.createElement("button");
-                rm.type = "button";
-                rm.className = "template-token__remove";
-                rm.title = "Remove";
-                rm.setAttribute("aria-label", "Remove");
-                rm.innerHTML = `
-                    <svg viewBox="0 0 16 16" fill="none"
-                        stroke="currentColor" stroke-width="2.2"
-                        stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
-                        <path d="M4 4l8 8M12 4l-8 8"></path>
-                    </svg>`;
-                rm.addEventListener("click", () => {
-                    tokens = tokens.filter((x) => x !== t);
-                    renderChips();
-                    persist();
-                });
-                chip.appendChild(rm);
-                chips.appendChild(chip);
-            });
-            chips.appendChild(textInput);
-            chips.appendChild(makeAddFolderChip());
-        }
-
-        if (textInput) {
-            textInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    addToken(textInput.value);
-                    textInput.value = "";
-                } else if (e.key === "Backspace" && !textInput.value &&
-                    tokens.length) {
-                    tokens.pop();
-                    renderChips();
-                    persist();
-                    const again = chips.querySelector(".tok__input");
-                    if (again) again.focus();
-                }
-            });
-            textInput.addEventListener("blur", () => {
-                if (textInput.value.trim()) {
-                    addToken(textInput.value);
-                    textInput.value = "";
-                }
-            });
-        }
-
-        tok.appendChild(chips);
-
-        renderChips();
-        lab.appendChild(tok);
-        section.appendChild(lab);
+        section.appendChild(fieldLabel(label, tip));
         addHint(section, hint);
         return section;
     };
@@ -1148,26 +1162,26 @@
             const node = getPath(cfg, section.key);
             if (!node || typeof node !== "object") return;
             const group = document.createElement("div");
-            group.className = "similar-cfg__group";
+            group.className = "comparison-settings__group";
             group.dataset.section = section.key;
             if (section.key === "engine.weights" ||
                 section.key === "engine" ||
                 section.key === "index" ||
                 section.key === "thresholds") {
-                group.classList.add("similar-cfg__group--weights");
+                group.classList.add("comparison-settings__group--grid");
             }
             const title = document.createElement("div");
-            title.className = "similar-cfg__group-title";
+            title.className = "comparison-settings__group-title settings-title";
             title.textContent = section.label;
             if (section.hint) title.setAttribute("data-tooltip", section.hint);
             group.appendChild(title);
-            const useGrid = group.classList.contains("similar-cfg__group--weights");
+            const useGrid = group.classList.contains("comparison-settings__group--grid");
             let grid = null;
             const ensureGrid = () => {
                 if (!useGrid) return group;
                 if (grid) return grid;
                 grid = document.createElement("div");
-                grid.className = "similar-cfg__group-grid";
+                grid.className = "comparison-settings__grid";
                 group.appendChild(grid);
                 return grid;
             };
@@ -1179,7 +1193,7 @@
                 grid = null;
             };
             const isWeights = section.key === "engine.weights";
-            let pendingRowPair = null;
+            let pendingRowGroup = null;
             Object.keys(node).forEach((k) => {
                 const v = node[k];
                 if (v && typeof v === "object" && !Array.isArray(v)) return;
@@ -1205,8 +1219,8 @@
                     row = makeTokenRow(path, meta.label, hint, v, tip,
                         { fixed: OPTIONS[path], reorder: true });
                 } else if (Array.isArray(v) && OPTIONS[path]) {
-                    row = makeMultiRow(
-                        path, meta.label, hint, v, tip, OPTIONS[path]);
+                    row = makeTokenRow(path, meta.label, hint, v, tip,
+                        { fixed: OPTIONS[path], reorder: false });
                 } else {
                     row = makeValueRow(
                         path, meta.label, hint, v, tip, section.key);
@@ -1215,37 +1229,45 @@
                 if (path === "index.cacheFileName" ||
                     path === "index.skipFolders" ||
                     path === "index.externalConverters.prefer") {
-                    row.classList.add("similar-cfg__field--wide");
+                    row.classList.add("comparison-settings__field--wide");
                 }
                 if (DEPENDS[path]) row.dataset.depOn = DEPENDS[path];
-                if (ROW_PAIRS[path]) {
-                    pendingRowPair = {
-                        end: ROW_PAIRS[path],
+                if (ROW_GROUP_START.has(path)) {
+                    const group = ROW_GROUP_START.get(path);
+                    pendingRowGroup = {
+                        paths: group.slice(1),
                         wrap: document.createElement("div")
                     };
-                    pendingRowPair.wrap.className = "similar-cfg__row-pair";
-                    pendingRowPair.wrap.appendChild(row);
-                    appendStandaloneRow(pendingRowPair.wrap);
+                    pendingRowGroup.wrap.className = "comparison-settings__row-pair";
+                    pendingRowGroup.wrap.appendChild(row);
+                    appendStandaloneRow(pendingRowGroup.wrap);
                     return;
                 }
-                if (pendingRowPair && pendingRowPair.end === path) {
-                    pendingRowPair.wrap.appendChild(row);
-                    pendingRowPair = null;
+                if (pendingRowGroup && pendingRowGroup.paths[0] === path) {
+                    pendingRowGroup.wrap.appendChild(row);
+                    pendingRowGroup.paths.shift();
+                    if (pendingRowGroup.paths.length === 0) {
+                        pendingRowGroup = null;
+                    }
                     return;
                 }
                 if (path === "index.skipFolders") {
                     appendStandaloneRow(row);
                     return;
                 }
-                if (ROW_PAIR_ENDS.has(path)) {
-                    row.classList.add("similar-cfg__field--wide");
-                }
                 appendSettingRow(row);
             });
-            ui.settings.appendChild(group);
+            if (section.key === "index" && ui.indexSettings) {
+                ui.indexSettings.appendChild(group);
+            } else {
+                ui.settings.appendChild(group);
+            }
         });
         if (typeof window.dejavuEnhanceSelects === "function") {
             window.dejavuEnhanceSelects(ui.settings);
+            if (ui.indexSettings) {
+                window.dejavuEnhanceSelects(ui.indexSettings);
+            }
         }
         applyDependencies();
     };
@@ -1282,7 +1304,7 @@
 
     const pill = (cls, n, label) => {
         const span = document.createElement("span");
-        span.className = `sim-pill sim-pill--${cls}`;
+        span.className = classNames("sim-pill", `sim-pill--${cls}`);
         span.innerHTML =
             `<strong>${n}</strong> ${label}`;
         return span;
@@ -1291,10 +1313,110 @@
     // Compact colored count for the always-visible row line.
     const miniCount = (cls, n, label, title) => {
         const span = document.createElement("span");
-        span.className = `similar-mini similar-mini--${cls}`;
+        span.className = classNames("similar-mini", `similar-mini--${cls}`);
         span.title = title || "";
         span.innerHTML = `<strong>${n}</strong> ${label}`;
         return span;
+    };
+
+    const detailMetric = (label, value) => {
+        const item = document.createElement("span");
+        item.className = "similar-metric";
+        const key = document.createElement("span");
+        key.className = "similar-metric__label";
+        key.textContent = label;
+        const val = document.createElement("strong");
+        val.className = "similar-metric__value";
+        val.textContent = value;
+        item.appendChild(key);
+        item.appendChild(val);
+        return item;
+    };
+
+    const converterInfo = (doc) => {
+        const key = String((doc && doc.converter) || "").toLowerCase();
+        const format = String((doc && doc.format) || "").replace(/^\./, "");
+        if (key === "inkscape") {
+            return {
+                key: "inkscape",
+                label: "Inkscape",
+                title: `Converted ${format || "file"} with Inkscape`,
+                icon: "engine-inkscape"
+            };
+        }
+        if (key === "ai2svg") {
+            return {
+                key: "ai2svg",
+                label: "AI2SVG",
+                title: `Converted ${format || "file"} with bundled AI2SVG`,
+                icon: "engine-ai2svg"
+            };
+        }
+        if (key === "illustrator") {
+            return {
+                key: "illustrator",
+                label: "Illustrator",
+                title: `Converted ${format || "file"} with Illustrator fallback`,
+                mono: "Ai"
+            };
+        }
+        if (key === "embeddedsvg") {
+            return {
+                key: "embedded",
+                label: "Embedded SVG",
+                title: "Read embedded SVG data",
+                icon: "engine-embedded"
+            };
+        }
+        if (key === "unknown") {
+            return {
+                key: "unknown",
+                label: "Converted",
+                title: "Converted with an older cached engine record",
+                icon: "engine-unknown"
+            };
+        }
+        if (format === "svg" || format === "svgz") {
+            return {
+                key: "svg",
+                label: "SVG",
+                title: "Read SVG directly",
+                icon: "format-svg"
+            };
+        }
+        return {
+            key: "direct",
+            label: format ? format.toUpperCase() : "Direct",
+            title: "Read directly without conversion",
+            icon: "engine-file"
+        };
+    };
+
+    const makeConverterBadge = (doc) => {
+        const info = converterInfo(doc);
+        const badge = document.createElement("span");
+        badge.className = classNames(
+            "similar-engine",
+            `similar-engine--${info.key}`
+        );
+        badge.title = info.title;
+        const icon = document.createElement("span");
+        if (info.mono) {
+            icon.className = "similar-engine__mono";
+            icon.textContent = info.mono;
+        } else {
+            icon.className = "svg-icon";
+            icon.dataset.icon = info.icon;
+        }
+        icon.setAttribute("aria-hidden", "true");
+        const label = document.createElement("span");
+        label.textContent = info.label;
+        badge.appendChild(icon);
+        badge.appendChild(label);
+        if (window.dejavu && window.dejavu.injectSvgIcons) {
+            window.dejavu.injectSvgIcons(badge);
+        }
+        return badge;
     };
 
     // Per-aspect contribution to the score. result.parts holds deltas
@@ -1345,17 +1467,17 @@
         const row = document.createElement("div");
         row.className = "similar-row";
 
-        const head = document.createElement("button");
-        head.type = "button";
+        const head = document.createElement("div");
         head.className = "similar-row__head";
-        head.setAttribute("aria-expanded", "false");
 
         const filePath = doc.path || result.filePath || "";
         const nm = document.createElement("span");
-        nm.className = "similar-row__name";
+        nm.className = classNames(
+            "similar-row__name",
+            filePath && "similar-row__name--link"
+        );
         nm.textContent = doc.name || result.filePath || "Untitled";
         if (filePath) {
-            nm.classList.add("similar-row__name--link");
             nm.title =
                 "Open in Illustrator  ·  Shift-click to reveal in Finder/Explorer";
             nm.addEventListener("click", (evt) => {
@@ -1387,6 +1509,7 @@
         const top = document.createElement("div");
         top.className = "similar-row__top";
         top.appendChild(nm);
+        top.appendChild(makeConverterBadge(doc));
         top.appendChild(date);
         top.appendChild(score);
         head.appendChild(top);
@@ -1417,13 +1540,19 @@
         // Quick element-count comparison + average match quality.
         const stats = document.createElement("div");
         stats.className = "similar-row__stats";
-        const statBits = [];
-        if (em.totalA != null) statBits.push(`Your doc: ${em.totalA} el`);
-        if (em.totalB != null) statBits.push(`This file: ${em.totalB} el`);
-        if (matched) statBits.push(`${matched} matched`);
-        if (avgSim != null && matched) statBits.push(`avg match ${avgSim}%`);
-        if (statBits.length) {
-            stats.textContent = statBits.join("  ·  ");
+        if (em.totalA != null) {
+            stats.appendChild(detailMetric("Source", `${em.totalA} elements`));
+        }
+        if (em.totalB != null) {
+            stats.appendChild(detailMetric("Candidate", `${em.totalB} elements`));
+        }
+        if (matched) {
+            stats.appendChild(detailMetric("Matched", `${matched} elements`));
+        }
+        if (avgSim != null && matched) {
+            stats.appendChild(detailMetric("Match quality", `${avgSim}%`));
+        }
+        if (stats.children.length) {
             detail.appendChild(stats);
         }
 
@@ -1444,19 +1573,15 @@
         const bits = [];
         if (doc.mtimeMs) bits.push(`Modified ${fullDate(doc.mtimeMs)}`);
         if (doc.sizeBytes) bits.push(fmtBytes(doc.sizeBytes));
+        if (doc.converter && doc.converter !== "direct") {
+            bits.push(`Converted by ${converterInfo(doc).label}`);
+        }
+        if (doc.conversionPlan && doc.conversionPlan.length > 1) {
+            bits.push(`Tried ${doc.conversionPlan.join(" → ")}`);
+        }
         if (doc.elementCount != null) bits.push(`${doc.elementCount} elements`);
         meta.textContent = bits.join("  ·  ");
         detail.appendChild(meta);
-
-        head.addEventListener("click", () => {
-            const open = row.classList.toggle("is-expanded");
-            head.setAttribute("aria-expanded", open ? "true" : "false");
-            // Height changed — refit the panel (the observer no longer
-            // watches class changes, for performance).
-            if (typeof schedulePanelAutoSize === "function") {
-                schedulePanelAutoSize();
-            }
-        });
 
         row.appendChild(head);
         row.appendChild(detail);
@@ -1556,33 +1681,43 @@
             return;
         }
 
-        Promise.resolve(
-            index.findSimilarToCurrentIllustratorDocument(folder, { recursive })
-        ).then((list) => {
-            results = Array.isArray(list) ? list : [];
-            render();
-            setHint(
-                results.length
-                    ? `Found ${results.length} candidate${results.length === 1 ? "" : "s"}.`
-                    : "No comparable files found in that folder.",
-                "ok"
-            );
-        }).catch((err) => {
-            setHint(
-                `Similarity failed: ${(err && err.message) ? err.message : err}`,
-                "warn"
-            );
-        }).then(() => {
-            busy = false;
-            resetProgress(true);
-            updateRunEnabled();
-        });
+        const startScan = () => {
+            Promise.resolve(
+                index.findSimilarToCurrentIllustratorDocument(folder, { recursive })
+            ).then((list) => {
+                results = Array.isArray(list) ? list : [];
+                render();
+                setHint(
+                    results.length
+                        ? `Found ${results.length} candidate${results.length === 1 ? "" : "s"}.`
+                        : "No comparable files found in that folder.",
+                    "ok"
+                );
+                updateProgress({ stage: "done", done: 1, total: 1 });
+            }).catch((err) => {
+                setHint(
+                    `Similarity failed: ${(err && err.message) ? err.message : err}`,
+                    "warn"
+                );
+            }).then(() => {
+                busy = false;
+                window.setTimeout(() => resetProgress(true), 450);
+                updateRunEnabled();
+            });
+        };
+
+        if (typeof window.requestAnimationFrame === "function") {
+            window.requestAnimationFrame(() => window.setTimeout(startScan, 0));
+        } else {
+            window.setTimeout(startScan, 0);
+        }
     };
 
     // Compact (graphs hidden) vs extended (graphs shown for every row).
     const setView = (extended) => {
         if (ui.list) ui.list.classList.toggle("is-extended", !!extended);
         if (ui.compact) {
+            const label = extended ? "Hide match graphs" : "Show match graphs";
             if (typeof setToggleIcon === "function") {
                 setToggleIcon(ui.compact, !!extended);
             } else {
@@ -1590,6 +1725,9 @@
                     "aria-pressed", extended ? "true" : "false");
                 ui.compact.classList.toggle("is-on", !!extended);
             }
+            ui.compact.title = label;
+            ui.compact.setAttribute("aria-label", label);
+            ui.compact.setAttribute("data-tooltip", label);
         }
         if (typeof schedulePanelAutoSize === "function") {
             schedulePanelAutoSize();
@@ -1604,7 +1742,8 @@
         ui.browse = document.getElementById("similarityBrowseBtn");
         ui.recursive = document.getElementById("similarityRecursive");
         ui.run = document.getElementById("similarityRunBtn");
-        ui.settings = document.getElementById("similaritySettings");
+        ui.settings = document.getElementById("comparisonSettings");
+        ui.indexSettings = document.getElementById("similarityIndexControls");
         ui.filter = document.getElementById("similarityFilterInput");
         ui.sort = document.getElementById("similaritySortSelect");
         ui.range = document.getElementById("similarityRangeSelect");
@@ -1630,6 +1769,9 @@
 
         validateFolder();
         renderSettings();
+        if (typeof window.dejavuEnhanceSelects === "function" && ui.indexSettings) {
+            window.dejavuEnhanceSelects(ui.indexSettings);
+        }
         setView(window.localStorage.getItem(LS_VIEW) === "extended");
 
         ui.folder.addEventListener("input", () => {

@@ -33,12 +33,16 @@
                             e.key === "Digit0")
                     );
                 };
-                document.addEventListener("keydown", (e) => {
-                    if (isZoomKey(e)) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                }, { capture: true });
+                document.addEventListener(
+                    "keydown",
+                    (e) => {
+                        if (isZoomKey(e)) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    },
+                    { capture: true }
+                );
                 document.addEventListener(
                     "wheel",
                     (e) => {
@@ -53,7 +57,15 @@
             (() => {
                 const token = window.__DEJAVU_ASSET_RELOAD_TOKEN__;
                 const styles = [
+                    "./css/def_measures.css",
+                    "./css/def_colors.css",
+                    "./css/def_time.css",
+                    "./css/def_font.css",
+                    "./css/def_effects.css",
+                    "./css/def_variables.css",
                     "./css/style.css",
+                    "./css/token-field.css",
+                    "./css/similarity.css",
                     "./css/top.css",
                     "./css/interval.css",
                     "./css/locations.css",
@@ -63,7 +75,7 @@
                     "./css/open.css",
                     "./css/advanced.css",
                     "./css/bottom.css",
-                    "./css/update-install.css"
+                    "./css/install.css"
                 ];
                 styles.forEach((stylePath) => {
                     document.write(
@@ -74,25 +86,74 @@
         </script>
     </head>
     <body>
-        <div class="app">
-            <header class="app__header">
-                <div class="app__title">
-                    <span class="app__dot" id="statusDot"></span>
-                    <span
-                        class="svg-icon app__logo"
-                        id="appLogo"
-                        aria-hidden="true"
-                    ></span>
-                    <h1>DejaVu</h1>
+        <div class="wrapper">
+            <header class="header">
+                <div class="app__header">
+                    <div class="app__title">
+                        <span class="app__dot" id="statusDot"></span>
+                        <h1>DejaVu</h1>
+                    </div>
+                    <button
+                        type="button"
+                        class="app__header-control app__logo-btn is-on"
+                        id="mainShellBtn"
+                        data-shell-target="mainShell"
+                        aria-controls="mainShell"
+                        aria-label="Main"
+                        title="Main"
+                        aria-pressed="true"
+                    >
+                        <span
+                            class="svg-icon app__logo"
+                            id="appLogo"
+                            data-icon="app-logo"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+                    <button
+                        type="button"
+                        class="app__header-control app__similarity-btn"
+                        id="similarityHeaderBtn"
+                        data-shell-target="similarityShell"
+                        aria-controls="similarityPanel"
+                        aria-label="Similarity"
+                        title="Similarity"
+                        aria-pressed="false"
+                    >
+                        <span
+                            class="svg-icon"
+                            data-icon="similarity"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+                    <button
+                        type="button"
+                        class="app__header-control app__settings-btn"
+                        id="settingsBtn"
+                        data-shell-target="settingsShell"
+                        aria-controls="settingsShell"
+                        aria-label="Settings"
+                        title="Settings"
+                        aria-pressed="false"
+                    >
+                        <span
+                            class="svg-icon"
+                            data-icon="settings"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
                 </div>
-                <!-- <span class="app__mode-tag" id="modeTag">Off all</span> -->
+                <div class="saving-bar" id="savingBar" aria-hidden="true">
+                    <div class="saving-bar__track">
+                        <div class="saving-bar__pulse"></div>
+                    </div>
+                </div>
             </header>
 
-            <div class="saving-bar" id="savingBar" aria-hidden="true">
-                <div class="saving-bar__track">
-                    <div class="saving-bar__pulse"></div>
-                </div>
-            </div>
+            <div class="container">
+                <div class="shell" id="mainShell">
+                    <header class="shell-header"></header>
+                    <div class="app shell-content">
 
             <div
                 class="mode-seg"
@@ -248,266 +309,50 @@
                 </div>
             </section>
 
-            <details
-                class="drawer settings-drawer"
-                id="saveSettingsDrawer"
-                open
-            >
-                <summary>
-                    <span>Save interval</span>
-                </summary>
-                <div class="drawer__body drawer__body--settings">
-                    <section class="field-group field-group--embedded">
-                        <div class="settings-row">
-                            <label
-                                class="settings-row__label"
-                                for="intervalInput"
-                                >Interval</label
-                            >
-                            <div class="settings-row__pills">
-                                <div class="number-input-group">
-                                    <div class="number-spin-buttons">
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="intervalInput"
-                                            data-action="up"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="intervalInput"
-                                            data-action="down"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        id="intervalInput"
-                                        min="1"
-                                        step="1"
-                                        value="2"
-                                    />
-                                </div>
-                                <div class="select-wrapper">
-                                    <select id="intervalUnit">
-                                        <option value="1">seconds</option>
-                                        <option value="60" selected>
-                                            minutes
-                                        </option>
-                                        <option value="3600">hours</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="settings-row" id="intervalPresets">
-                            <span class="settings-row__label">TEMPLATES</span>
-                            <div class="settings-row__pills">
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-seconds="30"
-                                >
-                                    30s
-                                </button>
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-seconds="60"
-                                >
-                                    1m
-                                </button>
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-seconds="900"
-                                >
-                                    15m
-                                </button>
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-seconds="3600"
-                                >
-                                    1h
-                                </button>
-                            </div>
-                        </div>
-                        <div class="settings-row" id="safetyProfiles">
-                            <span class="settings-row__label">Profile</span>
-                            <div class="settings-row__pills">
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-profile="maximum"
-                                >
-                                    Maximum
-                                </button>
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-profile="balanced"
-                                >
-                                    Balanced
-                                </button>
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-profile="light"
-                                >
-                                    Light
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </details>
-
-            <details class="drawer settings-drawer" id="locationsDrawer">
-                <summary>
-                    <span>Locations</span>
-                </summary>
-                <div class="drawer__body drawer__body--settings">
-                    <section class="field-group field-group--embedded">
-                        <label class="field-label" for="folderInput">
-                            Default save folder (unsaved documents only)
-                        </label>
-                        <div class="field-row">
-                            <span class="folder-field" id="folderField">
-                                <input
-                                    type="text"
-                                    id="folderInput"
-                                    placeholder="Type a path or browse…  (~/ = home)"
-                                    autocomplete="off"
-                                    autocapitalize="off"
-                                    spellcheck="false"
-                                />
-                                <span
-                                    class="folder-validity"
-                                    id="folderValidity"
-                                    aria-hidden="true"
-                                ></span>
-                            </span>
-                            <button class="btn" id="browseFolderBtn">
-                                Browse…
-                            </button>
-                        </div>
-                        <p class="field-hint">
-                            Saved documents dejavu beside their file. This
-                            folder is only for unsaved documents.
-                        </p>
-                        <div class="folder-template-group">
-                            <label
-                                class="field-label"
-                                id="folderTemplateEditorLabel"
-                            >
-                                Dejavu folder template
-                            </label>
-                            <div
-                                class="template-editor template-editor--folder"
-                                id="folderTemplateEditor"
-                                role="group"
-                                aria-labelledby="folderTemplateEditorLabel"
-                            ></div>
-                            <input type="hidden" id="folderTemplateInput" />
-                            <p class="field-hint">
-                                Document-folder and filename tokens are
-                                required.
-                            </p>
-                        </div>
-                    </section>
-
-                    <section class="field-group field-group--embedded">
-                        <label class="field-label" id="templateEditorLabel">
-                            Filename template
-                        </label>
-                        <div
-                            id="templateEditor"
-                            aria-labelledby="templateEditorLabel"
-                        ></div>
-                        <input
-                            type="hidden"
-                            id="templateInput"
-                            value="$filename_$hh$mm$ss_$dd$MM$YYYY"
-                        />
-                        <div class="tokens" id="tokensList"></div>
-                        <div class="settings-row" id="templatePresets">
-                            <span class="settings-row__label">TEMPLATES</span>
-                            <div class="settings-row__pills">
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-template="$filename_$hh$mm$ss_$dd$MM$YYYY"
-                                >
-                                    Time + date
-                                </button>
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-template="$filename_$hh$mm$ss"
-                                >
-                                    Time only
-                                </button>
-                                <button
-                                    class="preset-chip"
-                                    type="button"
-                                    data-template="$filename_$counter"
-                                >
-                                    Counter
-                                </button>
-                                <button
-                                    class="preset-chip preset-chip--clear"
-                                    id="clearTemplateBtn"
-                                    type="button"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
-                        <div class="preview">
-                            <span class="preview__value" id="templatePreview"
-                                >—</span
-                            >
-                            <span class="preview__label">Preview</span>
-                        </div>
-                        <p class="field-hint">
-                            Use tokens to customize the dejavu filename format.
-                        </p>
-                    </section>
-                </div>
-            </details>
-
-            <details class="drawer" id="versionDrawer" open>
-                <summary>
+            <section class="panel-nav" id="mainPanelNav">
+                <button
+                    class="panel-nav__tab is-active"
+                    type="button"
+                    data-panel-tab="timelinePanel"
+                    aria-controls="timelinePanel"
+                    aria-selected="true"
+                >
                     <span>Timeline</span>
-                    <span class="drawer__meta drawer__counter" id="versionCount"
+                    <span class="panel-nav__meta panel-nav__counter" id="versionCount"
                         >0</span
                     >
-                </summary>
-                <div class="drawer__body">
+                </button>
+                <button
+                    class="panel-nav__tab"
+                    type="button"
+                    data-panel-tab="recoveryPanel"
+                    aria-controls="recoveryPanel"
+                    aria-selected="false"
+                >
+                    <span>Recovery</span>
+                    <span
+                        class="panel-nav__meta panel-nav__counter"
+                        id="recoveryCandidateCount"
+                        >0</span
+                    >
+                </button>
+                <button
+                    class="panel-nav__tab"
+                    type="button"
+                    data-panel-tab="openDocumentsPanel"
+                    aria-controls="openDocumentsPanel"
+                    aria-selected="false"
+                >
+                    <span>Open Docs</span>
+                    <span
+                        class="panel-nav__meta panel-nav__counter"
+                        id="openDocsCount"
+                        >0</span
+                    >
+                </button>
+            </section>
+
+            <section class="panel-view is-active" id="timelinePanel">
                     <div class="timeline-search">
                         <input
                             class="timeline-filter"
@@ -537,33 +382,6 @@
                                 <option value="7d">Last 7 days</option>
                                 <option value="30d">Last 30 days</option>
                             </select>
-                        </div>
-                    </div>
-                    <div class="timeline-insights" id="timelineInsights">
-                        <div
-                            class="timeline-insights__refresh"
-                            id="refreshVersionsBtn"
-                            aria-label="Refresh timeline"
-                            title="Refresh timeline"
-                        >
-                            ↻
-                        </div>
-                        <div class="timeline-insights__content">
-                            <div class="timeline-insights__labels">
-                                <span id="timelineStorageSummary"
-                                    >0 files · 0 B</span
-                                >
-                                <span id="timelineRetentionSummary">—</span>
-                            </div>
-                            <div
-                                class="timeline-insights__track"
-                                aria-hidden="true"
-                            >
-                                <div
-                                    class="timeline-insights__fill"
-                                    id="timelineUsageFill"
-                                ></div>
-                            </div>
                         </div>
                     </div>
                     <div class="timeline-bulk" id="timelineBulkBar" hidden>
@@ -600,8 +418,9 @@
                             title="Pinned only"
                             aria-label="Pinned only"
                         >
-                            <span
-                                class="svg-icon icon-pin"
+                                <span
+                                    class="svg-icon icon-pin"
+                                    data-icon="pin"
                                 aria-hidden="true"
                             ></span>
                         </button>
@@ -613,8 +432,9 @@
                             title="Compact rows"
                             aria-label="Compact rows"
                         >
-                            <span
-                                class="svg-icon icon-compact"
+                                <span
+                                    class="svg-icon icon-compact"
+                                    data-icon="compact"
                                 aria-hidden="true"
                             ></span>
                         </button>
@@ -626,8 +446,9 @@
                             title="Auto-refresh"
                             aria-label="Auto-refresh"
                         >
-                            <span
-                                class="svg-icon icon-refresh"
+                                <span
+                                    class="svg-icon icon-refresh"
+                                    data-icon="refresh"
                                 aria-hidden="true"
                             ></span>
                         </button>
@@ -641,6 +462,7 @@
                             >
                                 <span
                                     class="svg-icon icon-download"
+                                    data-icon="download"
                                     aria-hidden="true"
                                 ></span>
                             </button>
@@ -654,6 +476,7 @@
                             >
                                 <span
                                     class="svg-icon icon-circle"
+                                    data-icon="circle"
                                     aria-hidden="true"
                                 ></span>
                             </button>
@@ -662,19 +485,39 @@
                     <div class="version-list" id="versionList">
                         <div class="empty-state">No snapshots loaded.</div>
                     </div>
-                </div>
-            </details>
+                    <div class="timeline-insights" id="timelineInsights">
+                        <div
+                            class="timeline-insights__refresh svg-icon icon-refresh"
+                            data-icon="refresh"
+                            id="refreshVersionsBtn"
+                            aria-label="Refresh timeline"
+                            title="Refresh timeline"
+                        ></div>
+                        <div class="timeline-insights__content">
+                            <div class="timeline-insights__labels">
+                                <span id="timelineStorageSummary"
+                                    >0 files · 0 B</span
+                                >
+                                <span id="timelineRetentionSummary">—</span>
+                            </div>
+                            <div
+                                class="timeline-insights__track"
+                                aria-hidden="true"
+                            >
+                                <div
+                                    class="timeline-insights__fill"
+                                    id="timelineUsageFill"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+            </section>
 
-            <details class="drawer" id="recoveryCenterDrawer">
-                <summary>
-                    <span>Recovery Center</span>
-                    <span
-                        class="drawer__meta drawer__counter"
-                        id="recoveryCandidateCount"
-                        >0</span
-                    >
-                </summary>
-                <div class="drawer__body">
+            <section
+                class="panel-view"
+                id="recoveryPanel"
+                hidden
+            >
                     <div class="timeline-search">
                         <input
                             class="timeline-filter"
@@ -739,8 +582,9 @@
                             title="Pinned only"
                             aria-label="Pinned only"
                         >
-                            <span
-                                class="svg-icon icon-pin"
+                                <span
+                                    class="svg-icon icon-pin"
+                                    data-icon="pin"
                                 aria-hidden="true"
                             ></span>
                         </button>
@@ -752,8 +596,9 @@
                             title="Compact rows"
                             aria-label="Compact rows"
                         >
-                            <span
-                                class="svg-icon icon-compact"
+                                <span
+                                    class="svg-icon icon-compact"
+                                    data-icon="compact"
                                 aria-hidden="true"
                             ></span>
                         </button>
@@ -767,6 +612,7 @@
                             >
                                 <span
                                     class="svg-icon icon-download"
+                                    data-icon="download"
                                     aria-hidden="true"
                                 ></span>
                             </button>
@@ -780,6 +626,7 @@
                             >
                                 <span
                                     class="svg-icon icon-circle"
+                                    data-icon="circle"
                                     aria-hidden="true"
                                 ></span>
                             </button>
@@ -788,19 +635,9 @@
                     <div class="version-list" id="recoveryCandidateList">
                         <div class="empty-state">No recovery history yet.</div>
                     </div>
-                </div>
-            </details>
+            </section>
 
-            <details class="drawer" id="openDocsDrawer">
-                <summary>
-                    <span>Open documents</span>
-                    <span
-                        class="drawer__meta drawer__counter"
-                        id="openDocsCount"
-                        >0</span
-                    >
-                </summary>
-                <div class="drawer__body">
+            <section class="panel-view" id="openDocumentsPanel" hidden>
                     <div class="timeline-search">
                         <input
                             class="timeline-filter"
@@ -868,16 +705,8 @@
                             >
                                 <span
                                     class="select-chevron open-doc__chevron"
+                                    data-icon="chevron-down"
                                     aria-hidden="true"
-                                    ><svg
-                                        viewBox="0 0 16 16"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <path d="M2 6l6 4 6-4" /></svg
                                 ></span>
                             </button>
                         </span>
@@ -893,6 +722,7 @@
                         >
                             <span
                                 class="svg-icon icon-unsaved"
+                                data-icon="unsaved"
                                 aria-hidden="true"
                             ></span>
                         </button>
@@ -906,6 +736,7 @@
                         >
                             <span
                                 class="svg-icon icon-circle"
+                                data-icon="circle"
                                 aria-hidden="true"
                             ></span>
                         </button>
@@ -913,345 +744,80 @@
                     <div class="open-docs" id="openDocsList">
                         <div class="empty-state">No documents open.</div>
                     </div>
-                </div>
-            </details>
-            <details
-                class="drawer settings-drawer cache-health-drawer"
-                id="cacheHealthDrawer"
-                open
-            >
-                <summary title="Cache and disk health for this document"><span>Cache health</span></summary>
-                <div class="drawer__body drawer__body--settings">
-                    <section
-                        class="field-group field-group--embedded cache-health"
-                    >
+            </section>
+
+            </div>
+            <div class="cache shell-content">
+                <div
+                    class="timeline-insights cache-health__disk"
+                    id="cacheDiskSpace"
+                    title="Free disk space for the dejavu folder"
+                >
+                    <div
+                            class="timeline-insights__refresh svg-icon icon-refresh"
+                            data-icon="refresh"
+                        id="cacheDiskSpaceRefresh"
+                        aria-label="Refresh disk space"
+                        title="Audit cache and refresh disk space"
+                    ></div>
+                    <div class="timeline-insights__content">
+                        <div class="timeline-insights__labels">
+                            <span id="cacheDiskSpaceSummary"
+                                >Disk space not checked.</span
+                            >
+                            <span id="cacheDiskSpacePercent">—</span>
+                        </div>
                         <div
-                            class="timeline-insights cache-health__disk"
-                            id="cacheDiskSpace"
-                            title="Free disk space for the dejavu folder"
+                            class="timeline-insights__track"
+                            aria-hidden="true"
                         >
                             <div
-                                class="timeline-insights__refresh"
-                                id="cacheDiskSpaceRefresh"
-                                aria-label="Refresh disk space"
-                                title="Audit cache and refresh disk space"
-                            >
-                                ↻
-                            </div>
-                            <div class="timeline-insights__content">
-                                <div class="timeline-insights__labels">
-                                    <span id="cacheDiskSpaceSummary"
-                                        >Disk space not checked.</span
-                                    >
-                                    <span id="cacheDiskSpacePercent">—</span>
-                                </div>
-                                <div
-                                    class="timeline-insights__track"
-                                    aria-hidden="true"
-                                >
-                                    <div
-                                        class="timeline-insights__fill"
-                                        id="cacheDiskSpaceFill"
-                                    ></div>
-                                </div>
-                            </div>
+                                class="timeline-insights__fill"
+                                id="cacheDiskSpaceFill"
+                            ></div>
                         </div>
-                        <div
-                            class="cache-health__summary"
-                            id="cacheHealthSummary"
-                            title="Snapshot count, total size, latest save and free disk space"
-                        >
-                            <span>Cache not checked yet.</span>
-                        </div>
-                        <div
-                            class="cache-health__warning"
-                            id="cacheHealthWarning"
-                            title="Cache health warnings"
-                            hidden
-                        ></div>
-                        <div class="settings-grid settings-grid--three">
-                            <label class="mini-field" title="Warn when free disk space drops below this value">
-                                <span>Low disk MB</span>
-                                <div class="number-input-group">
-                                    <div class="number-spin-buttons">
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="diskSpaceWarningInput"
-                                            data-action="up"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="diskSpaceWarningInput"
-                                            data-action="down"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        id="diskSpaceWarningInput"
-                                        min="0"
-                                        step="256"
-                                        title="0 disables the warning"
-                                    />
-                                </div>
-                            </label>
-                            <label class="mini-field" title="Re-check disk space after this many MB have been saved">
-                                <span>Refresh MB</span>
-                                <div class="number-input-group">
-                                    <div class="number-spin-buttons">
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="diskSpaceRefreshInput"
-                                            data-action="up"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="diskSpaceRefreshInput"
-                                            data-action="down"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        id="diskSpaceRefreshInput"
-                                        min="1"
-                                        step="64"
-                                        title="Minimum 1 MB"
-                                    />
-                                </div>
-                            </label>
-                            <label class="mini-field" title="How many recovery versions to keep per unsaved document">
-                                <span>Unsaved versions</span>
-                                <div class="number-input-group">
-                                    <div class="number-spin-buttons">
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="recoveryVersionsInput"
-                                            data-action="up"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="recoveryVersionsInput"
-                                            data-action="down"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        id="recoveryVersionsInput"
-                                        min="1"
-                                        max="20"
-                                        step="1"
-                                        title="1 to 20 versions"
-                                    />
-                                </div>
-                            </label>
-                            <label class="mini-field" title="Maximum recovery candidates tracked across all documents">
-                                <span>Recovery cap</span>
-                                <div class="number-input-group">
-                                    <div class="number-spin-buttons">
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="recoveryMaxEntriesInput"
-                                            data-action="up"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="recoveryMaxEntriesInput"
-                                            data-action="down"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        id="recoveryMaxEntriesInput"
-                                        min="10"
-                                        max="500"
-                                        step="10"
-                                        title="10 to 500 candidates"
-                                    />
-                                </div>
-                            </label>
-                        </div>
-                    </section>
+                    </div>
                 </div>
-            </details>
+                <div
+                    class="cache-health__summary"
+                    id="cacheHealthSummary"
+                    title="Snapshot count, total size, latest save and free disk space"
+                >
+                    <span>Cache not checked yet.</span>
+                </div>
+            </div>
+        </div>
 
-            <details class="drawer" id="similarityDrawer">
-                <summary>
-                    <span>Similarity</span>
-                    <span
-                        class="drawer__meta drawer__counter"
-                        id="similarityCount"
-                    >0</span>
-                </summary>
-                <div class="drawer__body">
-                    <section class="field-group field-group--embedded">
+        <div class="shell" id="similarityShell" hidden>
+            <header class="shell-header"></header>
+            <section class="panel-view panel-view--vertical" id="similarityPanel" hidden>
+                <div id="similarityIndexControls">
+                    <div class="similarity-search">
                         <label class="field-label" for="similarityFolderInput">
                             Search folder
                         </label>
                         <div class="field-row">
-                            <span class="folder-field" id="similarityFolderField">
-                                <input
-                                    type="text"
-                                    id="similarityFolderInput"
-                                    placeholder="Type a path or browse…  (~/ = home)"
-                                    autocomplete="off"
-                                    autocapitalize="off"
-                                    spellcheck="false"
-                                />
-                                <span
-                                    class="folder-validity"
-                                    id="similarityFolderValidity"
-                                    aria-hidden="true"
-                                ></span>
+                            <span class="folder-field " id="similarityFolderField">
+                                <input type="text" id="similarityFolderInput" placeholder="Type a path or browse…  (~/ = home)" autocomplete="off" autocapitalize="off" spellcheck="false">
+                                <span class="folder-validity " id="similarityFolderValidity" aria-hidden="true" title=""></span>
                             </span>
                             <button class="btn" id="similarityBrowseBtn">
                                 Browse…
                             </button>
                         </div>
                         <label class="checkbox">
-                            <input type="checkbox" id="similarityRecursive" />
+                            <input type="checkbox" id="similarityRecursive">
                             <span>Search inside subfolders</span>
                         </label>
-                        <p class="field-hint">
-                            Scans the folder for the files most similar to the
-                            active document (.svg / .ai / .pdf / .eps).
-                        </p>
-                        <div class="field-row">
-                            <button
-                                class="btn btn--primary"
-                                id="similarityRunBtn"
-                            >Find similar</button>
-                        </div>
-                        <div
-                            class="similar-progress"
-                            id="similarityProgress"
-                            hidden
-                        >
-                            <div class="similar-progress__labels">
-                                <span id="similarityProgressLabel"
-                                    >Preparing scan…</span
-                                >
-                                <span id="similarityProgressCount">0 / 0</span>
-                            </div>
-                            <div
-                                class="similar-progress__track"
-                                role="progressbar"
-                                aria-valuemin="0"
-                                aria-valuemax="100"
-                                aria-valuenow="0"
-                            >
-                                <div
-                                    class="similar-progress__bar"
-                                    id="similarityProgressBar"
-                                ></div>
-                            </div>
-                        </div>
-                    </section>
 
-                   
-
+                    </div>
+                </div>
+                <div class="field-row">
+                    <button class="btn btn--primary" id="similarityRunBtn" data-tooltip="Compare this folder against the active document">
+                        Find similar
+                    </button>
+                </div>
+                <div class="similarity-results">
                     <div class="timeline-search">
                         <input
                             class="timeline-filter"
@@ -1287,6 +853,9 @@
                     </div>
 
                     <div class="table-toggles" id="similarityToggles">
+                        <span class="panel-nav__meta panel-nav__counter" id="similarityCount"
+                            >0</span
+                        >
                         <button
                             class="table-toggle"
                             id="similarityCompactToggle"
@@ -1297,333 +866,703 @@
                         >
                             <span
                                 class="svg-icon icon-compact"
+                                data-icon="compact"
                                 aria-hidden="true"
                             ></span>
                         </button>
                     </div>
 
-                    <div class="version-list" id="similarityList">
-                        <div class="empty-state">
-                            Pick a folder and click “Find similar”.
+                    <div
+                        class="similar-progress"
+                        id="similarityProgress"
+                        hidden
+                    >
+                        <div class="similar-progress__labels">
+                            <span id="similarityProgressLabel"
+                                >Preparing scan...</span
+                            >
+                            <span id="similarityProgressCount">0 / 0</span>
+                        </div>
+                        <div
+                            class="similar-progress__track"
+                            role="progressbar"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow="0"
+                            aria-valuetext="Preparing scan"
+                        >
+                            <div
+                                class="similar-progress__bar"
+                                id="similarityProgressBar"
+                            ></div>
                         </div>
                     </div>
-                     <details class="drawer similar-settings" id="similaritySettingsDrawer">
-                        <summary><span>Comparison settings</span></summary>
-                        <div
-                            class="drawer__body drawer__body--settings"
-                            id="similaritySettings"
-                        ></div>
-                    </details>
+
+                    <div class="version-list" id="similarityList">
+                        <div class="empty-state">
+                            Pick a folder and click "Find similar".
+                        </div>
+                    </div>
                 </div>
-            </details>
+            </section>
+        </div>
 
-            <details class="drawer settings-drawer" id="advancedDrawer">
-                <summary><span>Advanced</span></summary>
-                <div class="drawer__body drawer__body--settings">
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input
-                                type="checkbox"
-                                id="recoveryCheckToggle"
-                                checked
-                            />
-                            <span>Warn when a newer dejavu exists</span>
-                        </label>
-                        <p class="field-hint">
-                            Shows a warning when opening a document that has a
-                            newer dejavu.
-                        </p>
-                    </section>
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input
-                                type="checkbox"
-                                id="autoRecoverCrashToggle"
-                                checked
-                            />
-                            <span
-                                >Open recent dejavus after an unexpected
-                                shutdown</span
-                            >
-                        </label>
-                        <p class="field-hint">
-                            Opens the latest dejavu for up to five documents,
-                            then creates a fresh recovery copy.
-                        </p>
-                    </section>
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input type="checkbox" id="backupOriginalToggle" />
-                            <span
-                                >Copy the current saved file before
-                                autosaving</span
-                            >
-                        </label>
-                        <p class="field-hint">
-                            Creates a backup of the original file before each
-                            dejavu.
-                        </p>
-                    </section>
-                    <section class="field-group field-group--embedded">
-                        <label class="mini-field mini-field--wide">
-                            <span
-                                >Automatically pin every Nth dejavu (0
-                                disables)</span
-                            >
-                            <div class="number-input-group">
-                                <div class="number-spin-buttons">
-                                    <div
-                                        class="number-spin-button"
-                                        data-target="autoPinEveryInput"
-                                        data-action="up"
-                                    >
-                                        <svg
-                                            class="spin-chevron"
-                                            viewBox="0 0 16 16"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            aria-hidden="true"
-                                        >
-                                            <path d="M2 10l6-4 6 4" />
-                                        </svg>
+        <div class="settings shell" id="settingsShell" hidden>
+            <section class="panel-nav" id="settingsPanelNav">
+                <button
+                    class="panel-nav__tab"
+                    type="button"
+                    data-panel-tab="comparisonSettingsPanel"
+                    aria-controls="comparisonSettingsPanel"
+                    aria-selected="false"
+                >
+                    <span>Comparison</span>
+                </button>
+                <button
+                    class="panel-nav__tab is-active"
+                    type="button"
+                    data-panel-tab="cacheHealthPanel"
+                    aria-controls="cacheHealthPanel"
+                    aria-selected="true"
+                >
+                    <span>Cache health</span>
+                </button>
+                <button
+                    class="panel-nav__tab"
+                    type="button"
+                    data-panel-tab="saveIntervalPanel"
+                    aria-controls="saveIntervalPanel"
+                    aria-selected="false"
+                >
+                    <span>Save interval</span>
+                </button>
+                <button
+                    class="panel-nav__tab"
+                    type="button"
+                    data-panel-tab="locationsPanel"
+                    aria-controls="locationsPanel"
+                    aria-selected="false"
+                >
+                    <span>Locations</span>
+                </button>
+                <button
+                    class="panel-nav__tab"
+                    type="button"
+                    data-panel-tab="advancedPanel"
+                    aria-controls="advancedPanel"
+                    aria-selected="false"
+                >
+                    <span>Advanced</span>
+                </button>
+                <button
+                    class="settings-reset settings-nav__reset"
+                    id="headerResetSettingsBtn"
+                    type="button"
+                    aria-label="Reset settings"
+                    title="Reset settings"
+                >
+                    <span class="settings-reset__label">Reset Settings</span>
+                    <span
+                        class="svg-icon icon-reset"
+                        data-icon="reset"
+                        aria-hidden="true"
+                    ></span>
+                </button>
+            </section>
+            <div class="settings__content">
+                <section class="panel-view" id="comparisonSettingsPanel" hidden>
+                    <div id="comparisonSettings"></div>
+                </section>
+
+                <section class="panel-view is-active" id="cacheHealthPanel">
+                        <section
+                            class="field-group field-group--embedded cache-health"
+                        >
+                            <div
+                                class="cache-health__warning"
+                                id="cacheHealthWarning"
+                                title="Cache health warnings"
+                                hidden
+                            ></div>
+                            <div class="settings-grid settings-grid--four">
+                                <label
+                                    class="mini-field"
+                                    title="Warn when free disk space drops below this value"
+                                >
+                                    <span class="settings-field-title">Low disk MB</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceWarningInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceWarningInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="diskSpaceWarningInput"
+                                            min="0"
+                                            step="256"
+                                            title="0 disables the warning"
+                                        />
                                     </div>
-                                    <div
-                                        class="number-spin-button"
-                                        data-target="autoPinEveryInput"
-                                        data-action="down"
-                                    >
-                                        <svg
-                                            class="spin-chevron"
-                                            viewBox="0 0 16 16"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            aria-hidden="true"
-                                        >
-                                            <path d="M2 6l6 4 6-4" />
-                                        </svg>
+                                </label>
+                                <label
+                                    class="mini-field"
+                                    title="Re-check disk space after this many MB have been saved"
+                                >
+                                    <span class="settings-field-title">Refresh MB</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceRefreshInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceRefreshInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="diskSpaceRefreshInput"
+                                            min="1"
+                                            step="64"
+                                            title="Minimum 1 MB"
+                                        />
                                     </div>
-                                </div>
-                                <input
-                                    type="number"
-                                    id="autoPinEveryInput"
-                                    min="0"
-                                    step="1"
-                                />
+                                </label>
+                                <label
+                                    class="mini-field"
+                                    title="How many recovery versions to keep per unsaved document"
+                                >
+                                    <span class="settings-field-title">Unsaved versions</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryVersionsInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryVersionsInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="recoveryVersionsInput"
+                                            min="1"
+                                            max="20"
+                                            step="1"
+                                            title="1 to 20 versions"
+                                        />
+                                    </div>
+                                </label>
+                                <label
+                                    class="mini-field"
+                                    title="Maximum recovery candidates tracked across all documents"
+                                >
+                                    <span class="settings-field-title">Recovery cap</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryMaxEntriesInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryMaxEntriesInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="recoveryMaxEntriesInput"
+                                            min="10"
+                                            max="500"
+                                            step="10"
+                                            title="10 to 500 candidates"
+                                        />
+                                    </div>
+                                </label>
                             </div>
-                        </label>
-                        <p class="field-hint">
-                            Automatically pins snapshots at regular intervals to
-                            prevent cleanup.
-                        </p>
-                    </section>
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input
-                                type="checkbox"
-                                id="saveOnEnableToggle"
-                                checked
-                            />
-                            <span>Save immediately when dejavu is enabled</span>
-                        </label>
-                        <p class="field-hint">
-                            Prevents waiting a full interval after turning
-                            dejavu on.
-                        </p>
-                    </section>
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input
-                                type="checkbox"
-                                id="saveOnDocumentSwitchToggle"
-                            />
-                            <span
-                                >Run a check shortly after switching
-                                documents</span
-                            >
-                        </label>
-                        <p class="field-hint">
-                            Useful when open documents use different dejavu
-                            rules.
-                        </p>
-                    </section>
+                        </section>
+                </section>
 
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input
-                                type="checkbox"
-                                id="checkForUpdatesToggle"
-                                checked
-                            />
-                            <span>Check for new updates</span>
-                        </label>
-                        <p class="field-hint">
-                            Periodically checks GitHub Releases and shows a
-                            banner when a newer version of DejaVu is available.
-                        </p>
-                    </section>
-
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input
-                                type="checkbox"
-                                id="overwriteToggle"
-                                checked
-                            />
-                            <span
-                                >Overwrite previous dejavu copy (same
-                                filename)</span
-                            >
-                        </label>
-                        <p class="field-hint">
-                            When enabled, reuses the same filename instead of
-                            creating unique copies.
-                        </p>
-                    </section>
-
-                    <section
-                        class="field-group field-group--embedded field-group--row"
-                    >
-                        <label class="checkbox">
-                            <input
-                                type="checkbox"
-                                id="onlyIfChangedToggle"
-                                checked
-                            />
-                            <span
-                                >Only save when content changed since last
-                                save</span
-                            >
-                        </label>
-                        <p class="field-hint">
-                            Skips dejavu if the document hasn't been modified
-                            since the last save.
-                        </p>
-                    </section>
-
-                    <section
-                        class="field-group field-group--embedded field-group--compact"
-                    >
-                        <div class="settings-grid settings-grid--three">
-                            <label class="mini-field">
-                                <span>Keep</span>
-                                <div class="number-input-group">
-                                    <div class="number-spin-buttons">
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="keepCountInput"
-                                            data-action="up"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
+                <section class="panel-view" id="saveIntervalPanel" hidden>
+                    <section class="field-group field-group--embedded">
+                            <div class="settings-row">
+                                <label
+                                    class="settings-row__label settings-field-title"
+                                    for="intervalInput"
+                                    >Interval</label
+                                >
+                                <div class="settings-row__pills">
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="intervalInput"
+                                                data-action="up"
                                             >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="keepCountInput"
-                                            data-action="down"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="intervalInput"
+                                                data-action="down"
                                             >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
                                         </div>
+                                        <input
+                                            type="number"
+                                            id="intervalInput"
+                                            min="1"
+                                            step="1"
+                                            value="2"
+                                        />
                                     </div>
-                                    <input
-                                        type="number"
-                                        id="keepCountInput"
-                                        min="0"
-                                        step="1"
-                                    />
-                                </div>
-                            </label>
-                            <label class="mini-field">
-                                <span>Days</span>
-                                <div class="number-input-group">
-                                    <div class="number-spin-buttons">
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="keepDaysInput"
-                                            data-action="up"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            class="number-spin-button"
-                                            data-target="keepDaysInput"
-                                            data-action="down"
-                                        >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
-                                        </div>
+                                    <div class="select-wrapper">
+                                        <select id="intervalUnit">
+                                            <option value="1">seconds</option>
+                                            <option value="60" selected>
+                                                minutes
+                                            </option>
+                                            <option value="3600">hours</option>
+                                        </select>
                                     </div>
-                                    <input
-                                        type="number"
-                                        id="keepDaysInput"
-                                        min="0"
-                                        step="1"
-                                    />
                                 </div>
+                            </div>
+                            <div class="settings-row" id="intervalPresets">
+                                <span class="settings-row__label settings-field-title">TEMPLATES</span>
+                                <div class="settings-row__pills">
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-seconds="30"
+                                    >
+                                        30s
+                                    </button>
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-seconds="60"
+                                    >
+                                        1m
+                                    </button>
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-seconds="900"
+                                    >
+                                        15m
+                                    </button>
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-seconds="3600"
+                                    >
+                                        1h
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="settings-row" id="safetyProfiles">
+                                <span class="settings-row__label settings-field-title">Profile</span>
+                                <div class="settings-row__pills">
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-profile="maximum"
+                                    >
+                                        Maximum
+                                    </button>
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-profile="balanced"
+                                    >
+                                        Balanced
+                                    </button>
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-profile="light"
+                                    >
+                                        Light
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                </section>
+
+                <section class="panel-view" id="locationsPanel" hidden>
+                    <section class="field-group field-group--embedded">
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="folderPerDocumentToggle"
+                                />
+                                <span class="settings-field-title">Per-document dejavu folder</span>
                             </label>
+                            <p class="field-hint">
+                                Creates a separate dejavu folder for each
+                                document (e.g., "MyFile.ai/dejavu/").
+                            </p>
+                        </section>
+                        <section class="field-group field-group--embedded">
+                            <label class="field-label settings-field-title" for="folderInput">
+                                Dejavu folder
+                            </label>
+                            <div class="folder-input-group">
+                                <input
+                                    type="text"
+                                    id="folderInput"
+                                    class="folderinput"
+                                    placeholder="~/"
+                                    spellcheck="false"
+                                />
+                                <button
+                                    type="button"
+                                    class="btn btn--micro"
+                                    id="browseFolderBtn"
+                                    aria-label="Browse folder"
+                                    title="Browse folder"
+                                >
+                                    Browse
+                                </button>
+                            </div>
+                            <p class="field-hint">
+                                Absolute path or "~/" for home. Per-document
+                                folders are relative to this location.
+                            </p>
+                        </section>
+                        <section class="field-group field-group--embedded">
+                            <label
+                                class="field-label settings-field-title"
+                                id="folderTemplateLabel"
+                            >
+                                Folder template
+                            </label>
+                            <div class="folder-template-group">
+                                <div
+                                    id="folderTemplateInput"
+                                    aria-labelledby="folderTemplateLabel"
+                                ></div>
+                            </div>
+                            <p class="field-hint">
+                                Locked tokens: $defaultFolder, $filename. Add
+                                date/time tokens between them.
+                            </p>
+                        </section>
+                        <section class="field-group field-group--embedded">
+                            <label class="field-label settings-field-title" id="templateEditorLabel">
+                                Filename template
+                            </label>
+                            <div
+                                id="templateEditor"
+                                aria-labelledby="templateEditorLabel"
+                            ></div>
+                            <input
+                                type="hidden"
+                                id="templateInput"
+                                value="$filename_$hh$mm$ss_$dd$MM$YYYY"
+                            />
+                            <div class="tokens" id="tokensList"></div>
+                            <div class="settings-row" id="templatePresets">
+                                <span class="settings-row__label settings-field-title">TEMPLATES</span>
+                                <div class="settings-row__pills">
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-template="$filename_$hh$mm$ss_$dd$MM$YYYY"
+                                    >
+                                        Time + date
+                                    </button>
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-template="$filename_$hh$mm$ss"
+                                    >
+                                        Time only
+                                    </button>
+                                    <button
+                                        class="preset-chip"
+                                        type="button"
+                                        data-template="$filename_$counter"
+                                    >
+                                        Counter
+                                    </button>
+                                    <button
+                                        class="preset-chip preset-chip--clear"
+                                        id="clearTemplateBtn"
+                                        type="button"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="preview">
+                                <span class="preview__value" id="templatePreview"
+                                    >—</span
+                                >
+                                <span class="preview__label">Preview</span>
+                            </div>
+                            <p class="field-hint">
+                                Use tokens to customize the dejavu filename format.
+                            </p>
+                        </section>
+                </section>
+
+                <section class="panel-view" id="advancedPanel" hidden>
+                    <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="recoveryCheckToggle"
+                                    checked
+                                />
+                                <span class="settings-field-title">Warn when a newer dejavu exists</span>
+                            </label>
+                            <p class="field-hint">
+                                Shows a warning when opening a document that has a
+                                newer dejavu.
+                            </p>
+                        </section>
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="autoRecoverCrashToggle"
+                                    checked
+                                />
+                                <span
+                                    class="settings-field-title"
+                                    >Open recent dejavus after an unexpected
+                                    shutdown</span
+                                >
+                            </label>
+                            <p class="field-hint">
+                                Opens the latest dejavu for up to five documents,
+                                then creates a fresh recovery copy.
+                            </p>
+                        </section>
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input type="checkbox" id="backupOriginalToggle" />
+                                <span
+                                    class="settings-field-title"
+                                    >Copy the current saved file before
+                                    autosaving</span
+                                >
+                            </label>
+                            <p class="field-hint">
+                                Creates a backup of the original file before
+                                overwriting it with a new dejavu.
+                            </p>
+                        </section>
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="autoPinEveryToggle"
+                                />
+                                <span class="settings-field-title">Auto-pin every N dejavus</span>
+                            </label>
+                            <p class="field-hint">
+                                Automatically pins snapshots at regular intervals to
+                                prevent cleanup.
+                            </p>
+                        </section>
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="saveOnEnableToggle"
+                                    checked
+                                />
+                                <span class="settings-field-title">Save immediately when dejavu is enabled</span>
+                            </label>
+                            <p class="field-hint">
+                                Prevents waiting a full interval after turning
+                                dejavu on.
+                            </p>
+                        </section>
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="saveOnDocumentSwitchToggle"
+                                />
+                                <span
+                                    class="settings-field-title"
+                                    >Run a check shortly after switching
+                                    documents</span
+                                >
+                            </label>
+                            <p class="field-hint">
+                                Useful when open documents use different dejavu
+                                rules.
+                            </p>
+                        </section>
+
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="checkForUpdatesToggle"
+                                    checked
+                                />
+                                <span class="settings-field-title">Check for new updates</span>
+                            </label>
+                            <p class="field-hint">
+                                Periodically checks GitHub Releases and shows a
+                                banner when a newer version of DejaVu is available.
+                            </p>
+                        </section>
+
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="overwriteToggle"
+                                    checked
+                                />
+                                <span
+                                    class="settings-field-title"
+                                    >Overwrite previous dejavu copy (same
+                                    filename)</span
+                                >
+                            </label>
+                            <p class="field-hint">
+                                When enabled, reuses the same filename instead of
+                                creating unique copies.
+                            </p>
+                        </section>
+
+                        <section
+                            class="field-group field-group--embedded field-group--row"
+                        >
+                            <label class="checkbox">
+                                <input
+                                    type="checkbox"
+                                    id="onlyIfChangedToggle"
+                                    checked
+                                />
+                                <span
+                                    class="settings-field-title"
+                                    >Only save when content changed since last
+                                    save</span
+                                >
+                            </label>
+                            <p class="field-hint">
+                                Skips dejavu if the document hasn't been modified
+                                since the last save.
+                            </p>
+                        </section>
+
+                        <section
+                            class="field-group field-group--embedded field-group--compact"
+                        >
+                            <div class="settings-grid settings-grid--three">
+                                <label class="mini-field">
+                                    <span class="settings-field-title">Keep</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="keepCountInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="keepCountInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="keepCountInput"
+                                            min="0"
+                                            step="1"
+                                        />
+                                    </div>
+                                </label>
+                                <label class="mini-field">
+                                    <span class="settings-field-title">Days</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="keepDaysInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="keepDaysInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="keepDaysInput"
+                                            min="0"
+                                            step="1"
+                                        />
+                                    </div>
+                                </label>
                             <label class="mini-field">
-                                <span>Max MB</span>
+                                <span class="settings-field-title">Max MB</span>
                                 <div class="number-input-group">
                                     <div class="number-spin-buttons">
                                         <div
@@ -1631,36 +1570,14 @@
                                             data-target="maxFolderSizeInput"
                                             data-action="up"
                                         >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 10l6-4 6 4" />
-                                            </svg>
+                                            <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
                                         </div>
                                         <div
                                             class="number-spin-button"
                                             data-target="maxFolderSizeInput"
                                             data-action="down"
                                         >
-                                            <svg
-                                                class="spin-chevron"
-                                                viewBox="0 0 16 16"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="2.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                aria-hidden="true"
-                                            >
-                                                <path d="M2 6l6 4 6-4" />
-                                            </svg>
+                                            <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
                                         </div>
                                     </div>
                                     <input
@@ -1700,43 +1617,35 @@
                             />
                         </div>
                     </section>
-                </div>
-            </details>
-            
+                </section>
+            </div>
+        </div>
+
+            </div>
+
             <footer class="app__footer">
-                <div class="footer__message-row">
+            <div class="footer__message-row">
+                <span
+                    class="footer__hint"
+                    id="footerHint"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                ></span>
+                <button
+                    class="footer__coffee"
+                    id="donationInfoBtn"
+                    type="button"
+                    aria-label="Buy me a coffee"
+                    title="Buy me a coffee — support DejaVu"
+                >
                     <span
-                        class="footer__hint"
-                        id="footerHint"
-                        role="status"
-                        aria-live="polite"
-                        aria-atomic="true"
+                        class="svg-icon icon-coffee"
+                        data-icon="coffee"
+                        aria-hidden="true"
                     ></span>
-                    <button
-                        class="footer__coffee"
-                        id="donationInfoBtn"
-                        type="button"
-                        aria-label="Buy me a coffee"
-                        title="Buy me a coffee — support DejaVu"
-                    >
-                        <span
-                            class="svg-icon icon-coffee"
-                            aria-hidden="true"
-                        ></span>
-                    </button>
-                    <button
-                        class="footer__reset"
-                        id="headerResetSettingsBtn"
-                        type="button"
-                        aria-label="Reset settings"
-                        title="Reset settings"
-                    >
-                        <span
-                            class="svg-icon icon-reset"
-                            aria-hidden="true"
-                        ></span>
-                    </button>
-                </div>
+                </button>
+            </div>
             </footer>
         </div>
 
@@ -1750,24 +1659,36 @@
         >
             <div class="donation-modal__scrim" id="donationScrim"></div>
             <section class="donation-card">
-                <button
-                    class="donation-card__close"
-                    id="donationCloseBtn"
-                    type="button"
-                    aria-label="Close"
-                    title="Close"
-                >
-                    ×
-                </button>
-                <div class="donation-card__badge">DejaVu</div>
-                <div class="donation-card__version" id="donationVersion"></div>
-                <h2 id="donationTitle">
+                <header class="donation-card__header">
                     <span
-                        class="svg-icon donation-card__cup icon-coffee"
+                        class="svg-icon donation-card__project-icon"
+                        data-icon="app-logo"
                         aria-hidden="true"
                     ></span>
-                    Buy me a coffee
-                </h2>
+                    <div class="donation-card__heading">
+                        <div class="donation-card__identity">
+                            <div class="donation-card__badge">DejaVu</div>
+                            <div
+                                class="donation-card__version"
+                                id="donationVersion"
+                            ></div>
+                        </div>
+                    </div>
+                    <button
+                        class="donation-card__close"
+                        id="donationCloseBtn"
+                        type="button"
+                        aria-label="Close"
+                        title="Close"
+                    >
+                        <span
+                            class="svg-icon"
+                            data-icon="close"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+                </header>
+                <h2 id="donationTitle">Buy me a coffee</h2>
                 <p id="donationDescription">
                     Thanks for installing DejaVu. If it saves you time, a small
                     coffee helps support continued fixes and new features.
@@ -1789,36 +1710,14 @@
                                     data-target="donationAmountInput"
                                     data-action="up"
                                 >
-                                    <svg
-                                        class="spin-chevron"
-                                        viewBox="0 0 16 16"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M2 10l6-4 6 4" />
-                                    </svg>
+                                    <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
                                 </div>
                                 <div
                                     class="number-spin-button"
                                     data-target="donationAmountInput"
                                     data-action="down"
                                 >
-                                    <svg
-                                        class="spin-chevron"
-                                        viewBox="0 0 16 16"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M2 6l6 4 6-4" />
-                                    </svg>
+                                    <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
                                 </div>
                             </div>
                             <input
@@ -1840,22 +1739,18 @@
                             </select>
                         </div>
                     </label>
-                    <label class="donation-field" for="donationPlatformSelect">
-                        <span>Platform</span>
-                        <div class="select-wrapper">
-                            <select id="donationPlatformSelect">
-                                <option value="kofi" selected>Ko-fi</option>
-                                <option value="buymeacoffee">
-                                    Buy Me a Coffee
-                                </option>
-                            </select>
-                        </div>
-                    </label>
                 </div>
                 <div class="donation-actions">
                     <button
                         class="btn btn--primary"
-                        id="donationPayBtn"
+                        id="donationBuyMeCoffeeBtn"
+                        type="button"
+                    >
+                        Open Buy me a coffee
+                    </button>
+                    <button
+                        class="btn btn--primary"
+                        id="donationKofiBtn"
                         type="button"
                     >
                         Open Ko-fi
@@ -1913,6 +1808,10 @@
                 <div class="update-install-status" id="updateInstallStatus">
                     Ready to download
                 </div>
+                <label class="update-install-checkbox">
+                    <input type="checkbox" id="updateInstallCheckbox" />
+                    <span>Don't ask again</span>
+                </label>
                 <div class="update-install-actions">
                     <button
                         class="btn btn--primary"
@@ -1946,6 +1845,129 @@
             </section>
         </div>
 
+        <div
+            class="update-install-modal update-install-modal--hidden"
+            id="inkscapeInstallModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="inkscapeInstallTitle"
+            aria-describedby="inkscapeInstallDescription"
+        >
+            <div
+                class="update-install-modal__scrim"
+                id="inkscapeInstallScrim"
+            ></div>
+            <section class="update-install-card">
+                <button
+                    class="update-install-card__close"
+                    id="inkscapeInstallCloseBtn"
+                    type="button"
+                    aria-label="Close"
+                    title="Close"
+                >
+                    ×
+                </button>
+                <div class="update-install-card__badge">Converter</div>
+                <h2 id="inkscapeInstallTitle">Install Inkscape?</h2>
+                <p id="inkscapeInstallDescription">
+                    DejaVu uses Inkscape to compare AI and PDF files without
+                    opening them in Illustrator. It is not installed on this
+                    computer.
+                </p>
+                <div class="update-install-progress" aria-hidden="true">
+                    <div
+                        class="update-install-progress__bar"
+                        id="inkscapeInstallProgressBar"
+                        style="width: 0%"
+                    ></div>
+                </div>
+                <div class="update-install-status" id="inkscapeInstallStatus">
+                    Ready to install
+                </div>
+                <label
+                    class="update-install-choice"
+                    for="inkscapeInstallNeverAsk"
+                >
+                    <input id="inkscapeInstallNeverAsk" type="checkbox" />
+                    <span>Don’t ask me again</span>
+                </label>
+                <div class="update-install-actions">
+                    <button
+                        class="btn btn--primary"
+                        id="inkscapeInstallRunBtn"
+                        type="button"
+                    >
+                        Install Inkscape
+                    </button>
+                    <button
+                        class="btn btn--ghost"
+                        id="inkscapeInstallLaterBtn"
+                        type="button"
+                    >
+                        Not now
+                    </button>
+                    <button
+                        class="btn btn--primary update-install-actions__refresh update-install-actions__hidden"
+                        id="inkscapeInstallDoneBtn"
+                        type="button"
+                    >
+                        Done
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <div
+            class="update-install-modal update-install-modal--hidden"
+            id="vendorDownloadModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="vendorDownloadTitle"
+            aria-describedby="vendorDownloadDescription"
+        >
+            <div
+                class="update-install-modal__scrim"
+                id="vendorDownloadScrim"
+            ></div>
+            <section class="update-install-card">
+                <button
+                    class="update-install-card__close"
+                    id="vendorDownloadCloseBtn"
+                    type="button"
+                    aria-label="Close"
+                    title="Close"
+                >
+                    ×
+                </button>
+                <div class="update-install-card__badge">Setup</div>
+                <h2 id="vendorDownloadTitle">Downloading Inkscape</h2>
+                <p id="vendorDownloadDescription">
+                    DejaVu is downloading the Inkscape binaries for your
+                    platform. This is a one-time setup that will enable PDF
+                    comparison.
+                </p>
+                <div class="update-install-progress" aria-hidden="true">
+                    <div
+                        class="update-install-progress__bar"
+                        id="vendorDownloadProgressBar"
+                        style="width: 0%"
+                    ></div>
+                </div>
+                <div class="update-install-status" id="vendorDownloadStatus">
+                    Initializing...
+                </div>
+                <div class="update-install-actions">
+                    <button
+                        class="btn btn--ghost update-install-actions__hidden"
+                        id="vendorDownloadDismissBtn"
+                        type="button"
+                    >
+                        Close
+                    </button>
+                </div>
+            </section>
+        </div>
+
         <script>
             (() => {
                 const token = window.__DEJAVU_ASSET_RELOAD_TOKEN__;
@@ -1954,7 +1976,9 @@
                     isCep ? "./lib/CSInterface.js" : null,
                     isCep ? null : "../host/host.js",
                     "./js/core.js",
-                    "./lib/token-input.js",
+                    "./js/host-contract.js",
+                    "./js/settings-store.js",
+                    "./lib/token-field.js",
                     "./js/table.js",
                     "./js/recovery.js",
                     "./js/interval.js",
@@ -1962,24 +1986,265 @@
                     "./js/top.js",
                     "./js/open.js",
                     "./js/bottom.js",
+                    "./js/svg-icon.js",
                     "./js/timeline.js",
                     "./js/advanced.js",
                     "./js/similarity/svg-similarity-config.js",
                     "./js/similarity/svg-similarity-engine.js",
                     "./js/similarity/svg-similarity-current-document.js",
+                    "./js/similarity/svg-similarity-converters.js",
                     "./js/similarity/svg-similarity-adapters.js",
                     "./js/similarity/svg-similarity-env.js",
                     "./js/similarity/svg-similarity-index.js",
+                    "./js/vendor-autoinstall.js",
                     "./js/main.js",
                     "./js/similar.js",
                     "./js/update-check.js",
                     "./js/update-install.js",
+                    "./js/inkscape-install.js",
                     "./js/theme.js"
                 ].filter(Boolean);
                 scripts.forEach((scriptPath) => {
                     const fullUrl = `${scriptPath}?reload=${token}`;
                     document.write(`<script src="${fullUrl}"><\/script>`);
                 });
+            })();
+        </script>
+
+        <!-- Debug: brightness-skin switcher. Hidden unless dev mode (or
+             localStorage 'dejavu.debugSkin' = '1'). -->
+        <div class="debug-skin" id="debugSkin" hidden aria-label="Debug skin">
+            <span class="debug-skin__label">skin</span>
+            <button type="button" data-skin="darkest">darkest</button>
+            <button type="button" data-skin="dark">dark</button>
+            <button type="button" data-skin="light">light</button>
+            <button type="button" data-skin="lightest">lightest</button>
+            <button type="button" data-skin="auto">auto</button>
+            <span class="debug-skin__label">debug</span>
+            <button type="button" id="debugStopLoops">stop loops</button>
+            <button type="button" id="debugFill">fill</button>
+        </div>
+        <script>
+            (function () {
+                var bar = document.getElementById("debugSkin");
+                if (!bar) return;
+                var reveal = function () {
+                    var dev = window.__DEJAVU_DEV_MODE__ === true;
+                    var ls = false;
+                    try {
+                        ls =
+                            window.localStorage.getItem("dejavu.debugSkin") ===
+                            "1";
+                    } catch (e) {}
+                    if (dev || ls) bar.hidden = false;
+                };
+
+                // Restore saved states
+                var restoreStates = function () {
+                    try {
+                        // Restore skin selection
+                        var savedSkin = window.localStorage.getItem(
+                            "dejavu.debugSkin.selected"
+                        );
+                        if (savedSkin) {
+                            var skinBtn = bar.querySelector(
+                                'button[data-skin="' + savedSkin + '"]'
+                            );
+                            if (skinBtn) {
+                                if (
+                                    window.DejaVuTheme &&
+                                    window.DejaVuTheme.forceSkin
+                                ) {
+                                    window.DejaVuTheme.forceSkin(savedSkin);
+                                } else {
+                                    document.documentElement.dataset.skin =
+                                        savedSkin;
+                                }
+                                var all =
+                                    bar.querySelectorAll("button[data-skin]");
+                                for (var i = 0; i < all.length; i++) {
+                                    all[i].classList.toggle(
+                                        "is-active",
+                                        all[i] === skinBtn
+                                    );
+                                }
+                            }
+                        }
+
+                        // Restore stop loops toggle
+                        var savedStopLoops =
+                            window.localStorage.getItem(
+                                "dejavu.debugSkin.stopLoops"
+                            ) === "true";
+                        var stopLoopsBtn =
+                            document.getElementById("debugStopLoops");
+                        if (stopLoopsBtn && savedStopLoops) {
+                            stopLoopsBtn.classList.add("is-active");
+                            window.__DEJAVU_STOP_LOOPS__ = true;
+                            console.log(
+                                "[Debug] Restored stop loops state: active"
+                            );
+                        }
+                    } catch (e) {
+                        console.error("[Debug] Failed to restore states:", e);
+                    }
+                };
+
+                bar.addEventListener("click", function (e) {
+                    var b = e.target.closest("button[data-skin]");
+                    if (!b) return;
+                    var name = b.getAttribute("data-skin");
+                    if (window.DejaVuTheme && window.DejaVuTheme.forceSkin) {
+                        window.DejaVuTheme.forceSkin(name);
+                    } else {
+                        document.documentElement.dataset.skin = name;
+                    }
+                    var all = bar.querySelectorAll("button[data-skin]");
+                    for (var i = 0; i < all.length; i++) {
+                        all[i].classList.toggle("is-active", all[i] === b);
+                    }
+                    // Save skin selection
+                    try {
+                        window.localStorage.setItem(
+                            "dejavu.debugSkin.selected",
+                            name
+                        );
+                    } catch (e) {}
+                });
+
+                // Stop loops button handler
+                var stopLoopsBtn = document.getElementById("debugStopLoops");
+                if (stopLoopsBtn) {
+                    stopLoopsBtn.addEventListener("click", function () {
+                        var isActive =
+                            stopLoopsBtn.classList.toggle("is-active");
+
+                        if (isActive) {
+                            // Set global flag that loops can check
+                            window.__DEJAVU_STOP_LOOPS__ = true;
+
+                            // Clear all intervals
+                            var maxIntervalId = setInterval(
+                                function () {},
+                                999999
+                            );
+                            for (var i = 1; i <= maxIntervalId; i++) {
+                                clearInterval(i);
+                            }
+
+                            // Clear all timeouts
+                            var maxTimeoutId = setTimeout(
+                                function () {},
+                                999999
+                            );
+                            for (var j = 1; j <= maxTimeoutId; j++) {
+                                clearTimeout(j);
+                            }
+
+                            console.log(
+                                "[Debug] All intervals and timeouts cleared. Loops can check window.__DEJAVU_STOP_LOOPS__"
+                            );
+                        } else {
+                            // Reset the flag
+                            window.__DEJAVU_STOP_LOOPS__ = false;
+                            console.log(
+                                "[Debug] Loop stop flag reset. Loops can resume."
+                            );
+                        }
+
+                        // Save stop loops state
+                        try {
+                            window.localStorage.setItem(
+                                "dejavu.debugSkin.stopLoops",
+                                isActive
+                            );
+                        } catch (e) {}
+                    });
+                }
+
+                // Fill button handler
+                var fillBtn = document.getElementById("debugFill");
+                if (fillBtn) {
+                    fillBtn.addEventListener("click", function () {
+                        var nextCheckValue =
+                            document.getElementById("nextCheckValue");
+                        var folderInput = document.getElementById("folderInput");
+                        var timelineUsageFill =
+                            document.getElementById("timelineUsageFill");
+                        var mockPath = "/Users/joaolopes/Desktop/mock_folder";
+
+                        if (nextCheckValue) {
+                            nextCheckValue.textContent = "2m 30s";
+                        }
+
+                        if (folderInput) {
+                            // Mock system path for Dejavu folder
+                            folderInput.value = mockPath;
+                        }
+
+                        if (timelineUsageFill) {
+                            // Mock timeline usage fill at 80%
+                            timelineUsageFill.style.width = "80%";
+                        }
+
+                        // Set the application state so updateFolderStatus() uses the mock path
+                        if (typeof state !== "undefined" && state.settings) {
+                            state.settings.folder = mockPath;
+                            state.settings.folderValidated = true;
+                            // Trigger folder status update to reflect the new state
+                            if (typeof updateFolderStatus === "function") {
+                                updateFolderStatus();
+                            }
+                        }
+
+                        console.log("[Debug] Filled mockup values");
+                    });
+                }
+
+                // Header shell switcher
+                var shellButtons =
+                    document.querySelectorAll("[data-shell-target]");
+                var shellIds = ["mainShell", "similarityShell", "settingsShell"];
+                var showShell = function (shellId) {
+                    shellIds.forEach(function (id) {
+                        var shell = document.getElementById(id);
+                        if (shell) {
+                            shell.hidden = id !== shellId;
+                        }
+                    });
+                    Array.prototype.forEach.call(shellButtons, function (btn) {
+                        var active = btn.getAttribute("data-shell-target") === shellId;
+                        btn.classList.toggle("is-on", active);
+                        btn.setAttribute("aria-pressed", active ? "true" : "false");
+                    });
+                    if (shellId === "mainShell") {
+                        var timelineTab =
+                            document.querySelector('[data-panel-tab="timelinePanel"]');
+                        if (timelineTab && !timelineTab.classList.contains("is-active")) {
+                            timelineTab.click();
+                        }
+                    }
+                    if (shellId === "similarityShell") {
+                        var similarityPanel =
+                            document.getElementById("similarityPanel");
+                        if (similarityPanel) {
+                            similarityPanel.hidden = false;
+                            similarityPanel.classList.add("is-active");
+                        }
+                    }
+                };
+
+                Array.prototype.forEach.call(shellButtons, function (btn) {
+                    btn.addEventListener("click", function () {
+                        showShell(btn.getAttribute("data-shell-target"));
+                    });
+                });
+                showShell("mainShell");
+                reveal();
+                window.setTimeout(function () {
+                    reveal();
+                    restoreStates();
+                }, 600);
             })();
         </script>
     </body>

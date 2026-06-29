@@ -23,6 +23,7 @@
   const starts = (a, b) => String(a).toLowerCase().startsWith(String(b).toLowerCase());
   const includes = (a, b) => String(a).toLowerCase().includes(String(b).toLowerCase());
   const isBoundary = value => !value || /[\s\u200b]/.test(value);
+  const classNames = (...names) => names.filter(Boolean).join(" ");
   const escapeCss = value => window.CSS?.escape
     ? CSS.escape(String(value))
     : String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"');
@@ -622,7 +623,7 @@
     }
 
     renderMenu(mention) {
-      this.menu.className = `token-menu is-open ${this.config.dropdown.className || ""}`.trim();
+      this.menu.className = classNames("token-menu", "is-open", this.config.dropdown.className);
       this.menu.replaceChildren();
       const hint = document.createElement("div");
       hint.className = "token-menu__hint";
@@ -644,7 +645,7 @@
         const item = row.item;
         const disabled = Boolean(item.disabled);
         button.type = "button";
-        button.className = `token-menu__item ${item.dropdownClass || ""}`.trim();
+        button.className = classNames("token-menu__item", item.dropdownClass);
         button.setAttribute("role", "option");
         button.setAttribute("aria-selected", String(index === this.selectedIndex));
         button.setAttribute("aria-disabled", String(disabled));
@@ -791,7 +792,7 @@
 
     createToken(system, item) {
       const token = document.createElement("span");
-      token.className = `token-chip ${system.tokenClass || ""} ${item.tokenClass || ""}`.trim();
+      token.className = classNames("token-chip", system.tokenClass, item.tokenClass);
       token.contentEditable = "false";
       // A contentEditable=false element is natively HTML5-draggable in
       // some engines, which hijacks the library's pointer-based drag

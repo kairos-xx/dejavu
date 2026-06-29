@@ -1,0 +1,259 @@
+
+.tf {
+    display: flex;
+    flex-direction: column;
+    gap: var(--token-field-gap);
+}
+
+.tf__field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--token-field-input-gap);
+    padding: var(--token-field-input-padding);
+    background: var(--bg-input);
+    border: var(--number-input-group-border);
+    border-radius: var(--token-field-input-border-radius);
+    cursor: var(--cursor-text-edit);
+}
+
+.tf__field:focus-within {
+    border-color: var(--accent);
+}
+
+.tf__field-wrap {
+    position: relative;
+}
+
+.tf__menu {
+    position: absolute;
+    left: var(--token-field-menu-left);
+    right: var(--token-field-menu-right);
+    top: var(--token-field-menu-top);
+    margin-top: var(--token-field-menu-margin-top);
+    z-index: var(--token-field-menu-z-index);
+    max-height: var(--token-field-menu-max-height);
+    overflow-y: auto;
+    background: var(--bg-raised);
+    border: var(--token-field-menu-border);
+    border-radius: var(--token-field-menu-border-radius);
+    box-shadow: var(--token-field-menu-box-shadow);
+}
+
+.tf__menu[hidden] {
+    display: none;
+}
+
+.tf__menu-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: var(--token-field-menu-item-gap);
+    padding: var(--token-field-menu-item-padding);
+    cursor: var(--cursor-action);
+    color: var(--text);
+    font-family: var(--font-family-code, monospace);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.tf__menu-label {
+    flex: 0 0 auto;
+}
+
+.tf__menu-item .tf__menu-hint {
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tf__menu-item.is-active,
+.tf__menu-item:hover {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+
+.tf__menu-more,
+.tf__menu-more:hover {
+    background: transparent;
+    color: var(--text-dim);
+    cursor: var(--cursor-default);
+    justify-content: center;
+    letter-spacing: var(--token-field-menu-more-letter-spacing);
+}
+
+.tf__menu-item.is-used,
+.tf__menu-item.is-used:hover {
+    background: transparent;
+    color: var(--text-dim);
+    cursor: var(--cursor-default);
+    opacity: var(--token-field-used-opacity);
+}
+
+.tf__menu-item.is-used .tf__menu-label {
+    text-decoration: var(--text-decoration-line-through);
+}
+
+.tf__menu-hint {
+    color: var(--text-dim);
+    font-size: var(--token-field-menu-hint-font-size);
+}
+
+.tf__menu-item.is-active .tf__menu-hint,
+.tf__menu-item:hover .tf__menu-hint {
+    color: var(--accent-text);
+    opacity: var(--token-field-active-hint-opacity);
+}
+
+.tf__flow {
+    flex: var(--token-field-flow-flex);
+    min-width: var(--token-field-flow-min-width);
+    outline: none;
+    line-height: var(--token-field-flow-line-height);
+    caret-color: var(--text-bright);
+}
+
+.tf__flow:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-dim);
+    pointer-events: none;
+}
+
+.tf__placeholder {
+    display: inline-block;
+    color: var(--text-dim);
+    text-decoration: none;
+    pointer-events: none;
+    user-select: none;
+    font-style: var(--form-placeholder-font-style);
+}
+
+.tf__flow.is-invalid {
+    color: var(--warn);
+    text-decoration: var(--token-field-invalid-text-decoration);
+    text-underline-offset: var(--token-field-invalid-underline-offset);
+}
+
+.tf__chip {
+    display: inline-block;
+    margin: var(--token-field-chip-margin);
+    padding: var(--token-field-chip-padding);
+    background: var(--bg-raised);
+    border: var(--token-field-chip-border);
+    border-radius: var(--token-field-chip-border-radius);
+    color: var(--accent);
+    font-family: var(--font-family-code, monospace);
+    line-height: var(--token-field-chip-line-height);
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: baseline;
+}
+
+.tf__chip--draggable {
+    cursor: var(--cursor-drag);
+    touch-action: none;
+}
+
+.tf__chip--draggable:active {
+    cursor: var(--cursor-dragging);
+}
+
+.tf__chip.is-dragging {
+    opacity: var(--token-field-dragging-opacity);
+}
+
+.tf__chip--ghost {
+    position: fixed;
+    left: var(--token-field-ghost-left);
+    top: var(--token-field-ghost-top);
+    z-index: var(--token-field-ghost-z-index);
+    margin: var(--token-field-ghost-margin);
+    pointer-events: none;
+    opacity: var(--token-field-ghost-opacity);
+    box-shadow: var(--token-field-ghost-box-shadow);
+}
+
+body.tf-dragging {
+    cursor: var(--cursor-dragging);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.tf__chip--custom {
+    color: var(--accent);
+}
+
+.tf__chip--pin {
+    background: var(--bg-input-well);
+    color: var(--accent);
+    cursor: var(--cursor-default);
+}
+
+.tf__chip-label {
+    pointer-events: none;
+}
+
+.tf__chip.is-selected {
+    background: var(--accent);
+    color: var(--accent-text);
+}
+
+.tf__chip-label::selection {
+    background: transparent;
+    color: inherit;
+}
+
+.tf__chip::selection {
+    background: transparent;
+    color: inherit;
+}
+
+.tf__action {
+    flex: var(--token-field-action-flex);
+    background: var(--bg);
+    border: var(--token-field-action-border);
+    border-radius: var(--token-field-action-border-radius);
+    color: var(--text-dim);
+    cursor: var(--cursor-action);
+}
+
+.tf__action:hover,
+.tf__action:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    outline: none;
+}
+
+.tf__flow .tf__chip + .tf__chip::before {
+    content: var(--token-field-chip-separator-content);
+    color: var(--text-dim);
+    margin: var(--token-field-chip-separator-margin);
+    pointer-events: none;
+}
+
+.tf__palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--token-field-palette-gap);
+}
+
+.tf__pool-item {
+    padding: var(--token-field-pool-item-padding);
+    background: var(--bg-input-well);
+    border: var(--token-field-pool-item-border);
+    border-radius: var(--token-field-pool-item-border-radius);
+    color: var(--text-dim);
+    font-family: var(--font-family-code, monospace);
+    cursor: var(--cursor-action);
+}
+
+.tf__pool-item:hover:not(:disabled) {
+    color: var(--text-bright);
+    border-color: var(--border-strong);
+}
+
+.tf__pool-item.is-used,
+.tf__pool-item:disabled {
+    opacity: var(--token-field-pool-item-disabled-opacity);
+    cursor: var(--cursor-default);
+}

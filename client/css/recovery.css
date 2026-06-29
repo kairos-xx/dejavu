@@ -1,88 +1,77 @@
-/* ================================================================
-   Recovery Center drawer
-   ================================================================ */
-
-/* Keep the day headers ("Today" etc.) pinned to the top while rows
-   scroll, and start the scrollbar just BELOW that pinned header by
-   insetting the scrollbar track by one header height. Applies to both
-   the timeline and the Recovery Center lists. */
 .version-list::-webkit-scrollbar-track,
 .recovery-list::-webkit-scrollbar-track {
-    margin-top: var(--day-header-h, var(--dimension-26));
+    margin-top: var(--version-list-recovery-list-margin-top);
 }
 
-/* Hide vertical line in Recovery Center */
 #recoveryCandidateList .timeline-rail::before {
     display: none;
 }
 
 .recovery-list {
-    margin-top: var(--dimension-7);
-    max-height: var(--dimension-210);
+    margin-top: var(--recovery-list-margin-top);
+    max-height: var(--recovery-list-max-height);
 }
 
 .recovery-actions {
-    width: 100%;
+    width: var(--recovery-actions-width);
 }
 
 .recovery-actions .btn {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: var(--recovery-actions-btn-flex);
+    min-width: var(--recovery-actions-btn-min-width);
 }
 
 .recovery-item {
     display: flex;
     align-items: center;
-    gap: var(--dimension-8);
-    padding: var(--dimension-7) var(--dimension-8) var(--dimension-7) var(--dimension-8);
-    padding-right: var(--dimension-15);
-    border-bottom: var(--dimension-1) solid var(--border-soft);
+    gap: var(--recovery-item-gap);
+    padding: var(--recovery-item-padding);
+    padding-right: var(--recovery-item-padding-right);
+    border-bottom: var(--recovery-item-border-bottom);
 }
 
 .recovery-item:last-child {
-    border-bottom: 0;
+    border-bottom: var(--recovery-item-last-child-border-bottom);
 }
 
 .recovery-item__info {
-    min-width: 0;
-    flex: 1 1 auto;
+    min-width: var(--recovery-item__info-min-width);
+    flex: var(--recovery-item__info-flex);
 }
 
 .recovery-item__name {
     -webkit-appearance: none;
     appearance: none;
     display: block;
-    max-width: 100%;
-    padding: 0;
-    border: 0;
-    border-bottom: var(--dimension-1) dotted transparent;
+    max-width: var(--recovery-item__name-max-width);
+    padding: var(--recovery-item__name-padding);
+    border: var(--recovery-item__name-border);
+    border-bottom: var(--recovery-item__name-border-bottom);
     background: transparent;
     color: var(--text-bright);
-    font-family: inherit;
-    font-size: var(--dimension-10-5);
-    font-weight: 600;
+    font-family: var(--font-family-inherit);
+    font-weight: var(--recovery-item__name-font-weight);
     text-align: left;
-    cursor: pointer;
+    cursor: var(--cursor-action);
 }
 
 .recovery-item__path {
     -webkit-appearance: none;
     appearance: none;
     display: inline-block;
-    max-width: 100%;
-    margin-top: var(--dimension-2);
-    padding: 0;
-    border: 0;
-    border-bottom: var(--dimension-1) dotted transparent;
+    max-width: var(--recovery-item__path-max-width);
+    margin-top: var(--recovery-item__path-margin-top);
+    padding: var(--recovery-item__path-padding);
+    border: var(--recovery-item__path-border);
+    border-bottom: var(--recovery-item__path-border-bottom);
     background: transparent;
     color: var(--accent);
-    font-family: var(--mono);
-    font-size: var(--dimension-8-5);
+    font-family: var(--font-family-code);
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: pointer;
+    white-space: var(--text-flow-nowrap);
+    cursor: var(--cursor-action);
 }
 
 .recovery-item__name:hover,
@@ -94,50 +83,50 @@
 }
 
 .recovery-item__age {
-    margin-top: var(--dimension-2);
+    margin-top: var(--recovery-item__age-margin-top);
     color: var(--text-dim);
-    font-size: var(--dimension-8-5);
 }
 
 .recovery-item__actions {
     display: flex;
-    flex: 0 0 auto;
-    gap: var(--dimension-7);
+    flex: var(--recovery-item__actions-flex);
+    gap: var(--recovery-item__actions-gap);
 }
 
 .recovery-item__action {
     -webkit-appearance: none;
     appearance: none;
-    padding: 0;
-    border: 0;
+    padding: var(--recovery-item__action-padding);
+    border: var(--recovery-item__action-border);
     background: transparent;
     color: var(--text-dim);
     font: inherit;
-    font-size: var(--dimension-10);
-    line-height: 1.2;
-    cursor: pointer;
+    line-height: var(--recovery-item__action-line-height);
+    cursor: var(--cursor-action);
 }
 
 .recovery-item__action:hover,
 .recovery-item__action:focus-visible {
     color: var(--accent);
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
-    text-underline-offset: var(--dimension-3);
+    text-decoration-line: var(--text-decoration-line-underline);
+    text-decoration-style: var(--text-decoration-style-dotted);
+    text-underline-offset: var(
+        --recovery-action-underline-offset
+    );
     outline: none;
 }
 
 .recovery-item--missing {
-    opacity: 0.5;
+    opacity: var(--recovery-item-missing-opacity);
 }
 
 .recovery-item--missing .recovery-item__name,
 .recovery-item--missing .recovery-item__path {
-    text-decoration: line-through;
+    text-decoration: var(--text-decoration-line-through);
     color: var(--text-dim);
 }
 
 .recovery-item--missing .recovery-item__name:disabled,
 .recovery-item--missing .recovery-item__path:disabled {
-    cursor: not-allowed;
+    cursor: var(--cursor-disabled);
 }

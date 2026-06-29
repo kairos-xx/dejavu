@@ -1,0 +1,154 @@
+.update-install-modal {
+    position: fixed;
+    inset: var(--update-install-modal-inset);
+    z-index: var(--update-install-modal-z-index);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--update-install-modal-padding);
+}
+
+.update-install-modal--hidden {
+    display: none;
+}
+
+.update-install-modal__scrim {
+    position: absolute;
+    inset: var(--update-install-modal__scrim-inset);
+    background: var(--color-overlay-strong);
+}
+
+.update-install-card {
+    position: relative;
+    z-index: var(--modal-card-z-index);
+    width: var(--update-install-card-width);
+    border: var(--update-install-card-border);
+    border-radius: var(--update-install-card-border-radius);
+    background: var(--bg-raised);
+    box-shadow: var(--update-install-card-box-shadow);
+    padding: var(--update-install-card-padding);
+    color: var(--text);
+}
+
+.update-install-card__close {
+    position: absolute;
+    top: var(--update-install-card__close-top);
+    right: var(--update-install-card__close-right);
+    width: var(--update-install-card__close-width);
+    height: var(--update-install-card__close-height);
+    border: var(--update-install-card__close-border);
+    border-radius: var(--update-install-card__close-border-radius);
+    background: transparent;
+    color: var(--text-dim);
+    line-height: var(--update-install-card__close-line-height);
+    cursor: var(--cursor-action);
+}
+
+.update-install-card__close:hover,
+.update-install-card__close:focus-visible {
+    border-color: var(--border);
+    color: var(--text-bright);
+    outline: none;
+}
+
+.update-install-card__badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--update-install-card__badge-min-height);
+    padding: var(--update-install-card__badge-padding);
+    border: var(--update-install-card__badge-border);
+    border-radius: var(--update-install-card__badge-border-radius);
+    background: var(--bg-input-well);
+    color: var(--text-dim);
+    font-weight: var(--update-install-card__badge-font-weight);
+    letter-spacing: var(--update-install-card__badge-letter-spacing);
+    text-transform: uppercase;
+}
+
+.update-install-card h2 {
+    margin: var(--update-install-card-h2-margin);
+    color: var(--text-bright);
+    line-height: var(--update-install-card-h2-line-height);
+}
+
+.update-install-card p {
+    margin: var(--update-install-card-p-margin);
+    color: var(--text-dim);
+    line-height: var(--update-install-card-p-line-height);
+}
+
+.update-install-progress {
+    height: var(--update-install-progress-height);
+    margin: var(--update-install-progress-margin);
+    border-radius: var(--update-install-progress-border-radius);
+    background: var(--bg-input-well);
+    overflow: hidden;
+}
+
+.update-install-progress__bar {
+    width: var(--update-install-progress__bar-width);
+    height: var(--update-install-progress__bar-height);
+    border-radius: var(--update-install-progress__bar-border-radius);
+    color: var(--accent);
+    transition: var(--update-install-progress__bar-transition);
+}
+
+.update-install-progress__bar--indeterminate {
+    width: var(--update-install-progress__bar-indeterminate-width);
+    animation: var(--update-install-progress__bar-indeterminate-animation);
+}
+
+.update-install-status {
+    margin: var(--update-install-status-margin);
+    color: var(--text-dim);
+    min-height: var(--update-install-status-min-height);
+}
+
+.update-install-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--update-install-checkbox-gap);
+    margin-top: var(--update-install-checkbox-margin-top);
+    color: var(--text-dim);
+    cursor: var(--cursor-action);
+    user-select: none;
+}
+
+.update-install-checkbox input[type="checkbox"] {
+    width: var(--update-install-checkbox-input-width);
+    height: var(--update-install-checkbox-input-height);
+    color: var(--accent);
+    cursor: var(--cursor-action);
+}
+
+.update-install-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--update-install-choice-gap);
+    margin-top: var(--update-install-choice-margin-top);
+    color: var(--text);
+    line-height: var(--update-install-choice-line-height);
+    cursor: var(--cursor-action);
+    user-select: none;
+}
+
+.update-install-choice input {
+    width: var(--update-install-choice-input-width);
+    height: var(--update-install-choice-input-height);
+    color: var(--accent);
+}
+
+.update-install-actions {
+    display: flex;
+    gap: var(--update-install-actions-gap);
+    align-items: center;
+    margin-top: var(--update-install-actions-margin-top);
+}
+
+.update-install-actions .btn {
+    flex: var(--update-install-actions-btn-flex);
+}
+
+.update-install-actions__hidden {
+    display: none;
+}

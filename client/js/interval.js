@@ -44,8 +44,8 @@ const normalizeFileDejavuOverrides = (value) => {
 };
 
 /**
- * Returns a plain object with only boolean open/closed drawer states.
- * @param {*} value Persisted drawer-state candidate.
+ * Returns a plain object with only boolean open/closed panel states.
+ * @param {*} value Persisted panel-state candidate.
  * @return {Object}
  */
 const normalizePlainObject = (value) => {
@@ -87,7 +87,7 @@ const normalizeTimelineRange = (value) => {
 };
 
 const saveSettings = () => {
-    return settingsStore.save();
+    return settingsStore.save(state.settings);
 };
 
 const loadPersistedSnoozeUntil = () => {
@@ -161,6 +161,27 @@ const pad2 = (n) => {
     return Fmt.pad2(n);
 };
 
+const buildTemplateReplacementMap = (baseName) => {
+    const d = new Date();
+    return {
+        "$filename": baseName,
+        "$hh": pad2(d.getHours()),
+        "$mm": pad2(d.getMinutes()),
+        "$ss": pad2(d.getSeconds()),
+        "$dd": pad2(d.getDate()),
+        "$MM": pad2(d.getMonth() + 1),
+        "$YYYY": String(d.getFullYear()),
+        "$YY": String(d.getFullYear()).slice(-2),
+        "$date": String(d.getFullYear()) +
+            pad2(d.getMonth() + 1) +
+            pad2(d.getDate()),
+        "$time": pad2(d.getHours()) +
+            pad2(d.getMinutes()) +
+            pad2(d.getSeconds()),
+        "$counter": ""
+    };
+};
+
 /**
  * Resolves the filename template against "now" for preview purposes,
  * using a placeholder base name since the real one is only known
@@ -170,166 +191,84 @@ const pad2 = (n) => {
  * @return {string}
  */
 const previewTemplate = (template, baseName, extension) => {
-    const d = new Date();
-    const tokens = {
-        "$filename": baseName,
-        "$hh": pad2(d.getHours()),
-        "$mm": pad2(d.getMinutes()),
-        "$ss": pad2(d.getSeconds()),
-        "$dd": pad2(d.getDate()),
-        "$MM": pad2(d.getMonth() + 1),
-        "$YYYY": String(d.getFullYear()),
-        "$YY": String(d.getFullYear()).slice(-2),
-        "$date": String(d.getFullYear()) + pad2(d.getMonth() + 1) + pad2(d.getDate()),
-        "$time": pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds()),
-        "$counter": ""
-    };
     const ext = extension || "ai";
-    return `${DEJAVU.applyTokens(template, tokens)}.${ext}`;
+    return `${DEJAVU.applyTokens(
+        template,
+        buildTemplateReplacementMap(baseName)
+    )}.${ext}`;
 };
 
 /**
- * Filename-template token system for the TokenInput library: a
- * single "$" trigger with the flat, single-use filename tokens.
- * @return {Array} systems config for TokenInput.attach.
- */
-const buildFilenameSystems = () => {
-    return [{
-        trigger: "$",
-        id: "filename",
-        name: "token",
-        icon: "",
-        items: TOKENS.map((t) => {
-            return {
-                key: t.token.slice(1),   // "$filename" -> "filename"
-                label: t.token,          // chip + row show "$filename"
-                description: t.hint,
-                singleUse: true
-            };
-        })
-    }];
-};
-
-/**
- * Parses a stored template string ("$filename_$hh…") into TokenInput
- * parts (text runs + "$" tokens), longest-match first so "$YYYY"
+ * Parses a stored template string ("$filename_$hh…") into TokenField
+ * values: text runs and "$" token keys, longest-match first so "$YYYY"
  * wins over its prefix "$YY".
  * @param {string} template
  * @return {Array}
  */
-const templateToParts = (template) => {
-    return DEJAVU.tokenizeTemplate(template, TOKENS.map((t) => t.token));
+const parseTemplateParts = (template) => {
+    return DEJAVU.tokenizeTemplate(template, TOKENS.map((t) => t.token))
+        .map((part) => {
+            if (part.type === "token") {
+                return { token: `$${(part.path || [])[0] || ""}` };
+            }
+            return { text: part.value || "" };
+        });
+};
+
+const suggestTemplateTokens = (query, tokens) => {
+    const q = String(query || "");
+    const m = q.match(/\$[a-z0-9]*$/i);
+    if (!m) return [];
+    const frag = m[0];
+    const fl = frag.toLowerCase();
+    return (tokens || [])
+        .filter((t) => t.token.toLowerCase().indexOf(fl) === 0)
+        .map((t) => ({
+            value: t.token,
+            label: t.token,
+            hint: t.hint,
+            token: true,
+            replaceText: frag
+        }));
 };
 
 /**
- * Attaches the TokenInput library to the filename template editor,
+ * Attaches the TokenField library to the filename template editor,
  * keeping #templateInput synced as the serialized value the rest of
- * the panel reads, then builds the clickable token palette.
+ * the panel reads. TokenField renders its own available-token palette.
  */
 const setupFilenameTokenInput = () => {
-    if (!window.TokenInput || !el.templateEditor) {
+    if (!window.TokenField || !el.templateEditor) {
         // If the library didn't load, fall back to leaving the
         // hidden input's persisted value intact so dejavu still
         // works; just render no palette.
         return;
     }
-    state.filenameTokenInput = window.TokenInput.attach(el.templateEditor, {
+    el.templateEditor.innerHTML = "";
+    state.filenameTokenInput = window.TokenField.attach(el.templateEditor, {
+        tokens: TOKENS.map((t) => ({
+            key: t.token,
+            label: t.token,
+            title: t.hint
+        })),
+        value: parseTemplateParts(state.settings.template),
+        allowFreeText: true,
+        allowCustomTokens: false,
+        singleUse: true,
+        showPalette: true,
+        reorder: true,
         placeholder: "Filename template — type $ for tokens",
-        autoTokenizeExactOnSpace: false,
-        hideUsedSingleTokens: true,
-        systems: buildFilenameSystems(),
-        // Populate during construction so the first onChange already
-        // carries the real template (no transient empty save).
-        initialParts: templateToParts(state.settings.template),
-        dropdown: { maxItems: 12, emptyHtml: "No matching token." },
+        suggest: (query) => suggestTemplateTokens(query, TOKENS),
+        hideUsedSuggestions: true,
         onChange: (parts, api) => {
             el.templateInput.value = api.getText();
             onTemplateChanged();
         }
     });
-    renderFilenamePalette();
-};
-
-/**
- * Builds the clickable token palette under the editor. Clicking a
- * chip inserts that token at the caret through the library.
- */
-const renderFilenamePalette = () => {
-    if (!el.tokensList) return;
-    el.tokensList.innerHTML = "";
-    state.tokenChips = [];
-    TOKENS.forEach((t) => {
-        const chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "token";
-        chip.title = t.hint;
-        chip.textContent = t.token;
-        chip.addEventListener("click", () => {
-            if (chip.disabled || !state.filenameTokenInput) return;
-            state.filenameTokenInput.insertItemAtCaret(
-                "$",
-                [t.token.slice(1)]
-            );
-        });
-        state.tokenChips.push({ token: t.token, el: chip });
-        el.tokensList.appendChild(chip);
-    });
-    syncTokenChips();
-};
-
-/**
- * Disables each token chip whose token already appears in the
- * template (so every token can be used at most once), and
- * re-enables chips whose token is no longer present. Driven from
- * the current field text, so it stays correct whether the token
- * was added via a chip or typed/removed by hand.
- */
-const syncTokenChips = () => {
-    if (!state.tokenChips) return;
-    let value = el.templateInput.value || "";
-    state.tokenChips.forEach((chip) => {
-        // A token like "$YY" is a prefix of "$YYYY", so match the
-        // token only when not immediately followed by an
-        // alphanumeric character (its own longer sibling).
-        const present = tokenIsInTemplate(value, chip.token);
-        chip.el.disabled = present;
-        chip.el.classList.toggle("token--used", present);
-    });
-};
-
-/**
- * True if token occurs in template as a whole token (not as a
- * prefix of a longer token such as $YY inside $YYYY).
- * @param {string} template
- * @param {string} token
- * @return {boolean}
- */
-const tokenIsInTemplate = (template, token) => {
-    return DEJAVU.tokenIsInTemplate(template, token);
-};
-
-const renderFolderTokenPalette = () => {
-    // No palette needed - both tokens are locked and always present
-};
-
-// Builds a non-editable, locked token pill (e.g. $defaultFolder / $filename)
-// for the folder template editor. The visible label can be swapped for a
-// friendly value (see refreshDefaultFolderTokenLabel) while data-token keeps
-// the canonical token for serialization.
-const createInlineTemplateToken = (token) => {
-    const pill = document.createElement("span");
-    pill.className = "template-token template-token--locked";
-    pill.contentEditable = "false";
-    pill.dataset.token = token;
-    pill.dataset.locked = "true";
-    pill.title = "Required token";
-
-    const label = document.createElement("span");
-    label.className = "template-token__label";
-    label.textContent = token;
-    pill.appendChild(label);
-
-    return pill;
+    if (el.tokensList) {
+        el.tokensList.innerHTML = "";
+        el.tokensList.hidden = true;
+    }
 };
 
 const normalizeFolderTemplate = (value) => {
@@ -341,172 +280,146 @@ const normalizeFolderTemplate = (value) => {
     );
 };
 
-/* ----------------------------------------------------------------------
- * Folder template editor — dedicated editable middle segment.
- *
- * The folder template is always "$defaultFolder" + an optional middle path
- * + "$filename". Rather than make the whole container contenteditable (which
- * let the caret land before the fixed $defaultFolder token), only a single
- * middle element is editable; the two tokens and the slashes around them are
- * static, non-editable nodes. Editing is therefore only possible between the
- * two required tokens.
- * -------------------------------------------------------------------- */
-
-/** The editable middle element inside the folder template editor, or null. */
-const folderTemplateMidEl = () => {
-    return (el.folderTemplateEditor &&
-        el.folderTemplateEditor.querySelector(".folder-tpl-mid")) || null;
-};
-
 /** Extracts the middle path (between the two tokens) from a folder template. */
 const folderTemplateMidValue = (template) => {
     return DEJAVU.folderTemplateMidValue(template);
 };
 
-/** Rebuilds the full folder template from the editable middle element. */
-const serializeFolderTemplate = () => {
-    const midEl = folderTemplateMidEl();
-    const mid = midEl ? (midEl.textContent || "") : "";
-    return normalizeFolderTemplate(`$defaultFolder/${mid}/$filename`);
+const folderTemplateEditableTokens = () =>
+    (typeof TOKENS !== "undefined" ? TOKENS : [])
+        .filter((t) => FOLDER_TOKENS.indexOf(t.token) === -1);
+
+const folderTemplateToParts = (template) => {
+    const mid = folderTemplateMidValue(template);
+    if (!mid) return [];
+    return DEJAVU.tokenizeTemplate(
+        mid,
+        folderTemplateEditableTokens().map((t) => t.token)
+    ).map((part) => {
+        if (part.type === "token") {
+            return { token: `$${(part.path || [])[0] || ""}` };
+        }
+        return { text: part.value || "" };
+    });
 };
 
-/** Hides the trailing "/" separator when the middle path is empty. */
-const syncFolderTrailingSep = () => {
-    const editor = el.folderTemplateEditor;
-    if (!editor) return;
-    const midEl = folderTemplateMidEl();
-    const sepR = editor.querySelector(".folder-tpl-sep--trailing");
-    if (!midEl || !sepR) return;
-    const hasMid = !!(midEl.textContent || "").replace(/\//g, "").trim();
-    sepR.classList.toggle("is-hidden", !hasMid);
+/**
+ * Autocomplete for the folder-template middle: suggests the date/time template
+ * tokens ($dd, $mm, $YYYY, …) when the user is typing a "$…" fragment, so the
+ * sub-path can be made date-based. Each item completes the typed text (the
+ * token stays inline text; resolveFolderTemplate expands it at save time).
+ */
+const suggestFolderTemplateTokens = (query) => {
+    const reserved = (typeof FOLDER_TOKENS !== "undefined") ? FOLDER_TOKENS : [];
+    return suggestTemplateTokens(
+        query,
+        (typeof TOKENS !== "undefined" ? TOKENS : [])
+            .filter((t) => reserved.indexOf(t.token) === -1)
+    );
+};
+
+/**
+ * Wires the folder template to TokenField. The required tokens are pinned
+ * structurally at the start/end, so the editable flow is only the middle path.
+ */
+const setupFolderTemplateInput = () => {
+    if (!window.TokenField || !el.folderTemplateInput) return;
+    el.folderTemplateInput.innerHTML = "";
+    state.folderTemplateTokenInput = window.TokenField.attach(
+        el.folderTemplateInput,
+        {
+            tokens: [
+                {
+                    key: "$defaultFolder",
+                    label: "$defaultFolder",
+                    title: "Default dejavu folder",
+                    pin: "start"
+                },
+                ...folderTemplateEditableTokens().map((t) => ({
+                    key: t.token,
+                    label: t.token,
+                    title: t.hint
+                })),
+                {
+                    key: "$filename",
+                    label: "$filename",
+                    title: "Document filename without extension",
+                    pin: "end"
+                }
+            ],
+            value: folderTemplateToParts(state.settings.folderTemplate),
+            allowFreeText: true,
+            allowCustomTokens: false,
+            singleUse: true,
+            showPalette: true,
+            reorder: false,
+            separator: "/",
+            placeholder: "Folder segment",
+            suggest: suggestFolderTemplateTokens,
+            hideUsedSuggestions: true,
+            onChange: () => commitFolderTemplate()
+        }
+    );
+    refreshDefaultFolderTokenLabel();
+};
+
+/** Rebuilds the full folder template from the TokenField middle flow. */
+const serializeFolderTemplate = () => {
+    if (state.folderTemplateTokenInput) {
+        return normalizeFolderTemplate(state.folderTemplateTokenInput.getText());
+    }
+    return normalizeFolderTemplate(state.settings.folderTemplate);
 };
 
 /** Persists the current folder template and refreshes dependent UI. */
 const commitFolderTemplate = () => {
     if (!el.folderTemplateInput) return;
     const value = serializeFolderTemplate();
-    el.folderTemplateInput.value = value;
+    // el.folderTemplateInput is the TokenField mount <div> (no .value); the
+    // serialized template lives in settings instead.
     state.settings.folderTemplate = value;
     saveSettings();
     updateFolderTemplatePreview();
-    syncFolderTrailingSep();
 };
 
-/** Wires input/blur/keydown/paste on the editable middle element. */
-const bindFolderTemplateMid = (midEl) => {
-    midEl.addEventListener("input", () => {
-        commitFolderTemplate();
-    });
-    midEl.addEventListener("blur", () => {
-        // Normalize (collapse/trim slashes) and reflect the clean value back.
-        const clean = folderTemplateMidValue(serializeFolderTemplate());
-        if ((midEl.textContent || "") !== clean) {
-            midEl.textContent = clean;
-        }
-        commitFolderTemplate();
-    });
-    midEl.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-            event.preventDefault();
-        }
-    });
-    midEl.addEventListener("paste", (event) => {
-        event.preventDefault();
-        let text = event.clipboardData
-            ? event.clipboardData.getData("text/plain")
-            : "";
-        text = text.replace(/[\r\n]/g, "").replace(/\/+/g, "/");
-        document.execCommand("insertText", false, text);
-    });
-};
-
-/** Renders the folder template editor as [token] / [editable] / [token]. */
+/**
+ * Reflects a stored folder template into TokenField: the pinned tokens stay
+ * locked while the middle text is replaced.
+ */
 const renderFolderTemplateEditor = (value) => {
-    const editor = el.folderTemplateEditor;
-    if (!editor) return;
-    const mid = folderTemplateMidValue(value);
-    editor.innerHTML = "";
-
-    editor.appendChild(createInlineTemplateToken("$defaultFolder"));
-
-    const sepL = document.createElement("span");
-    sepL.className = "folder-tpl-sep";
-    sepL.contentEditable = "false";
-    sepL.textContent = "/";
-    editor.appendChild(sepL);
-
-    const midEl = document.createElement("span");
-    midEl.className = "folder-tpl-mid";
-    midEl.contentEditable = "true";
-    midEl.spellcheck = false;
-    midEl.setAttribute("role", "textbox");
-    midEl.setAttribute("aria-label", "Subfolder path (optional)");
-    midEl.textContent = mid;
-    editor.appendChild(midEl);
-
-    const sepR = document.createElement("span");
-    sepR.className = "folder-tpl-sep folder-tpl-sep--trailing";
-    sepR.contentEditable = "false";
-    sepR.textContent = "/";
-    if (!mid) sepR.classList.add("is-hidden");
-    editor.appendChild(sepR);
-
-    editor.appendChild(createInlineTemplateToken("$filename"));
-
+    if (state.folderTemplateTokenInput) {
+        state.folderTemplateTokenInput.setValue(folderTemplateToParts(value));
+    }
     refreshDefaultFolderTokenLabel();
-    bindFolderTemplateMid(midEl);
 };
 
-/** One-time wiring on the folder editor container. */
-const bindFolderTemplateEditor = () => {
-    const editor = el.folderTemplateEditor;
-    if (!editor) return;
-    // Clicking anywhere that isn't the editable middle focuses the middle
-    // (caret at end), so the user can never land a caret before the tokens.
-    editor.addEventListener("mousedown", (event) => {
-        if (!event.target.closest(".folder-tpl-mid")) {
-            event.preventDefault();
-            const midEl = folderTemplateMidEl();
-            if (midEl) {
-                midEl.focus();
-                placeCaretAtEnd(midEl);
-            }
-        }
-    });
-};
-
-/** Places the caret at the end of a contenteditable element. */
-const placeCaretAtEnd = (editor) => {
-    editor.focus();
-    const range = document.createRange();
-    range.selectNodeContents(editor);
-    range.collapse(false);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-};
+const bindFolderTemplateEditor = () => {};
 
 /** Places the caret between the two required tokens ($defaultFolder and $filename). */
 /**
  * Updates the live preview line under the template field.
  */
 const updatePreview = () => {
-    const baseName = el.docNameValue.dataset.baseName || "Untitled-1";
-    const extension = el.docNameValue.dataset.dejavuFormat || "ai";
-    el.templatePreview.textContent = previewTemplate(
-        el.templateInput.value,
-        baseName,
-        extension
-    );
-    // Collision check: without overwrite, a template that has no
-    // second-resolution or counter token can produce the same name
-    // on consecutive saves, so flag it amber with a how-to-fix tip.
-    const risky = !state.settings.overwriteExisting &&
-        !/\$ss|\$time|\$counter/.test(el.templateInput.value || "");
-    el.templatePreview.classList.toggle("preview__value--warn", risky);
-    el.templatePreview.title = risky
-        ? `These names can repeat on quick saves. Add $ss, $time or $counter, or enable overwrite, to keep them unique.`
-        : "";
+    // The filename-template preview UI was removed in the settings refactor;
+    // only refresh it when those elements are still present.
+    if (el.templatePreview && el.templateInput) {
+        const baseName = el.docNameValue.dataset.baseName || "Untitled-1";
+        const extension = el.docNameValue.dataset.dejavuFormat || "ai";
+        el.templatePreview.textContent = previewTemplate(
+            el.templateInput.value,
+            baseName,
+            extension
+        );
+        // Collision check: without overwrite, a template that has no
+        // second-resolution or counter token can produce the same name
+        // on consecutive saves, so flag it amber with a how-to-fix tip.
+        const risky = !state.settings.overwriteExisting &&
+            !/\$ss|\$time|\$counter/.test(el.templateInput.value || "");
+        el.templatePreview.classList.toggle("preview__value--warn", risky);
+        el.templatePreview.title = risky
+            ? `These names can repeat on quick saves. Add $ss, $time or $counter, or enable overwrite, to keep them unique.`
+            : "";
+    }
     updateFolderTemplatePreview();
 };
 
@@ -591,12 +504,11 @@ const resolveDejavuRootFolder = () => {
 const buildResolvedDejavuPath = (rootFolder) => {
     const baseName = (el.docNameValue && el.docNameValue.dataset.baseName) ||
         "Untitled-1";
-    const template = (el.folderTemplateInput && el.folderTemplateInput.value) ||
+    const template = state.settings.folderTemplate ||
         "$defaultFolder/$filename";
-    return DEJAVU.resolveFolderTemplate(template, {
-        "$defaultFolder": rootFolder,
-        "$filename": baseName
-    });
+    const tokens = buildTemplateReplacementMap(baseName);
+    tokens.$defaultFolder = rootFolder;
+    return DEJAVU.resolveFolderTemplate(template, tokens);
 };
 
 /**
@@ -610,7 +522,7 @@ const buildResolvedDejavuPath = (rootFolder) => {
  *     tracking keystrokes (mirrors the DEJAVU FOLDER status row).
  */
 const refreshDefaultFolderTokenLabel = () => {
-    const editor = el.folderTemplateEditor;
+    const editor = el.folderTemplateInput;
     if (!editor) return;
     const docFolder = activeDocumentFolder();
     let display;
@@ -636,14 +548,14 @@ const refreshDefaultFolderTokenLabel = () => {
         display = resolveTildePath(raw);
         title = `Default folder: ${display}`;
     }
-    // Drop any trailing "/" — the following .folder-tpl-sep already renders
-    // the separator, so the pill shouldn't double it up.
+    // Drop any trailing "/" — TokenField inserts separators while serializing,
+    // so the visible label should not double them.
     display = display.replace(/\/+$/, "") || "/";
     const pill = editor.querySelector(
-        ".template-token[data-token=\"$defaultFolder\"]"
+        ".tf__chip[data-key=\"$defaultFolder\"]"
     );
     if (!pill) return;
-    const label = pill.querySelector(".template-token__label");
+    const label = pill.querySelector(".tf__chip-label");
     if (label && label.textContent !== display) {
         label.textContent = display;
     }
@@ -664,7 +576,6 @@ const onTemplateChanged = () => {
     state.settings.template = el.templateInput.value;
     saveSettings();
     updatePreview();
-    syncTokenChips();
     syncTemplatePresets();
 };
 
@@ -676,7 +587,9 @@ const onTemplateChanged = () => {
  */
 const applyTemplateString = (template) => {
     if (state.filenameTokenInput) {
-        state.filenameTokenInput.setParts(templateToParts(template));
+        state.filenameTokenInput.setValue(parseTemplateParts(template));
+        el.templateInput.value = state.filenameTokenInput.getText();
+        onTemplateChanged();
     } else {
         el.templateInput.value = template;
         onTemplateChanged();
@@ -704,7 +617,10 @@ const syncTemplatePresets = () => {
  * @return {number}
  */
 const getIntervalMs = () => {
-    return DEJAVU.intervalToMs(el.intervalInput.value, el.intervalUnit.value);
+    const unit = el.intervalUnit
+        ? el.intervalUnit.value
+        : state.settings.intervalUnit || 60;
+    return DEJAVU.intervalToMs(el.intervalInput.value, unit);
 };
 
 /**
@@ -741,7 +657,9 @@ const applyIntervalSeconds = (totalSeconds) => {
     } else if (seconds % 60 === 0) {
         unit = 60;
     }
-    el.intervalUnit.value = String(unit);
+    if (el.intervalUnit) {
+        el.intervalUnit.value = String(unit);
+    }
     el.intervalInput.value = Math.max(1, Math.round(seconds / unit));
     state.settings.intervalUnit = unit;
     state.settings.intervalValue = parseInt(el.intervalInput.value, 10);
@@ -757,8 +675,11 @@ const applyIntervalSeconds = (totalSeconds) => {
  */
 const syncIntervalPresets = () => {
     if (!el.intervalPresets) return;
+    const unit = el.intervalUnit
+        ? parseInt(el.intervalUnit.value, 10) || 60
+        : Number(state.settings.intervalUnit) || 60;
     const seconds = (parseInt(el.intervalInput.value, 10) || 1) *
-        (parseInt(el.intervalUnit.value, 10) || 60);
+        unit;
     const chips = el.intervalPresets.querySelectorAll("[data-seconds]");
     Array.prototype.forEach.call(chips, (chip) => {
         chip.classList.toggle(

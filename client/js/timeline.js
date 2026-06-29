@@ -9,7 +9,7 @@
 let timelineTable = null;
 let recoveryTable = null;
 
-/** Returns the shared table controller for the Timeline drawer. */
+/** Returns the shared table controller for the Timeline panel. */
 const getTimelineTable = () => {
     if (!timelineTable && window.DejaVuTable) {
         timelineTable = window.DejaVuTable.create({
@@ -60,7 +60,7 @@ const getTimelineTable = () => {
     return timelineTable;
 };
 
-/** Returns the shared table controller for the Recovery Center drawer. */
+/** Returns the shared table controller for the Recovery Center panel. */
 const getRecoveryTable = () => {
     if (!recoveryTable && window.DejaVuTable) {
         recoveryTable = window.DejaVuTable.create({
@@ -912,7 +912,7 @@ const renderVersions = (items) => {
 
     if (el.versionCount) {
         el.versionCount.textContent = String(state.versions.length);
-        el.versionCount.classList.remove("drawer__meta--warn");
+        el.versionCount.classList.remove("panel-nav__meta--warn");
         el.versionCount.title = state.versions.length +
             (state.versions.length === 1 ? " snapshot" : " snapshots");
     }
@@ -968,7 +968,13 @@ const renderVersions = (items) => {
 
             const node = document.createElement("div");
             const noteText = getSnapshotNote(item.path);
-            node.className = `snapshot${(isLatest ? " snapshot--latest" : "")}${(isProtected ? " snapshot--pinned" : "")}${(noteText ? " snapshot--comment" : "")}${(isSnapshotSelected(item.path) ? " snapshot--selected" : "")}`;
+            node.className = DEJAVU.classNames(
+                "snapshot",
+                isLatest && "snapshot--latest",
+                isProtected && "snapshot--pinned",
+                noteText && "snapshot--comment",
+                isSnapshotSelected(item.path) && "snapshot--selected"
+            );
             node.tabIndex = 0;
             node.dataset.path = item.path;
             node.addEventListener("mouseenter", () => {
@@ -1152,10 +1158,13 @@ const renderVersions = (items) => {
 
             const inlineNoteText = getSnapshotNote(item.path);
             const noteEl = document.createElement("div");
-            noteEl.className = `snapshot__note${(inlineNoteText ? "" : " snapshot__note--empty")}`;
+            noteEl.className = DEJAVU.classNames(
+                "snapshot__note",
+                !inlineNoteText && "snapshot__note--empty"
+            );
             noteEl.textContent = inlineNoteText || "Note";
             noteEl.title = "Double-click to edit note";
-            
+
             // Disable note editing for missing files
             if (item.exists === false) {
                 noteEl.title = "File no longer exists - cannot edit note";

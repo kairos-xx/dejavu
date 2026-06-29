@@ -4,7 +4,7 @@
   "description": "Timed, change-aware DejaVu panel for Adobe Illustrator (CEP + UXP).",
   "private": true,
   "scripts": {
-    "test": "node --test",
+    "test": "node --test tests/*.js",
     "lint": "eslint client/js host *.js",
     "format": "prettier --write \"client/**/*.{js,css,html}\" \"host/**/*.js\" \"*.md\""
   },

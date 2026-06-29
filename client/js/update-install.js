@@ -13,7 +13,9 @@
     const MAX_PROGRESS = 100;
     const INSTALL_ITEMS = ["client", "host", "icons", "CSXS", "manifest.json"];
     const STALE_ITEMS = [
+        "client/index_old.html",
         "client/js/main_es6.js",
+        "client/lib/token-input.js",
         "host/host.legacy.jsx"
     ];
 
@@ -26,7 +28,8 @@
         refreshBtn: document.getElementById("updateInstallRefreshBtn"),
         revealBtn: document.getElementById("updateInstallRevealBtn"),
         progressBar: document.getElementById("updateInstallProgressBar"),
-        status: document.getElementById("updateInstallStatus")
+        status: document.getElementById("updateInstallStatus"),
+        checkbox: document.getElementById("updateInstallCheckbox")
     };
 
     const state = {
@@ -134,6 +137,7 @@
         setStatus("Ready to install");
         setLaterLabel("Later");
         if (ui.downloadBtn) ui.downloadBtn.textContent = primaryLabel();
+        if (ui.checkbox) ui.checkbox.checked = false;
         showButton(ui.downloadBtn);
         showButton(ui.laterBtn);
         hideButton(ui.refreshBtn);
@@ -142,6 +146,15 @@
 
     const hide = () => {
         if (state.busy || !ui.modal) return;
+        // Save "don't ask again" preference
+        if (ui.checkbox && ui.checkbox.checked) {
+            try {
+                const STORAGE_KEY = "dejavuai.updateCheck.v1";
+                const state = JSON.parse(window.localStorage.getItem(STORAGE_KEY)) || {};
+                state.neverAsk = true;
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch {}
+        }
         ui.modal.classList.add("update-install-modal--hidden");
     };
 

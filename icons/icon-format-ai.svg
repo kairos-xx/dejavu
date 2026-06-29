@@ -5,5 +5,5 @@
       <text x="8" y="10.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="7.5" font-weight="700" fill="#000">AI</text>
     </mask>
   </defs>
-  <rect x="1.5" y="2.5" width="13" height="11" rx="2.5" fill="#fff" mask="url(#cut)"/>
+  <rect x="1.5" y="2.5" width="13" height="11" rx="2.5" fill="currentColor" mask="url(#cut)"/>
 </svg>

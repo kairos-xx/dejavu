@@ -17,7 +17,7 @@
 // warns if it doesn't match, which makes a *stale* host — one left in
 // Illustrator's persistent ExtendScript engine from before a fix —
 // visible instead of silently producing old behaviour.
-var DEJAVU_HOST_VERSION = "2026.06.25-r33";
+var DEJAVU_HOST_VERSION = "2026.06.25-r37";
 
 // Persist across $.evalFile reloads so reopening the CEP panel does not make
 // an already-open unsaved document look like a new document session.

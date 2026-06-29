@@ -1,44 +1,151 @@
-/* ================================================================
-   Top content and dejavu mode controls
-   ================================================================ */
 
-/* ---------------------------------------------------------------- */
-/* Header                                                            */
-/* ---------------------------------------------------------------- */
 
 .app__header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
+    z-index: var(--app-header-z-index);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: var(--dimension-9) var(--dimension-12) var(--dimension-8);
-    border-bottom: var(--dimension-1) solid var(--border-soft);
+    justify-content: var(--app__header-justify-content);
+    gap: var(--app__header-gap);
+    padding: var(--app__header-padding);
+    border-bottom: var(--app__header-border-bottom);
     background: var(--bg);
-    flex: 0 0 auto;
+    flex: var(--app__header-flex);
 }
 
 .app__title {
     display: flex;
     align-items: center;
-    gap: var(--dimension-7);
+    gap: var(--app__title-gap);
+    flex: var(--app__title-flex);
 }
 
-.app__logo {
-    --icon-size: var(--dimension-16);
+.app__header-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--app__header-control-border);
+    background: var(--app__header-control-background);
+    transition: var(--app__header-control-transition);
+}
+
+.app__header-control.is-on svg {
+    border-bottom: var(--app__header-control-active-border-bottom);
+    color: var(--app__header-control-active-color);
+}
+
+.app__header-control svg {
+    height: var(--app__header-control-svg-height);
+    padding: var(--app__header-control-svg-padding);
+    border-bottom: var(--app__header-control-svg-border-bottom);
+}
+
+
+.app__logo-btn {
+    flex: var(--app__logo-flex);
+    border-left: var(--app__logo-btn-border-left);
+    padding-left: var(--app__logo-btn-padding-left);
     color: var(--accent);
-    flex: 0 0 auto;
-    display: block;
+    cursor: var(--cursor-action);
+}
+
+.app__settings-btn {
+    --icon-size: var(--app__settings-btn-icon-size);
+    color: var(--app__settings-btn-color);
+    cursor: var(--cursor-action);
+}
+
+.app__similarity-btn {
+    --icon-size: var(--app__similarity-btn-icon-size);
+    color: var(--app__similarity-btn-color);
+    cursor: var(--cursor-action);
+}
+
+.app__similarity-btn:hover {
+    color: var(--app__similarity-btn-hover-color);
+    background: var(--app__similarity-btn-hover-background);
+}
+
+.app__similarity-btn:active {
+    color: var(--app__similarity-btn-active-color);
+    background: var(--app__similarity-btn-active-background);
+}
+
+.app__similarity-btn:focus-visible {
+    outline: var(--app__similarity-btn-focus-outline);
+    outline-offset: var(--app__similarity-btn-focus-outline-offset);
+}
+
+.app__settings-btn:hover {
+    color: var(--app__settings-btn-hover-color);
+    background: var(--app__settings-btn-hover-background);
+}
+
+.app__settings-btn:active {
+    color: var(--app__settings-btn-active-color);
+    background: var(--app__settings-btn-active-background);
+}
+
+.app__settings-btn:focus-visible {
+    outline: var(--app__settings-btn-focus-outline);
+    outline-offset: var(--app__settings-btn-focus-outline-offset);
+}
+
+.settings[hidden] {
+    display: none;
+}
+
+.settings__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--settings__header-padding);
+    border-bottom: var(--settings__header-border-bottom);
+}
+
+.settings__header h1 {
+    font-weight: var(--settings__header-h1-font-weight);
+    color: var(--text-bright);
+    letter-spacing: var(--settings__header-h1-letter-spacing);
+}
+
+.settings__close-btn {
+    --icon-size: var(--settings__close-btn-icon-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--settings__close-btn-padding);
+    border: var(--settings__close-btn-border);
+    border-radius: var(--settings__close-btn-border-radius);
+    background: var(--settings__close-btn-background);
+    color: var(--settings__close-btn-color);
+    cursor: var(--cursor-action);
+    transition: var(--settings-close-button-transition);
+}
+
+.settings__close-btn:hover {
+    color: var(--settings__close-btn-hover-color);
+    background: var(--settings__close-btn-hover-background);
+}
+
+.settings__close-btn:active {
+    color: var(--settings__close-btn-active-color);
+    background: var(--settings__close-btn-active-background);
+}
+
+.settings__close-btn:focus-visible {
+    outline: var(--settings__close-btn-focus-outline);
+    outline-offset: var(--settings__close-btn-focus-outline-offset);
+}
+
+.settings__content {
+    padding: var(--settings__content-padding);
 }
 
 .app__title h1 {
-    font-size: var(--dimension-12);
-    font-weight: 700;
-    margin: 0;
+    font-weight: var(--app__title-h1-font-weight);
     color: var(--text-bright);
-    letter-spacing: var(--dimension-0-1);
-    transition: color 0.12s ease;
+    letter-spacing: var(--app__title-h1-letter-spacing);
+    transition: var(--app__title-h1-transition);
 }
 
 .app__title--running h1 {
@@ -46,122 +153,85 @@
 }
 
 .app__dot {
-    width: var(--dimension-6);
-    height: var(--dimension-6);
-    border-radius: 50%;
-    background: var(--text-dim);
-    box-shadow: 0 0 0 0 var(--color-shadow-transparent);
-    transition: background 0.2s ease, box-shadow 0.2s ease;
-    flex: 0 0 auto;
+    width: var(--app__dot-size);
+    height: var(--app__dot-size);
+    border-radius: var(--app__dot-border-radius);
+    border: var(--app__dot-border);
+    background: var(--app__dot-background);
+    transition: var(--app__dot-transition);
+    flex: var(--app__dot-flex);
 }
 
 .app__dot--active {
-    background: var(--accent);
-    box-shadow: 0 0 var(--dimension-5) 0 var(--accent);
+    color: var(--accent);
+    box-shadow: var(--app__dot-active-box-shadow);
 }
 
-/* Error: steady red, slightly stronger glow so it reads as a fault. */
 .app__dot--error {
-    background: var(--danger);
-    box-shadow: 0 0 var(--dimension-6) 0 var(--danger);
-    animation: none;
+    color: var(--danger);
+    box-shadow: var(--app__dot-error-box-shadow);
+    animation: var(--app__dot-error-animation);
 }
 
-/* Saving: fade-pulse the LED from its green base toward blue (accent)
-   and back, so the header dot signals an in-progress dejavu. */
 .app__dot--saving {
-    animation: dot-saving-pulse 0.5s ease-in-out 3;
+    animation: var(--app__dot-saving-animation);
 }
-
-@keyframes dot-saving-pulse {
-    0%, 100% {
-        background: var(--ok);
-        box-shadow: 0 0 var(--dimension-5) 0 var(--ok);
-    }
-    50% {
-        background: var(--accent);
-        box-shadow: 0 0 var(--dimension-7) 0 var(--accent);
-    }
-}
-
-/* ---------------------------------------------------------------- */
-/* Saving progress bar — thin, non-blocking, indeterminate.          */
-/* The save itself is synchronous in UXP host so we can't show   */
-/* real percentages; this is an honest "work in progress" pulse that */
-/* appears only while a save promise is in flight. It lives in the   */
-/* panel's own Chromium process, so it keeps animating regardless of */
-/* what Illustrator's main thread is doing.                          */
-/* ---------------------------------------------------------------- */
 
 .saving-bar {
     position: sticky;
-    top: var(--dimension-41);
-    z-index: 19;
-    flex: 0 0 auto;
-    height: var(--dimension-2);
+    top: var(--saving-bar-top);
+    z-index: var(--saving-bar-z-index);
+    flex: var(--saving-bar-flex);
+    height: var(--saving-bar-height);
     overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.18s ease;
+    opacity: var(--saving-bar-opacity);
+    transition: var(--saving-bar-transition);
 }
 
 .saving-bar.is-active {
-    opacity: 1;
+    opacity: var(--saving-bar-is-active-opacity);
 }
 
 .saving-bar__track {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-input-well);
+    width: var(--saving-bar__track-width);
+    height: var(--saving-bar__track-height);
+    border-radius: var(--saving-bar__track-border-radius);
+    overflow: hidden;
+    background: var(--bg);
 }
 
 .saving-bar__pulse {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 40%;
-    border-radius: var(--dimension-2);
-    background: var(--accent);
-    transform: translateX(-120%);
+    height: var(--saving-bar__pulse-height);
+    width: var(--saving-bar__pulse-width);
+    border-radius: inherit;
+    background: var(--saving-bar__pulse-background);
 }
 
 .saving-bar.is-active .saving-bar__pulse {
-    animation: saving-slide 1.05s ease-in-out infinite;
-}
-
-@keyframes saving-slide {
-    0% {
-        transform: translateX(-120%);
-        width: 35%;
-    }
-    50% {
-        width: 55%;
-    }
-    100% {
-        transform: translateX(320%);
-        width: 35%;
-    }
+    animation: var(--saving-bar-is-active-saving-bar__pulse-animation);
 }
 
 .status__row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--dimension-5);
-    min-height: var(--dimension-23);
-    padding: var(--dimension-2) var(--dimension-4);
-    border-radius: var(--radius);
-    transition: background-color 0.12s ease;
+    gap: var(--status__row-gap);
+    height: var(--status__row-height);
+    padding: var(--status__row-padding);
+    border-top: var(--status__row-border-top);
+    border-radius: var(--status__row-border-radius);
+    letter-spacing: var(--status__row-letter-spacing);
+    transition: var(--status__row-transition);
+}
+
+.status__row + .status__row {
+    border-top: var(--status__row-separator-border);
 }
 
 .status__label {
     color: var(--text-dim);
-    font-size: var(--dimension-9);
-    font-weight: 600;
-    letter-spacing: 0.055em;
-    text-transform: uppercase;
-    flex: 0 0 auto;
+    font-weight: var(--status__label-font-weight);
+    flex: var(--status__label-flex);
 }
 
 .status__label--paused {
@@ -171,16 +241,15 @@
 .status__value {
     color: var(--text-bright);
     background: var(--bg-input-well);
-    border: var(--dimension-1) solid var(--border-soft);
-    border-radius: var(--radius);
-    padding: var(--dimension-2) var(--dimension-6);
-    font-size: var(--dimension-10-5);
-    font-family: var(--mono);
+    border: var(--status__value-border);
+    border-radius: var(--status__value-border-radius);
+    padding: var(--status__value-padding);
+    font-family: var(--font-family-code);
     text-align: right;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 0 0 auto;
+    white-space: var(--text-flow-nowrap);
+    flex: var(--status__value-flex);
 }
 
 #docNameValue,
@@ -189,16 +258,46 @@
 }
 
 #formatValue {
-    color: var(--accent);
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    color: var(--formatvalue-color);
+    background: var(--formatvalue-background);
+    border: var(--formatvalue-border);
+    font-weight: var(--top-font-weight);
+    letter-spacing: var(--formatvalue-letter-spacing);
     display: flex;
     align-items: center;
-    gap: var(--dimension-4);
+    align-self: var(--formatvalue-align-self);
+    gap: var(--formatvalue-gap);
+}
+
+#formatValue span:not(.svg-icon) {
+    letter-spacing: var(--formatvalue-text-letter-spacing);
+}
+
+.status__row--format-ai {
+    --formatvalue-color: var(--color-format-ai);
+}
+
+.status__row--format-pdf {
+    --formatvalue-color: var(--color-format-pdf);
+}
+
+.status__row--format-eps {
+    --formatvalue-color: var(--color-format-eps);
+}
+
+.status__row--format-svg {
+    --formatvalue-color: var(--color-format-svg);
 }
 
 #formatValue .svg-icon {
-    --icon-size: var(--dimension-12);
+    width: var(--formatvalue-svg-icon-width);
+    height: var(--formatvalue-svg-icon-height);
+    min-width: var(--formatvalue-svg-icon-width);
+}
+
+#formatValue .svg-icon svg {
+    width: var(--formatvalue-svg-icon-width);
+    height: var(--formatvalue-svg-icon-height);
 }
 
 #sessionStatsValue {
@@ -213,16 +312,18 @@
 }
 
 #folderStatusValue {
-    cursor: pointer;
-    text-decoration: none;
+    cursor: var(--cursor-action);
+    text-decoration: var(--text-decoration-none);
 }
 
 #folderStatusValue:hover,
 #folderStatusValue:focus-visible {
-    color: var(--text-bright) !important;
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
-    text-underline-offset: var(--dimension-3);
+    color: var(--text-bright);
+    text-decoration-line: var(--text-decoration-line-underline);
+    text-decoration-style: var(--text-decoration-style-dotted);
+    text-underline-offset: var(
+        --folder-status-link-underline-offset
+    );
     outline: none;
 }
 
@@ -230,24 +331,22 @@
     position: relative;
     display: flex;
     justify-content: flex-end;
-    min-width: 0;
-    max-width: 68%;
+    min-width: var(--status__folder-wrap-min-width);
+    max-width: var(--status__folder-wrap-max-width);
 }
 
 .status__folder-wrap #folderStatusValue {
-    max-width: 100%;
+    max-width: var(--status-folder-value-max-width);
 }
 
 .status__value--warn {
     color: var(--warn);
 }
 
-/* Countdown ring: an SVG circle whose stroke sweeps down as the next
-   dejavu approaches, sitting inline with the remaining-time text. */
 .status__value--countdown {
     display: inline-flex;
     align-items: center;
-    gap: var(--dimension-6);
+    gap: var(--status__value-countdown-gap);
     justify-content: flex-end;
 }
 
@@ -255,172 +354,133 @@
     color: var(--warn);
 }
 
-/* ---------------------------------------------------------------- */
-/* Four-state dejavu mode selector                                 */
-/*                                                                   */
-/* A full-width segmented control: four joined buttons (Off all /    */
-/* Off current / On current / On all). Click any segment to set that */
-/* state directly. The active segment is filled — green for the two  */
-/* ON states, neutral for the two OFF states. The current-scope      */
-/* segments disable themselves when no document is open, since a     */
-/* per-document rule needs a document to attach to.                  */
-/* ---------------------------------------------------------------- */
-
-.app__mode-tag {
-    font-size: var(--dimension-10);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: var(--text-dim);
-    flex: 0 0 auto;
-}
-
-.app__mode-tag--on {
-    color: var(--ok);
-}
-
 .mode-seg {
     display: flex;
-    flex: 0 0 auto;
-    margin: var(--dimension-10) var(--dimension-14);
-    border: var(--dimension-1) solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-input-well);
+    flex: var(--mode-seg-flex);
+    margin-bottom: var(--mode-seg-margin);
+    border: var(--mode-seg-border);
+    border-radius: var(--mode-seg-border-radius);
+    background: var(--mode-seg-background);
     overflow: hidden;
 }
 
 .mode-seg__btn {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: var(--dimension-6) var(--dimension-4);
-    border: 0;
-    border-left: var(--dimension-1) solid var(--border-soft);
-    background: transparent;
-    color: var(--text-dim);
-    font-family: var(--sans);
-    font-size: var(--dimension-10-5);
-    font-weight: 500;
-    line-height: 1;
-    white-space: nowrap;
+    flex: var(--mode-seg-btn-flex);
+    min-width: var(--mode-seg-btn-min-width);
+    padding: var(--mode-seg__btn-padding);
+    border: var(--mode-seg-btn-border);
+    border-left: var(--mode-seg__btn-border-left);
+    background: var(--mode-seg-btn-background);
+    color: var(--mode-seg-btn-color);
+    font-family: var(--font-family-app);
+    font-weight: var(--mode-seg__btn-font-weight);
+    line-height: var(--mode-seg__btn-line-height);
+    white-space: var(--text-flow-nowrap);
     text-overflow: ellipsis;
     overflow: hidden;
-    cursor: pointer;
-    transition: background 0.12s ease, color 0.12s ease;
+    cursor: var(--cursor-action);
+    transition: var(--mode-segment-button-transition);
 }
 
 .mode-seg__btn:first-child {
-    border-left: 0;
+    border-left: var(--mode-seg-btn-first-child-border-left);
 }
 
 .mode-seg__btn:hover:not(:disabled):not(.mode-seg__btn--active) {
-    background: var(--bg-hover);
-    color: var(--text-bright);
+    background: var(--mode-seg-btn-hover-background);
+    color: var(--mode-seg-btn-hover-color);
 }
 
-/* Light Illustrator skins need a whisper of separation between each
-   inactive segment and the recessed track behind it. */
 html.theme-light .mode-seg__btn:not(.mode-seg__btn--active) {
-    background: var(--bg-input);
-    color: var(--text);
+    background: var(--mode-seg-btn-background);
+    color: var(--mode-seg-btn-color);
 }
 
-html.theme-light .mode-seg__btn:hover:not(:disabled):not(.mode-seg__btn--active) {
-    background: var(--bg-hover);
-    color: var(--text-bright);
+html.theme-light
+    .mode-seg__btn:hover:not(:disabled):not(.mode-seg__btn--active) {
+    background: var(--mode-seg-btn-hover-background);
+    color: var(--mode-seg-btn-hover-color);
 }
 
 .mode-seg__btn:focus-visible {
     outline: none;
-    box-shadow: inset 0 0 0 var(--dimension-1) var(--accent);
+    box-shadow: var(--mode-seg__btn-box-shadow);
 }
 
-/* Active OFF state — neutral fill: reads as selected without implying
-   dejavu is running. */
 .mode-seg__btn--active {
-    background: var(--bg-hover);
-    color: var(--text-bright);
-    font-weight: 600;
+    background: var(--mode-seg-btn-active-background);
 }
 
-/* Active ON state — green fill with dark-green text. */
 .mode-seg__btn--on {
-    background: var(--ok);
-    color: var(--color-success-contrast);
-    font-weight: 600;
+    color: var(--mode-seg-btn-on-color);
+    font-weight: var(--mode-seg__btn-on-font-weight);
 }
 
-/* In light mode --ok darkens, so dark-green text loses contrast — switch
-   the ON label to white there. */
 html.theme-light .mode-seg__btn--on {
-    color: var(--color-static-white);
+    color: var(--mode-seg-btn-on-color);
 }
 
 .mode-seg__btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    opacity: var(--mode-seg__btn-opacity);
+    cursor: var(--cursor-disabled);
 }
-
-/* ---------------------------------------------------------------- */
-/* Snooze (temporary pause) bar — compact row under the mode buttons */
-/* ---------------------------------------------------------------- */
 
 .snooze-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--dimension-5);
-    padding: var(--dimension-5) var(--dimension-4) 0;
-    width: 100%;
-    flex: 0 0 auto;
+    gap: var(--snooze-bar-gap);
+    padding: var(--snooze-bar-padding);
+    width: var(--snooze-bar-width);
+    flex: var(--snooze-bar-flex);
 }
 
 .snooze-bar__label {
     width: auto;
-    min-height: var(--dimension-23);
-    flex: 0 0 auto;
+    min-height: var(--snooze-bar__label-min-height);
+    flex: var(--snooze-bar__label-flex);
     display: inline-flex;
     align-items: center;
     color: var(--text-dim);
-    font-size: var(--dimension-9);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.055em;
+    font-weight: var(--snooze-bar__label-font-weight);
 }
 
 .snooze-bar__chips {
     display: flex;
     justify-content: flex-end;
-    gap: var(--dimension-4);
+    gap: var(--snooze-bar__chips-gap);
     margin-left: auto;
 }
 
-/* ---------------------------------------------------------------- */
-/* Maximum-polish additions: presets, timeline tools, health/actions */
-/* ---------------------------------------------------------------- */
-
 .status__value--path {
-    cursor: default;
-    flex: 1 1 auto;
+    cursor: var(--cursor-default);
+    flex: var(--status__value-path-flex);
     color: var(--accent);
     background: transparent;
-    border: 0;
+    border: var(--status__value-path-border);
 }
 
-.status__value:not(#lastSavedValue):not(#sessionStatsValue):not(.status__value--countdown),
+.status__value:not(#lastSavedValue):not(#sessionStatsValue):not(
+        .status__value--countdown
+    ),
 .preview,
-
 .snapshot {
-    border-radius: var(--radius-sm);
+    border-radius: var(
+        --status-value-badge-border-radius
+    );
 }
 
 .snapshot__name,
 .recovery-item__name,
 .recovery-item__path,
 #folderStatusValue {
-    transition: color 0.12s ease, border-color 0.12s ease,
-        text-decoration-color 0.12s ease;
+    transition: var(--top-transition);
 }
 
-html.theme-light .status__value:not(#lastSavedValue):not(#sessionStatsValue):not(.status__value--countdown):not(.status__value--path),
+html.theme-light
+    .status__value:not(#lastSavedValue):not(#sessionStatsValue):not(
+        .status__value--countdown
+    ):not(.status__value--path),
 html.theme-light .preview,
 html.theme-light .timeline-insights,
 html.theme-light .version-list {
@@ -431,9 +491,11 @@ html.theme-light .version-list {
     *,
     *::before,
     *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
+        animation-duration: var(--top-animation-duration) !important;
+        animation-iteration-count: var(
+            --top-animation-iteration-count
+        ) !important;
+        transition-duration: var(--top-transition-duration) !important;
+        scroll-behavior: var(--top-scroll-behavior) !important;
     }
 }

@@ -2,7 +2,9 @@
   "exclude": [
     ".dev",
     ".history",
-    "**/stubs/**"
+    "**/stubs/**",
+    "**/vendor/**",
+    "**/build/**"
   ],
   "extraPaths": [
     "/opt/anaconda3/lib/python3.13/site-packages"

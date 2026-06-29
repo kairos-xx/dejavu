@@ -8,7 +8,7 @@
 
 let openDocsTable = null;
 
-/** Returns the shared table controller for the Open Documents drawer. */
+/** Returns the shared table controller for the Open Documents panel. */
 const getOpenDocsTable = () => {
     if (!openDocsTable && window.DejaVuTable) {
         openDocsTable = window.DejaVuTable.create({
@@ -394,11 +394,15 @@ const OPEN_DOC_ICONS = {
     unsaved: "icon-unsaved"
 };
 
-/** Creates a reusable external SVG icon span. */
+/** Creates a reusable inline SVG icon span. */
 const makeSvgIcon = (iconClass) => {
     const icon = document.createElement("span");
-    icon.className = `svg-icon ${iconClass}`;
+    icon.className = DEJAVU.classNames("svg-icon", iconClass);
+    icon.dataset.icon = iconClass.replace(/^icon-/, "");
     icon.setAttribute("aria-hidden", "true");
+    if (window.dejavu && window.dejavu.injectIcon) {
+        window.dejavu.injectIcon(icon);
+    }
     return icon;
 };
 
@@ -412,12 +416,16 @@ const makeSvgIcon = (iconClass) => {
 const makeOpenDocAction = (iconClass, title, extraClass) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = `open-doc__action${extraClass ? ` ${extraClass}` : ""}`;
+    btn.className = DEJAVU.classNames("open-doc__action", extraClass);
     btn.title = title;
     btn.setAttribute("aria-label", title);
     const icon = document.createElement("span");
-    icon.className = `svg-icon ${iconClass}`;
+    icon.className = DEJAVU.classNames("svg-icon", iconClass);
+    icon.dataset.icon = iconClass.replace(/^icon-/, "");
     icon.setAttribute("aria-hidden", "true");
+    if (window.dejavu && window.dejavu.injectIcon) {
+        window.dejavu.injectIcon(icon);
+    }
     btn.appendChild(icon);
     return btn;
 };
@@ -496,14 +504,15 @@ const makeSaveSplitAction = (title, onSave, onSaveAndClose) => {
     arrowBtn.setAttribute("aria-label", "Save and close");
     arrowBtn.setAttribute("aria-expanded", "false");
     arrowBtn.innerHTML =
-        '<span class="select-chevron open-doc__chevron" aria-hidden="true">' +
-        '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" ' +
-        'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M2 6l6 4 6-4"/></svg></span>';
+        '<span class="select-chevron open-doc__chevron" ' +
+        'data-icon="chevron-down" aria-hidden="true"></span>';
     wrap.appendChild(arrowBtn);
+    if (window.dejavu && window.dejavu.injectSvgIcons) {
+        window.dejavu.injectSvgIcons(arrowBtn);
+    }
 
     const menu = makeOpenDocsMenu(onSaveAndClose, "row");
-    document.body.appendChild(menu);
+    wrap.appendChild(menu);
     arrowBtn.addEventListener("click", (evt) => {
         evt.stopPropagation();
         const isOpen = menu.getAttribute("aria-hidden") === "false";
@@ -550,13 +559,20 @@ const buildOpenDocRow = (doc) => {
     const on = isDejavuOnForKey(key);
 
     const row = document.createElement("div");
-    row.className = `open-doc${(doc.isActive ? " open-doc--active" : "")}${(isOpenDocSelected(key) ? " open-doc--selected" : "")}`;
+    row.className = DEJAVU.classNames(
+        "open-doc",
+        doc.isActive && "open-doc--active",
+        isOpenDocSelected(key) && "open-doc--selected"
+    );
 
     // Left state slot: aligned with the Timeline / Recovery pin circles.
     // Unsaved documents show the unsaved glyph here; saved documents keep
     // an invisible placeholder so names still line up.
     const dot = document.createElement("span");
-    dot.className = `open-doc__dot${(doc.saved === false ? " open-doc__dot--unsaved" : "")}`;
+    dot.className = DEJAVU.classNames(
+        "open-doc__dot",
+        doc.saved === false && "open-doc__dot--unsaved"
+    );
     dot.setAttribute("aria-hidden", "true");
     dot.appendChild(makeSvgIcon(OPEN_DOC_ICONS.unsaved));
     if (doc.saved === false) {
@@ -746,7 +762,7 @@ const initOpenDocsBulkSaveMenu = () => {
     const menu = makeOpenDocsMenu(() => {
         saveOpenDocs(selectedOpenDocs(), { closeAfter: true });
     }, "bulk");
-    document.body.appendChild(menu);
+    host.appendChild(menu);
     arrow.addEventListener("click", (evt) => {
         evt.stopPropagation();
         const isOpen = menu.getAttribute("aria-hidden") === "false";
@@ -770,7 +786,6 @@ const initOpenDocsBulkSaveMenu = () => {
 /** Disables the bulk Save controls while a sequential save runs. */
 const setOpenDocsBusyUi = (busy) => {
     [
-        el.openDocsSaveAllBtn,
         el.openDocsBulkSaveBtn,
         el.openDocsBulkSaveMenuBtn
     ].forEach((btn) => {

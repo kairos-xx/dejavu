@@ -1,0 +1,524 @@
+:root {
+    --primary-pct-100: 100%;
+    --primary-pct-95: 95%;
+    --primary-pct-90: 90%;
+    --primary-pct-85: 85%;
+    --primary-pct-80: 80%;
+    --primary-pct-75: 75%;
+    --primary-pct-70: 70%;
+    --primary-pct-68: 68%;
+    --primary-pct-65: 65%;
+    --primary-pct-60: 60%;
+    --primary-pct-55: 55%;
+    --primary-pct-50: 50%;
+    --primary-pct-45: 45%;
+    --primary-pct-40: 40%;
+    --primary-pct-35: 35%;
+    --primary-pct-30: 30%;
+    --primary-pct-25: 25%;
+    --primary-pct-20: 20%;
+    --primary-pct-15: 15%;
+    --primary-pct-10: 10%;
+    --primary-pct-5: 5%;
+    --primary-pct-0: 0%;
+    --primary-pct-neg-50: -50%;
+    --primary-pct-neg-80: -80%;
+    --primary-pct-neg-95: -95%;
+    --primary-pct-neg-100: -100%;
+    --primary-pct-neg-120: -120%;
+    --primary-pct-250: 250%;
+    --primary-pct-400: 400%;
+
+    --primary-ui-scale-preference: var(--uxp-host-ui-scale-factor, 1);
+    --primary-ui-scale: var(--primary-ui-scale-preference);
+    --primary-large-tabs-scale: 1;
+    --primary-density: 1;
+    --base-ui-scale-preference: var(--primary-ui-scale-preference);
+    --base-ui-scale-factor: var(--primary-ui-scale);
+    --base-large-tabs-multiplier: var(--primary-large-tabs-scale);
+    --base-effective-ui-scale: calc(
+        var(--base-ui-scale-factor) * var(--base-large-tabs-multiplier)
+            * var(--primary-density)
+    );
+
+    --primary-space-0: 0;
+    --primary-size-neg-1: -1;
+    --primary-space-1: 2;
+    --primary-space-1-5: 3;
+    --primary-space-2: 4;
+    --primary-space-2-5: 5;
+    --primary-space-3: 6;
+    --primary-space-4: 8;
+    --primary-space-4-5: 10;
+    --primary-space-5: 12;
+    --primary-space-6: 16;
+    --primary-space-7: 20;
+    --primary-space-8: 24;
+    --primary-space-9: 32;
+    --primary-space-10: 48;
+    --primary-space-neg-1: -2;
+    --primary-space-neg-2: -4;
+    --primary-space-neg-3: -6;
+
+    --primary-border-w: 1;
+
+    --primary-radius-sm: 2;
+    --primary-radius: 3;
+    --primary-radius-md: 6;
+    --primary-radius-lg: 10;
+    --primary-radius-pill: 14;
+
+    --primary-z-index-1: 1;
+    --primary-z-index-10: 10;
+    --primary-z-index-19: 19;
+    --primary-z-index-20: 20;
+    --primary-z-index-30: 30;
+    --primary-z-index-50: 50;
+    --primary-z-index-999: 999;
+    --primary-z-index-9999: 9999;
+    --primary-z-index-10000: 10000;
+    --primary-z-index-10020: 10020;
+    --primary-z-index-10050: 10050;
+    --primary-z-index-99998: 99998;
+    --primary-z-index-99999: 99999;
+    --primary-z-index-100000: 100000;
+    --primary-z-index-max: 2147483647;
+
+    --primary-grid-repeat-3: 3;
+    --primary-grid-repeat-4: 4;
+    --primary-grid-line-start: 1;
+    --primary-grid-line-end: -1;
+    --primary-grid-fr-1: 1fr;
+    --primary-grid-fr-08: 0.8fr;
+    --primary-grid-auto: auto;
+    --primary-display-flex: flex;
+    --primary-justify-content-stretch: stretch;
+    --primary-justify-content-start: start;
+    --primary-justify-content-space-between: space-between;
+    --primary-align-self-stretch: stretch;
+    --primary-align-self-end: end;
+    --primary-flex-direction-column: column;
+    --primary-flex-fixed: 0 0;
+    --primary-flex-none: 0 0 auto;
+    --primary-flex-fill: 1;
+    --primary-flex-auto-start: 0 1 auto;
+    --primary-flex-fluid: 1 1;
+    --primary-flex-fluid-auto: 1 1 auto;
+    --primary-flex-fluid-zero: 1 1 0;
+    --primary-flex-shrink-none: 0;
+    --primary-vh-100: 100vh;
+    --primary-border-none: none;
+    --primary-order-10: 10;
+
+    --primary-size-1: 1;
+    --primary-size-2: 2;
+    --primary-size-3: 3;
+    --primary-size-4: 4;
+    --primary-size-4-5: 4.5;
+    --primary-size-5: 5;
+    --primary-size-5-5: 5.5;
+    --primary-size-6: 6;
+    --primary-size-8: 8;
+    --primary-size-9: 9;
+    --primary-size-10: 10;
+    --primary-size-11: 11;
+    --primary-size-12: 12;
+    --primary-size-13: 13;
+    --primary-size-14: 14;
+    --primary-size-16: 16;
+    --primary-size-18: 18;
+    --primary-size-20: 20;
+    --primary-size-21: 21;
+    --primary-size-22: 22;
+    --primary-size-23: 23;
+    --primary-size-24: 24;
+    --primary-size-25: 25;
+    --primary-size-26: 26;
+    --primary-size-28: 28;
+    --primary-size-30: 30;
+    --primary-size-36: 36;
+    --primary-size-40: 40;
+    --primary-size-42: 42;
+    --primary-size-54: 54;
+    --primary-size-58: 58;
+    --primary-size-64: 64;
+    --primary-size-66: 66;
+    --primary-size-70: 70;
+    --primary-size-72: 72;
+    --primary-size-80: 80;
+    --primary-size-100: 100;
+    --primary-size-106: 106;
+    --primary-size-180: 180;
+    --primary-size-120: 120;
+    --primary-size-132: 132;
+    --primary-size-200: 200;
+    --primary-size-210: 210;
+    --primary-size-220: 220;
+    --primary-size-240: 240;
+    --primary-size-280: 280;
+    --primary-size-320: 320;
+    --primary-size-360: 360;
+    --primary-size-420: 420;
+    --primary-size-500: 500;
+    --primary-size-28-6: 28.6;
+    --primary-size-31-2: 31.2;
+    --primary-size-30-3: 30.3;
+    --primary-size-54-6: 54.6;
+    --primary-size-170: 170;
+    --primary-size-384: 384;
+    --primary-size-408: 408;
+    --primary-size-2x: 6;
+    --primary-size-3x: 9;
+
+    --primary-cursor-action: pointer;
+    --primary-cursor-default: default;
+    --primary-cursor-disabled: not-allowed;
+    --primary-cursor-drag: grab;
+    --primary-cursor-dragging: grabbing;
+    --primary-cursor-text-edit: text;
+
+    --primary-text-flow-normal: normal;
+    --primary-text-flow-nowrap: nowrap;
+    --primary-text-flow-pre: pre;
+    --primary-text-flow-pre-wrap: pre-wrap;
+
+    --base-space-0: calc(
+        var(--primary-space-0) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-1: calc(
+        var(--primary-space-1) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-1-5: calc(
+        var(--primary-space-1-5) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-2: calc(
+        var(--primary-space-2) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-2-5: calc(
+        var(--primary-space-2-5) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-3: calc(
+        var(--primary-space-3) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-4: calc(
+        var(--primary-space-4) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-4-5: calc(
+        var(--primary-space-4-5) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-5: calc(
+        var(--primary-space-5) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-6: calc(
+        var(--primary-space-6) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-7: calc(
+        var(--primary-space-7) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-8: calc(
+        var(--primary-space-8) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-9: calc(
+        var(--primary-space-9) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-10: calc(
+        var(--primary-space-10) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-neg-1: calc(
+        var(--primary-space-neg-1) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-neg-2: calc(
+        var(--primary-space-neg-2) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-neg-3: calc(
+        var(--primary-space-neg-3) * 1px * var(--base-effective-ui-scale)
+    );
+
+    --base-border-w: calc(
+        var(--primary-border-w) * 1px * var(--base-effective-ui-scale)
+    );
+
+    --base-radius-sm: calc(
+        var(--primary-radius-sm) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-radius: calc(
+        var(--primary-radius) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-radius-md: calc(
+        var(--primary-radius-md) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-radius-lg: calc(
+        var(--primary-radius-lg) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-radius-pill: calc(
+        var(--primary-radius-pill) * 1px * var(--base-effective-ui-scale)
+    );
+
+    --base-z-index-content-base: var(--primary-z-index-1);
+    --base-z-index-timeline-header: var(--primary-z-index-10);
+    --base-z-index-saving-bar: var(--primary-z-index-19);
+    --base-z-index-app-header: var(--primary-z-index-20);
+    --base-z-index-folder-balloon: var(--primary-z-index-30);
+    --base-z-index-50: var(--primary-z-index-50);
+    --base-z-index-panel-nav: var(--primary-z-index-999);
+    --base-z-index-donation-modal: var(--primary-z-index-9999);
+    --base-z-index-token-menu: var(--primary-z-index-10000);
+    --base-z-index-tooltip: var(--primary-z-index-10000);
+    --base-z-index-popup: var(--primary-z-index-10020);
+    --base-z-index-install-modal: var(--primary-z-index-10050);
+    --base-z-index-token-drop-caret: var(--primary-z-index-99998);
+    --base-z-index-token-ghost: var(--primary-z-index-99999);
+    --base-z-index-debug-skin: var(--primary-z-index-100000);
+    --base-z-index-open-doc-menu: var(--primary-z-index-max);
+
+    --base-grid-repeat-3: var(--primary-grid-repeat-3);
+    --base-grid-repeat-4: var(--primary-grid-repeat-4);
+    --base-grid-line-start: var(--primary-grid-line-start);
+    --base-grid-line-end: var(--primary-grid-line-end);
+    --base-grid-fr-1: var(--primary-grid-fr-1);
+    --base-grid-fr-08: var(--primary-grid-fr-08);
+    --base-grid-auto: var(--primary-grid-auto);
+    --base-display-flex: var(--primary-display-flex);
+    --base-justify-content-stretch: var(--primary-justify-content-stretch);
+    --base-justify-content-start: var(--primary-justify-content-start);
+    --base-justify-content-space-between: var(
+        --primary-justify-content-space-between
+    );
+    --base-align-self-stretch: var(--primary-align-self-stretch);
+    --base-align-self-end: var(--primary-align-self-end);
+    --base-flex-direction-column: var(--primary-flex-direction-column);
+    --base-flex-fixed: var(--primary-flex-fixed);
+    --base-flex-none: var(--primary-flex-none);
+    --base-flex-fill: var(--primary-flex-fill);
+    --base-flex-auto-start: var(--primary-flex-auto-start);
+    --base-flex-fluid: var(--primary-flex-fluid);
+    --base-flex-fluid-auto: var(--primary-flex-fluid-auto);
+    --base-flex-fluid-zero: var(--primary-flex-fluid-zero);
+    --base-flex-shrink-none: var(--primary-flex-shrink-none);
+    --base-vh-100: var(--primary-vh-100);
+    --base-border-none: var(--primary-border-none);
+    --base-order-10: var(--primary-order-10);
+
+    --base-size-neg-1: calc(
+        var(--primary-size-neg-1) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-1: calc(
+        var(--primary-size-1) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-2: calc(
+        var(--primary-size-2) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-3: calc(
+        var(--primary-size-3) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-4: calc(
+        var(--primary-size-4) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-4-5: calc(
+        var(--primary-size-4-5) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-5: calc(
+        var(--primary-size-5) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-5-5: calc(
+        var(--primary-size-5-5) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-6: calc(
+        var(--primary-size-6) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-8: calc(
+        var(--primary-size-8) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-9: calc(
+        var(--primary-size-9) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-10: calc(
+        var(--primary-size-10) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-11: calc(
+        var(--primary-size-11) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-12: calc(
+        var(--primary-size-12) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-13: calc(
+        var(--primary-size-13) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-14: calc(
+        var(--primary-size-14) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-16: calc(
+        var(--primary-size-16) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-18: calc(
+        var(--primary-size-18) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-20: calc(
+        var(--primary-size-20) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-21: calc(
+        var(--primary-size-21) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-22: calc(
+        var(--primary-size-22) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-23: calc(
+        var(--primary-size-23) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-24: calc(
+        var(--primary-size-24) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-25: calc(
+        var(--primary-size-25) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-26: calc(
+        var(--primary-size-26) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-28: calc(
+        var(--primary-size-28) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-30: calc(
+        var(--primary-size-30) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-36: calc(
+        var(--primary-size-36) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-40: calc(
+        var(--primary-size-40) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-42: calc(
+        var(--primary-size-42) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-54: calc(
+        var(--primary-size-54) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-58: calc(
+        var(--primary-size-58) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-64: calc(
+        var(--primary-size-64) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-66: calc(
+        var(--primary-size-66) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-70: calc(
+        var(--primary-size-70) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-72: calc(
+        var(--primary-size-72) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-80: calc(
+        var(--primary-size-80) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-100: calc(
+        var(--primary-size-100) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-106: calc(
+        var(--primary-size-106) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-180: calc(
+        var(--primary-size-180) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-120: calc(
+        var(--primary-size-120) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-132: calc(
+        var(--primary-size-132) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-200: calc(
+        var(--primary-size-200) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-210: calc(
+        var(--primary-size-210) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-220: calc(
+        var(--primary-size-220) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-240: calc(
+        var(--primary-size-240) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-280: calc(
+        var(--primary-size-280) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-320: calc(
+        var(--primary-size-320) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-360: calc(
+        var(--primary-size-360) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-420: calc(
+        var(--primary-size-420) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-500: calc(
+        var(--primary-size-500) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-28-6: calc(
+        var(--primary-size-28-6) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-31-2: calc(
+        var(--primary-size-31-2) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-30-3: calc(
+        var(--primary-size-30-3) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-54-6: calc(
+        var(--primary-size-54-6) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-size-170: calc(
+        var(--primary-size-170) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-token-quarter-basis: calc(
+        25% - (var(--primary-space-2) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-dialog-max-width: calc(
+        100vw - (var(--primary-size-36) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-compare-menu-width: calc(
+        100vw - (var(--primary-size-20) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-open-doc-menu-max-height: calc(
+        100vh - (var(--primary-size-12) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-popup-top-offset: calc(
+        100% + (var(--primary-space-2) * 1px * var(--base-effective-ui-scale))
+    );
+    --base-space-1x2: calc(
+        var(--primary-size-2x) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-1x3: calc(
+        var(--primary-size-3x) * 1px * var(--base-effective-ui-scale)
+    );
+
+    --base-pct-0: var(--primary-pct-0);
+    --base-pct-25: var(--primary-pct-25);
+    --base-pct-35: var(--primary-pct-35);
+    --base-pct-40: var(--primary-pct-40);
+    --base-pct-50: var(--primary-pct-50);
+    --base-pct-55: var(--primary-pct-55);
+    --base-pct-60: var(--primary-pct-60);
+    --base-pct-68: var(--primary-pct-68);
+    --base-pct-100: var(--primary-pct-100);
+    --base-pct-neg-50: var(--primary-pct-neg-50);
+    --base-pct-neg-80: var(--primary-pct-neg-80);
+    --base-pct-neg-95: var(--primary-pct-neg-95);
+    --base-pct-neg-100: var(--primary-pct-neg-100);
+    --base-pct-neg-120: var(--primary-pct-neg-120);
+    --base-pct-250: var(--primary-pct-250);
+    --base-pct-400: var(--primary-pct-400);
+
+    --base-cursor-action: var(--primary-cursor-action);
+    --base-cursor-default: var(--primary-cursor-default);
+    --base-cursor-disabled: var(--primary-cursor-disabled);
+    --base-cursor-drag: var(--primary-cursor-drag);
+    --base-cursor-dragging: var(--primary-cursor-dragging);
+    --base-cursor-text-edit: var(--primary-cursor-text-edit);
+
+    --base-text-flow-normal: var(--primary-text-flow-normal);
+    --base-text-flow-nowrap: var(--primary-text-flow-nowrap);
+    --base-text-flow-pre: var(--primary-text-flow-pre);
+    --base-text-flow-pre-wrap: var(--primary-text-flow-pre-wrap);
+}
+
+html.ui-large-tabs {
+    --primary-large-tabs-scale: 1.08;
+}

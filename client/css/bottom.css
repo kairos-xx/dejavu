@@ -1,56 +1,56 @@
-/* ================================================================
-   Bottom bar, status label, donation and reset controls
-   ================================================================ */
-
-.footer__reset .svg-icon {
-    --icon-size: var(--dimension-14);
-    display: block;
+.settings-reset .svg-icon {
+    --icon-size: var(--settings-reset-icon-size);
 }
 
-.footer__reset {
-    margin-left: var(--dimension-6);
-    padding: 0;
-    border: 0;
-    border-radius: 0;
+.settings-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--settings-reset-gap);
+    padding: var(--settings-reset-padding);
+    border: var(--settings-reset-border);
+    border-radius: var(--settings-reset-border-radius);
     background: transparent;
-    cursor: pointer;
+    cursor: var(--cursor-action);
     color: var(--text-dim);
-    transition: color 0.12s ease, transform 0.12s ease;
+    transition: var(--settings-reset-transition);
 }
 
-.footer__reset:hover,
-.footer__reset:focus-visible {
+.settings-reset:hover,
+.settings-reset:focus-visible {
     outline: none;
     color: var(--text);
-    transform: rotate(-18deg) scale(1.08);
 }
 
-.footer__reset.is-armed,
-html.theme-light .footer__reset.is-armed {
-    color: var(--danger) !important;
-    transform: scale(1.1);
+.settings-reset:hover .svg-icon,
+.settings-reset:focus-visible .svg-icon {
+    transform: var(--footer-reset-hover-transform);
 }
 
-/* ---------------------------------------------------------------- */
-/* Footer                                                             */
-/* ---------------------------------------------------------------- */
+.settings-reset.is-armed,
+html.theme-light .settings-reset.is-armed {
+    color: var(--danger);
+}
+
+.settings-reset.is-armed .svg-icon,
+html.theme-light .settings-reset.is-armed .svg-icon {
+    transform: var(--footer-reset-armed-transform);
+}
+
 .app__footer {
     position: relative;
-    margin-top: auto;
-    padding: var(--dimension-4) var(--dimension-14);
+    padding: var(--app__footer-padding);
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-7);
-    flex: 0 0 auto;
+    gap: var(--app__footer-gap);
+    flex: var(--app__footer-flex);
 }
 
 .footer__hint {
-    font-size: var(--dimension-10-5);
     color: var(--text-dim);
-    min-height: var(--dimension-13);
+    min-height: var(--footer__hint-min-height);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: var(--text-flow-nowrap);
 }
 
 .footer__hint--warn {
@@ -61,43 +61,36 @@ html.theme-light .footer__reset.is-armed {
     color: var(--ok);
 }
 
-/* ---------------------------------------------------------------- */
-/* First-install donation splash                                     */
-/* ---------------------------------------------------------------- */
-
 .footer__message-row {
     display: flex;
     align-items: center;
-    gap: var(--dimension-7);
-    min-height: var(--dimension-18);
+    gap: var(--footer__message-row-gap);
+    min-height: var(--footer__message-row-min-height);
 }
 
 .footer__message-row .footer__hint {
-    flex: 1 1 auto;
-    min-width: 0;
+    flex: var(--footer__message-row-hint-flex);
+    min-width: var(--footer__message-row-hint-min-width);
 }
 
-/* The "Buy me a coffee" affordance — an icon button in the footer that
-   opens the support card. Same stroke language as the table icons. */
 .footer__coffee {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--dimension-22);
-    height: var(--dimension-22);
-    min-width: var(--dimension-22);
-    padding: 0;
-    border: none;
-    border-radius: var(--radius);
+    width: var(--footer__coffee-width);
+    height: var(--footer__coffee-height);
+    min-width: var(--footer__coffee-min-width);
+    padding: var(--footer__coffee-padding);
+    border: var(--footer__coffee-border);
+    border-radius: var(--footer__coffee-border-radius);
     background: transparent;
     color: var(--text-dim);
-    cursor: pointer;
-    transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+    cursor: var(--cursor-action);
+    transition: var(--footer__coffee-transition);
 }
 
 .footer__coffee .svg-icon {
-    --icon-size: var(--dimension-16);
-    display: block;
+    --icon-size: var(--footer-coffee-icon-size);
 }
 
 .footer__coffee:hover,
@@ -106,18 +99,14 @@ html.theme-light .footer__reset.is-armed {
     outline: none;
 }
 
-.footer__coffee:active {
-    transform: translateY(var(--dimension-1));
-}
-
 .donation-modal {
     position: fixed;
-    inset: 0;
-    z-index: 9999;
+    inset: var(--donation-modal-inset);
+    z-index: var(--donation-modal-z-index);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--dimension-18);
+    padding: var(--donation-modal-padding);
 }
 
 .donation-modal--hidden {
@@ -126,35 +115,65 @@ html.theme-light .footer__reset.is-armed {
 
 .donation-modal__scrim {
     position: absolute;
-    inset: 0;
+    inset: var(--donation-modal__scrim-inset);
     background: var(--color-overlay-strong);
 }
 
 .donation-card {
     position: relative;
-    z-index: 1;
-    width: min(var(--dimension-360), calc(100vw - var(--dimension-36)));
-    border: var(--dimension-1) solid var(--border-strong);
-    border-radius: var(--dimension-9);
+    z-index: var(--modal-card-z-index);
+    display: flex;
+    flex-direction: column;
+    gap: var(--donation-card-gap);
+    width: var(--donation-card-width);
+    border: var(--donation-card-border);
+    border-radius: var(--donation-card-border-radius);
     background: var(--bg-raised);
-    box-shadow: 0 var(--dimension-8) var(--dimension-28) var(--shadow);
-    padding: var(--dimension-18);
+    box-shadow: var(--donation-card-box-shadow);
+    padding: var(--donation-card-padding);
     color: var(--text);
 }
 
+.donation-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--donation-card__header-gap);
+}
+
+.donation-card__project-icon {
+    --icon-size: var(--donation-card__project-icon-size);
+    flex: var(--donation-card__project-icon-flex);
+    color: var(--accent);
+}
+
+.donation-card__heading {
+    display: flex;
+    flex: var(--donation-card__heading-flex);
+    flex-direction: column;
+    gap: var(--donation-card__heading-gap);
+    min-width: var(--donation-card__heading-min-width);
+}
+
+.donation-card__identity {
+    display: flex;
+    align-items: center;
+    gap: var(--donation-card__identity-gap);
+}
+
 .donation-card__close {
-    position: absolute;
-    top: var(--dimension-8);
-    right: var(--dimension-8);
-    width: var(--dimension-24);
-    height: var(--dimension-24);
-    border: var(--dimension-1) solid transparent;
-    border-radius: 50%;
+    --icon-size: var(--donation-card__close-icon-size);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: var(--donation-card__close-flex);
+    width: var(--donation-card__close-width);
+    height: var(--donation-card__close-height);
+    border: var(--donation-card__close-border);
+    border-radius: var(--donation-card__close-border-radius);
     background: transparent;
     color: var(--text-dim);
-    font-size: var(--dimension-18);
-    line-height: var(--dimension-20);
-    cursor: pointer;
+    cursor: var(--cursor-action);
+    transition: var(--donation-card__close-transition);
 }
 
 .donation-card__close:hover,
@@ -167,53 +186,33 @@ html.theme-light .footer__reset.is-armed {
 .donation-card__badge {
     display: inline-flex;
     align-items: center;
-    min-height: var(--dimension-18);
-    padding: var(--dimension-2) var(--dimension-7);
-    border: var(--dimension-1) solid var(--border-soft);
-    border-radius: var(--dimension-10);
+    width: fit-content;
+    min-height: var(--donation-card__badge-min-height);
+    padding: var(--donation-card__badge-padding);
+    border: var(--donation-card__badge-border);
+    border-radius: var(--donation-card__badge-border-radius);
     background: var(--bg-input-well);
     color: var(--text-dim);
-    font-size: var(--dimension-9-5);
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-weight: var(--donation-card__badge-font-weight);
+    letter-spacing: var(--donation-card__badge-letter-spacing);
     text-transform: uppercase;
 }
 
 .donation-card h2 {
-    display: flex;
-    align-items: center;
-    gap: var(--dimension-8);
-    margin: var(--dimension-12) var(--dimension-28) var(--dimension-8) 0;
+    margin: var(--donation-card-h2-margin);
     color: var(--text-bright);
-    font-size: var(--dimension-18);
-    line-height: 1.2;
-}
-
-.donation-card__cup {
-    flex: 0 0 auto;
-    color: var(--accent);
-}
-
-.donation-card__cup path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    line-height: var(--donation-card-h2-line-height);
 }
 
 .donation-card p {
-    margin: 0;
+    margin: var(--donation-card-p-margin);
     color: var(--text-dim);
-    font-size: var(--dimension-11);
-    line-height: 1.45;
+    line-height: var(--donation-card-p-line-height);
 }
 
 .donation-card__version {
-    margin: var(--dimension-6) 0 0;
     color: var(--text-dim);
-    font-size: var(--dimension-10);
-    font-family: var(--mono);
+    font-family: var(--font-family-code);
 }
 
 .donation-card__version:empty {
@@ -222,16 +221,15 @@ html.theme-light .footer__reset.is-armed {
 
 .donation-card__github {
     display: inline-block;
-    margin: var(--dimension-10) 0 0;
+    margin: var(--donation-card__github-margin);
     color: var(--accent);
-    font-size: var(--dimension-10);
-    text-decoration: none;
+    text-decoration: var(--text-decoration-none);
     word-break: break-all;
 }
 
 .donation-card__github:hover,
 .donation-card__github:focus-visible {
-    text-decoration: underline;
+    text-decoration: var(--text-decoration-underline);
 }
 
 .donation-card__github:empty {
@@ -240,43 +238,41 @@ html.theme-light .footer__reset.is-armed {
 
 .donation-form {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(var(--dimension-96), 0.8fr);
-    gap: var(--dimension-8);
-    margin: var(--dimension-14) 0 var(--dimension-12);
+    grid-template-columns: var(--donation-form-grid-template-columns);
+    gap: var(--donation-form-gap);
+    margin: var(--donation-form-margin);
 }
 
 .donation-field {
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-4);
+    gap: var(--donation-field-gap);
     color: var(--text-dim);
-    font-size: var(--dimension-10);
 }
 
 .donation-field input,
 .donation-field select {
-    min-height: var(--dimension-21);
-    font-family: var(--mono);
+    min-height: var(--donation-field-control-min-height);
+    font-family: var(--font-family-code);
 }
 
 .donation-actions {
     display: flex;
-    gap: var(--dimension-7);
+    gap: var(--donation-actions-gap);
     align-items: center;
-    margin-top: var(--dimension-10);
+    margin-top: var(--donation-actions-margin-top);
 }
 
 .donation-actions .btn {
-    flex: 1 1 0;
+    flex: var(--donation-actions-btn-flex);
 }
 
 .donation-note {
-    margin-top: var(--dimension-12) !important;
-    font-size: var(--dimension-10) !important;
+    margin-top: var(--donation-note-margin-top) !important;
 }
 
 .footer__hint:empty::before {
     content: "Ready";
     color: var(--text-dim);
-    opacity: 0.65;
+    opacity: var(--footer__hint-opacity);
 }

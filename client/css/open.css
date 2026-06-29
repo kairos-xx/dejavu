@@ -1,52 +1,36 @@
-/* ================================================================
-   Open Documents drawer
-   ================================================================ */
-
-/* ---------------------------------------------------------------- */
-/* Multi-document overview (Open documents drawer)                   */
-/* ---------------------------------------------------------------- */
-
 .open-docs {
-    max-height: var(--dimension-240);
+    max-height: var(--open-docs-max-height);
 }
 
-/* While a sequential Save all / bulk Save runs, the list and its bulk
-   controls are dimmed and non-interactive so the in-progress state reads
-   clearly and clicks can't stack. */
 .open-docs--busy {
-    opacity: 0.6;
+    opacity: var(--open-docs-busy-opacity);
     pointer-events: none;
 }
 
-/* Contiguous rows inside the well — hairline divided, hover-highlighted,
-   and marked with an inset accent rail when selected, exactly like the
-   snapshot rows in the timeline. */
 .open-doc {
     position: relative;
     display: flex;
     align-items: center;
-    gap: var(--dimension-9);
-    padding: var(--dimension-6) var(--dimension-18) var(--dimension-6) var(--dimension-8);
-    transition: background 0.12s ease;
+    gap: var(--open-doc-gap);
+    padding: var(--open-doc-padding);
+    transition: var(--open-doc-transition);
 }
 
 .open-docs__day .open-doc:not(:last-child) {
-    border-bottom: var(--dimension-1) solid var(--border-soft);
+    border-bottom: var(--open-docs__day-open-doc-border-bottom);
 }
 
 .open-doc:hover {
     background: var(--bg-hover);
 }
 
-/* Active = the current document. A quiet accent-dim rail, overridden by
-   the brighter accent rail when the row is also selected. */
 .open-doc--active {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent-dim);
+    box-shadow: var(--open-doc-active-box-shadow);
 }
 
 .open-doc--selected {
     background: var(--accent-glow);
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent);
+    box-shadow: var(--open-doc-selected-box-shadow);
 }
 
 .open-doc__dot {
@@ -62,40 +46,36 @@
 }
 
 .open-doc__dot .svg-icon {
-    --icon-size: var(--dimension-16);
+    --icon-size: var(--open-doc__dot-svg-icon-icon-size);
 }
 
 .open-doc__main {
-    flex: 1 1 auto;
-    min-width: 0;
+    flex: var(--open-doc-main-flex);
+    min-width: var(--open-doc-main-min-width);
 }
 
 .open-doc__name-row {
     display: flex;
     align-items: center;
-    gap: var(--dimension-6);
-    min-height: var(--dimension-14);
+    gap: var(--open-doc__name-row-gap);
+    min-height: var(--open-doc__name-row-min-height);
 }
 
-/* Filename as a link: monospaced like the other table filenames, with a
-   dotted underline + colour shift on hover. Click activates the document
-   (⌘/Ctrl-click reveals it in Finder). */
 .open-doc__name {
     -webkit-appearance: none;
     appearance: none;
-    padding: 0;
-    border: 0;
-    border-bottom: var(--dimension-1) dotted transparent;
+    padding: var(--open-doc__name-padding);
+    border: var(--open-doc__name-border);
+    border-bottom: var(--open-doc__name-border-bottom);
     background: transparent;
-    font-family: var(--mono);
-    font-size: var(--dimension-11);
+    font-family: var(--font-family-code);
     color: var(--accent);
     text-align: left;
-    cursor: pointer;
+    cursor: var(--cursor-action);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
+    white-space: var(--text-flow-nowrap);
+    min-width: var(--open-doc__name-min-width);
 }
 
 .open-doc__name:hover,
@@ -105,39 +85,35 @@
     outline: none;
 }
 
-/* Unsaved-changes marker before the filename. */
 .open-doc__unsaved {
-    flex: 0 0 auto;
+    flex: var(--open-doc__unsaved-flex);
     display: inline-flex;
     align-items: center;
     color: var(--warn);
 }
 
 .open-doc__unsaved .svg-icon {
-    --icon-size: var(--dimension-12);
+    --icon-size: var(--open-doc__unsaved-svg-icon-icon-size);
     display: block;
 }
 
-/* Last-saved relative label — mirrors the Timeline / Recovery time
-   chips, with a fixed min-width so it never jitters the row. */
 .open-doc .snapshot__time-container {
-    flex: 0 0 auto;
+    flex: var(--open-doc__snapshot-time-container-flex);
 }
 
 .open-doc__rel {
-    flex: 0 0 auto;
-    min-width: 0;
+    flex: var(--open-doc__rel-flex);
+    min-width: var(--open-doc__rel-min-width);
     text-align: left;
-    font-family: var(--mono);
-    font-size: var(--dimension-9);
+    font-family: var(--font-family-code);
     color: var(--text-dim);
-    white-space: nowrap;
+    white-space: var(--text-flow-nowrap);
 }
 
 .open-doc__actions {
-    flex: 0 0 auto;
+    flex: var(--open-doc__actions-flex);
     display: flex;
-    gap: var(--space-1);
+    gap: var(--open-doc__actions-gap);
 }
 
 .open-doc__split-action {
@@ -147,37 +123,41 @@
 }
 
 .open-doc__split-action--bulk {
-    flex: 0 0 auto;
+    flex: var(--open-doc__split-action-bulk-flex);
     height: auto;
-    border: 0;
-    border-radius: var(--radius);
+    border: var(--open-doc__split-action-bulk-border);
+    border-radius: var(--open-doc__split-action-bulk-border-radius);
     background: transparent;
     overflow: visible;
 }
 
 .open-doc__split-action .open-doc__action--save {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-top-right-radius: var(
+        --open-doc__split-action-save-border-top-right-radius
+    );
+    border-bottom-right-radius: var(
+        --open-doc__split-action-save-border-bottom-right-radius
+    );
 }
 
 .open-doc__action-arrow {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: var(--dimension-22);
-    padding: 0;
-    border: 0;
-    border-radius: 0 var(--radius) var(--radius) 0;
+    height: var(--open-doc__action-arrow-height);
+    padding: var(--open-doc__action-arrow-padding);
+    border: var(--open-doc__action-arrow-border);
+    border-radius: var(--open-doc__action-arrow-border-radius);
     background: transparent;
     color: var(--text-dim);
-    cursor: pointer;
-    transition: color 0.12s ease, background 0.12s ease;
+    cursor: var(--cursor-action);
+    transition: var(--open-doc__action-arrow-transition);
 }
 
 .open-doc__chevron {
     position: static;
-    width: var(--dimension-10);
-    height: var(--dimension-10);
+    width: var(--open-doc__chevron-width);
+    height: var(--open-doc__chevron-height);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -185,8 +165,8 @@
 }
 
 .open-doc__chevron svg {
-    width: var(--dimension-8);
-    height: var(--dimension-8);
+    width: var(--open-doc__chevron-svg-width);
+    height: var(--open-doc__chevron-svg-height);
     display: block;
     color: currentColor;
 }
@@ -201,17 +181,17 @@
 .open-doc__action-arrow[aria-expanded="true"] .open-doc__chevron,
 .open-doc__split-action.is-open .open-doc__chevron {
     color: var(--accent);
-    transform: rotate(180deg);
+    transform: var(--open-doc-chevron-open-transform);
 }
 
 .open-doc-menu {
     position: fixed;
-    z-index: 2147483647;
+    z-index: var(--open-doc-menu-z-index);
     isolation: isolate;
     width: auto;
-    min-width: 0;
+    min-width: var(--open-doc-menu-min-width);
     overflow: visible;
-    max-height: min(var(--dimension-240), calc(100vh - var(--dimension-12)));
+    max-height: var(--open-doc-menu-max-height);
 }
 
 .open-doc-menu[aria-hidden="false"] {
@@ -221,49 +201,50 @@
 .open-doc-menu__item {
     display: inline-flex;
     align-items: center;
-    grid-template-columns: minmax(0, 1fr);
-    min-height: var(--dimension-21);
+    grid-template-columns: var(--open-doc-menu__item-grid-template-columns);
+    min-height: var(--open-doc-menu__item-min-height);
     width: auto !important;
-    padding-left: var(--dimension-8);
-    padding-right: var(--dimension-8);
-    white-space: nowrap;
+    padding-left: var(--open-doc-menu__item-padding-left);
+    padding-right: var(--open-doc-menu__item-padding-right);
+    white-space: var(--text-flow-nowrap);
 }
 
 .open-doc-menu__item .select-menu__label {
     overflow: visible;
     text-overflow: clip;
-    white-space: nowrap;
+    white-space: var(--text-flow-nowrap);
 }
 
 .open-doc__bulk-save-main {
-    flex: 0 0 auto;
-    /* height: var(--bulk-control-h); */
-    min-height: var(--bulk-control-h);
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    background: var(--accent-dim);
+    flex: var(--open-doc__bulk-save-main-flex);
+    min-height: var(--open-doc__bulk-save-main-min-height);
+    border-top-right-radius: var(
+        --open-doc__bulk-save-main-border-top-right-radius
+    );
+    border-bottom-right-radius: var(
+        --open-doc__bulk-save-main-border-bottom-right-radius
+    );
+    color: var(--accent-dim);
     color: var(--text);
-    font-family: var(--sans);
-    font-size: var(--dimension-10);
-    padding: 0 var(--dimension-6);
+    font-family: var(--font-family-app);
+    padding: var(--open-doc__bulk-save-main-padding);
 }
 
 .open-doc__bulk-save-arrow {
-    flex: 0 0 var(--dimension-14);
-    /* width: var(--dimension-14); */
-    /* height: var(--bulk-control-h); */
-    /* min-height: var(--bulk-control-h); */
+    flex: var(--open-doc__bulk-save-arrow-flex);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* min-width: var(--dimension-14); */
-    /* padding-left: 0; */
-    margin-left: calc(var(--dimension-1) * -1);
+    margin-left: var(--open-doc__bulk-save-arrow-margin-left);
     border-color: var(--border);
-    border-left: var(--dimension-1) solid var(--border);
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    background: var(--accent-dim);
+    border-left: var(--open-doc__bulk-save-arrow-border-left);
+    border-top-left-radius: var(
+        --open-doc__bulk-save-arrow-border-top-left-radius
+    );
+    border-bottom-left-radius: var(
+        --open-doc__bulk-save-arrow-border-bottom-left-radius
+    );
+    color: var(--accent-dim);
     color: var(--text-dim);
 }
 
@@ -275,36 +256,33 @@
 .open-doc__split-action--bulk:hover .open-doc__bulk-save-arrow,
 .open-doc__split-action--bulk.is-open .open-doc__bulk-save-main,
 .open-doc__split-action--bulk.is-open .open-doc__bulk-save-arrow {
-    background: var(--accent);
+    color: var(--accent);
     border-color: var(--border-strong);
     color: var(--accent-text);
 }
 
 .open-doc__split-action--bulk:hover .open-doc__chevron,
 .open-doc__split-action--bulk.is-open .open-doc__chevron {
-    color: var(--accent-text) !important;
+    color: var(--accent-text);
 }
 
-/* Row actions are icon buttons in the same stroke language as the
-   toolbar's table-toggle icons: transparent, dim by default, brightening
-   (or taking a state colour) on hover. */
 .open-doc__action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--row-action-size);
-    height: var(--row-action-size);
-    padding: 0;
-    border: none;
-    border-radius: var(--radius);
+    width: var(--open-doc__action-width);
+    height: var(--open-doc__action-height);
+    padding: var(--open-doc__action-padding);
+    border: var(--open-doc__action-border);
+    border-radius: var(--open-doc__action-border-radius);
     background: transparent;
     color: var(--text-dim);
-    cursor: pointer;
-    transition: color 0.12s ease, background 0.12s ease;
+    cursor: var(--cursor-action);
+    transition: var(--open-doc__action-transition);
 }
 
 .open-doc__action .svg-icon {
-    --icon-size: var(--dimension-16);
+    --icon-size: var(--open-doc__action-svg-icon-icon-size);
     display: flex;
     position: relative;
 }
@@ -312,10 +290,10 @@
 .open-doc__action .svg-icon::before {
     content: "";
     position: absolute;
-    inset: -4px;
-    border-radius: var(--radius);
+    inset: var(--open-doc__action-svg-icon-inset);
+    border-radius: var(--open-doc__action-svg-icon-border-radius);
     background-color: transparent;
-    transition: background-color 0.12s ease;
+    transition: var(--open-doc__action-svg-icon-transition);
 }
 
 .open-doc__action:hover {
@@ -323,12 +301,9 @@
 }
 
 .open-doc__action:hover .svg-icon::before {
-    background-color: var(--bg-hover);
+    background: var(--bg-hover);
 }
 
-/* Power toggle: with the "Dejavu off/on" text removed (N21), the
-   button itself signals state — green with a soft fill when on, dim
-   when off. */
 .open-doc__action--on,
 .open-doc__action--on:hover {
     color: var(--ok);

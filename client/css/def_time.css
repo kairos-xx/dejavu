@@ -1,0 +1,60 @@
+:root {
+    --primary-time: 1s;
+    --primary-time-scale-0: 0;
+    --primary-time-scale-001: 0.001;
+    --primary-time-scale-01: 0.1;
+    --primary-time-scale-02: 0.2;
+    --primary-time-scale-05: 0.5;
+    --primary-time-scale-2: 2;
+
+    --primary-ease-standard: ease;
+    --primary-ease-in-out: ease-in-out;
+    --primary-ease-linear: linear;
+    --primary-ease-material: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --primary-animation-direction-alternate: alternate;
+    --primary-animation-iteration-infinite: infinite;
+    --primary-animation-iteration-once: 1;
+    --primary-animation-iteration-pulse: 3;
+    --primary-animation-name-countdown-pie-save-pulse: countdown-pie-save-pulse;
+    --primary-animation-name-dot-saving-pulse: dot-saving-pulse;
+    --primary-animation-name-refresh-spin: refresh-spin;
+    --primary-animation-name-progress-indeterminate: progress-indeterminate;
+    --primary-animation-none: none;
+    --primary-scroll-behavior-auto: auto;
+
+    --base-time-0: calc(var(--primary-time) * var(--primary-time-scale-0));
+    --base-time-1ms: calc(var(--primary-time) * var(--primary-time-scale-001));
+    --base-time-100ms: calc(var(--primary-time) * var(--primary-time-scale-01));
+    --base-time-200ms: calc(var(--primary-time) * var(--primary-time-scale-02));
+    --base-time-500ms: calc(var(--primary-time) * var(--primary-time-scale-05));
+    --base-time-1s: var(--primary-time);
+    --base-time-2s: calc(var(--primary-time) * var(--primary-time-scale-2));
+
+    --base-ease-standard: var(--primary-ease-standard);
+    --base-ease-in-out: var(--primary-ease-in-out);
+    --base-ease-linear: var(--primary-ease-linear);
+    --base-ease-material: var(--primary-ease-material);
+    --base-animation-direction-alternate: var(
+        --primary-animation-direction-alternate
+    );
+    --base-animation-iteration-infinite: var(
+        --primary-animation-iteration-infinite
+    );
+    --base-animation-iteration-once: var(--primary-animation-iteration-once);
+    --base-animation-iteration-pulse: var(--primary-animation-iteration-pulse);
+    --base-animation-name-countdown-pie-save-pulse: var(
+        --primary-animation-name-countdown-pie-save-pulse
+    );
+    --base-animation-name-dot-saving-pulse: var(
+        --primary-animation-name-dot-saving-pulse
+    );
+    --base-animation-name-refresh-spin: var(
+        --primary-animation-name-refresh-spin
+    );
+    --base-animation-name-progress-indeterminate: var(
+        --primary-animation-name-progress-indeterminate
+    );
+    --base-animation-none: var(--primary-animation-none);
+    --base-scroll-behavior-auto: var(--primary-scroll-behavior-auto);
+}

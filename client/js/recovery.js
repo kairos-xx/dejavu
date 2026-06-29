@@ -309,7 +309,12 @@ const renderRecoveryCenter = () => {
 
             const node = document.createElement("div");
             const noteText = getSnapshotNote(candidate.path);
-            node.className = `snapshot${(isProtected ? " snapshot--pinned" : "")}${(noteText ? " snapshot--comment" : "")}${(isRecoverySelected(candidate.path) ? " snapshot--selected" : "")}`;
+            node.className = DEJAVU.classNames(
+                "snapshot",
+                isProtected && "snapshot--pinned",
+                noteText && "snapshot--comment",
+                isRecoverySelected(candidate.path) && "snapshot--selected"
+            );
             node.tabIndex = 0;
             node.dataset.path = candidate.path;
             node.addEventListener("mouseenter", () => {
@@ -432,10 +437,13 @@ const renderRecoveryCenter = () => {
             const notes = state.settings.snapshotNotes || {};
             const note = notes[candidate.path] || "";
             const noteEl = document.createElement("div");
-            noteEl.className = `snapshot__note${(note ? "" : " snapshot__note--empty")}`;
+            noteEl.className = DEJAVU.classNames(
+                "snapshot__note",
+                !note && "snapshot__note--empty"
+            );
             noteEl.textContent = note || "Note";
             noteEl.title = "Double-click to edit note";
-            
+
             if (candidate.exists === false) {
                 noteEl.title = "File no longer exists - cannot edit note";
                 noteEl.classList.add("snapshot__note--missing");

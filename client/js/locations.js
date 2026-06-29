@@ -200,13 +200,24 @@ const applyFolderSelection = (folderPath) => {
  * doesn't exist yet, neutral = empty). Debounced by the caller.
  */
 const validateFolderInput = () => {
-    if (!el.folderValidity) return;
     const value = (el.folderInput ? el.folderInput.value : "") || "";
+    // The inline validity dot + folder-field wrapper were removed in the
+    // settings refactor; the validation logic below (folderValidated, folder
+    // status, folder-template preview) still runs — only the visual indicator
+    // is painted, and only when those elements are present.
     const setState = (cls, title) => {
-        el.folderValidity.className = `folder-validity ${cls}`;
-        el.folderValidity.title = title;
+        if (el.folderValidity) {
+            el.folderValidity.className = DEJAVU.classNames(
+                "folder-validity",
+                cls
+            );
+            el.folderValidity.title = title;
+        }
         if (el.folderField) {
-            el.folderField.className = `folder-field ${cls.replace("folder-validity--", "folder-field--")}`;
+            el.folderField.className = DEJAVU.classNames(
+                "folder-field",
+                cls.replace("folder-validity--", "folder-field--")
+            );
         }
     };
     if (!value.trim()) {

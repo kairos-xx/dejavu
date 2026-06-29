@@ -1,0 +1,545 @@
+#similarityPanel .token-chip__pill {
+    gap: var(--similarity-panel-token-chip-pill-gap);
+}
+
+#similarityIndexControls {
+    display: var(--similarity-index-controls-display);
+    flex-direction: var(--similarity-index-controls-flex-direction);
+    gap: var(--similarity-index-controls-gap);
+}
+
+.similarity-search {
+    display: flex;
+    flex-direction: column;
+    gap: var(--similarity-search-gap);
+}
+
+.comparison-settings__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--comparison-settings-group-gap);
+    border-bottom: var(--comparison-settings-group-border-bottom);
+    padding: var(--comparison-settings-group-padding);
+}
+
+.comparison-settings__group:last-child {
+    border-bottom: var(--border-none);
+}
+
+.comparison-settings__group-title {
+    font-weight: var(--settings-title-font-weight);
+    text-transform: none;
+    color: var(--text);
+    margin-bottom: var(--comparison-settings-group-title-margin-bottom);
+    margin-left: var(--comparison-settings-group-title-margin-left);
+}
+
+.comparison-settings__group-hint {
+    margin: var(--comparison-settings-group-hint-margin);
+    line-height: var(--comparison-settings-group-hint-line-height);
+    color: var(--text-dim);
+}
+
+.comparison-settings__grid {
+    display: grid;
+    grid-template-columns: var(--comparison-settings-grid-template-columns);
+    gap: var(--comparison-settings-grid-gap);
+}
+
+.comparison-settings__grid .comparison-settings__field,
+.comparison-settings__row-pair .comparison-settings__field {
+    padding: var(--comparison-settings-field-padding);
+    border-bottom: var(--comparison-settings-field-border-bottom);
+    display: flex;
+    align-self: var(--comparison-settings-field-align-self);
+}
+
+#comparisonSettingsPanel .comparison-settings__group-title {
+    color: var(--comparison-settings-panel-group-title-color);
+}
+
+#comparisonSettingsPanel .settings-field-title {
+    color: var(--comparison-settings-panel-field-title-color);
+}
+
+#comparisonSettingsPanel .comparison-settings__field.field-group--embedded {
+    padding: var(--comparison-settings-panel-embedded-padding);
+    border-bottom: var(--comparison-settings-panel-embedded-border-bottom);
+}
+
+#comparisonSettingsPanel .mini-field {
+    gap: var(--comparison-settings-panel-field-gap);
+}
+
+#comparisonSettingsPanel .checkbox {
+    min-height: var(--comparison-settings-panel-checkbox-min-height);
+}
+
+.comparison-settings__grid .comparison-settings__field--wide {
+    grid-column: var(--comparison-settings-wide-field-grid-column);
+}
+
+.comparison-settings__row-pair {
+    display: grid;
+    grid-template-columns: var(--comparison-settings-row-pair-grid-template-columns);
+    grid-auto-rows: var(--comparison-settings-row-pair-grid-auto-rows);
+    align-items: stretch;
+    gap: var(--comparison-settings-row-pair-gap);
+}
+
+.comparison-settings__row-pair + .comparison-settings__grid,
+.comparison-settings__grid + .comparison-settings__row-pair {
+    margin-top: var(
+        --comparison-settings-grid-row-cluster-margin-top
+    );
+}
+
+.comparison-settings__grid .mini-field > span:first-child,
+.comparison-settings__row-pair .mini-field > span:first-child {
+    display: flex;
+    align-items: flex-end;
+    white-space: var(--text-flow-normal);
+    font-size: var(--settings-field-title-font-size);
+    font-weight: var(--settings-field-title-font-weight);
+    letter-spacing: var(--settings-field-title-letter-spacing);
+}
+
+.comparison-settings__grid .checkbox,
+.comparison-settings__row-pair .checkbox {
+    align-items: center;
+}
+
+.comparison-settings__grid .field-hint,
+.comparison-settings__row-pair .field-hint {
+    margin-top: var(
+        --comparison-settings-row-hint-margin-top
+    );
+}
+
+@media (max-width: var(--wide-menu-width)) {
+    .settings-grid,
+    .settings-grid--three,
+    .comparison-settings__grid,
+    .comparison-settings__row-pair {
+        grid-template-columns: var(--comparison-settings-responsive-grid-template-columns);
+    }
+}
+
+.comparison-settings__field .field-hint {
+    margin-top: var(--comparison-settings-field-hint-margin-top);
+}
+
+.comparison-settings__token-field {
+    gap: var(--comparison-settings-token-field-gap);
+}
+
+.similar-token-editor {
+    min-height: var(--similar-token-editor-min-height);
+    cursor: var(--cursor-default);
+}
+
+.similar-token-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--similar-token-pool-gap);
+}
+
+.similar-token-pool[hidden] {
+    display: none;
+}
+
+.comparison-settings__field.is-disabled {
+    opacity: var(--comparison-settings-disabled-opacity);
+}
+
+.comparison-settings__field.is-disabled .checkbox,
+.comparison-settings__field.is-disabled .ms__trigger {
+    cursor: var(--cursor-disabled);
+}
+
+.comparison-settings__field.is-disabled .number-input-group,
+.comparison-settings__field.is-disabled .ms,
+.comparison-settings__field.is-disabled .tok,
+.comparison-settings__field.is-disabled .token-shell,
+.comparison-settings__field.is-disabled .bytesize {
+    pointer-events: none;
+}
+
+.similar-progress {
+    display: grid;
+    gap: var(--similar-progress-gap);
+    width: var(--similar-progress-width);
+    margin-top: var(--similar-progress-margin-top);
+}
+
+.similar-progress[hidden] {
+    display: none;
+}
+
+.similar-progress__labels {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--similar-progress__labels-gap);
+    color: var(--text-dim);
+    line-height: var(--similar-progress__labels-line-height);
+}
+
+.similar-progress__labels span:first-child {
+    min-width: var(--similar-progress__label-primary-min-width);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: var(--text-flow-nowrap);
+}
+
+.similar-progress__labels span:last-child {
+    flex: var(--similar-progress__label-secondary-flex);
+    font-family: var(--font-family-code);
+}
+
+.similar-progress__track {
+    width: var(--similar-progress__track-width);
+    height: var(--similar-progress__track-height);
+    overflow: hidden;
+    border-radius: var(--similar-progress__track-border-radius);
+    border-color: var(--border-soft);
+    background: var(--similar-progress__track-background);
+}
+
+.similar-progress__bar {
+    width: var(--similar-progress__bar-width);
+    height: var(--similar-progress__bar-height);
+    border-radius: inherit;
+    background: var(--similar-progress__bar-background);
+    transition: var(--similar-progress__bar-transition);
+}
+
+.similar-progress.is-active .similar-progress__bar {
+    width: var(--similar-progress__bar-indeterminate-width);
+    animation: var(--similar-progress-is-active-similar-progress__bar-animation);
+}
+
+.similar-row:not(:last-child) {
+    border-bottom: var(--similar-row-border-bottom);
+}
+
+.similar-row__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--similar-row__head-gap);
+    width: var(--similar-row__head-width);
+    padding: var(--similar-row__head-padding);
+    border: var(--similar-row__head-border);
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    cursor: var(--cursor-default);
+}
+
+.similar-row__top {
+    display: grid;
+    grid-template-columns: var(--similar-row__top-grid-template-columns);
+    align-items: center;
+    gap: var(--similar-row__top-gap);
+    width: var(--similar-row__top-width);
+}
+
+.similar-engine {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--similar-engine-gap);
+    min-width: var(--similar-engine-min-width);
+    height: var(--similar-engine-height);
+    padding: var(--similar-engine-padding);
+    border: var(--similar-engine-border);
+    border-radius: var(--similar-engine-border-radius);
+    background: var(--bg-input);
+    color: var(--text-dim);
+    line-height: var(--similar-engine-line-height);
+    white-space: var(--text-flow-nowrap);
+}
+
+.similar-engine svg {
+    width: var(--similar-engine-svg-width);
+    height: var(--similar-engine-svg-height);
+}
+
+.similar-engine__mono {
+    font-family: var(--font-family-code);
+    font-weight: var(--similar-engine__mono-font-weight);
+    line-height: var(--similar-engine__mono-line-height);
+}
+
+.similar-engine--inkscape {
+    border-color: var(--color-engine-inkscape-border);
+    color: var(--ok);
+}
+
+.similar-engine--ai2svg {
+    border-color: var(--color-engine-ai2svg-border);
+    color: var(--accent);
+}
+
+.similar-engine--illustrator {
+    border-color: var(--color-engine-illustrator-border);
+    color: var(--warn);
+}
+
+.similar-engine--embedded,
+.similar-engine--svg,
+.similar-engine--direct,
+.similar-engine--unknown {
+    color: var(--accent);
+}
+
+.similar-engine--svg {
+    border-color: var(--color-engine-svg-border);
+    color: var(--color-format-svg);
+}
+
+.similar-row__mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--similar-row__mini-gap);
+    color: var(--text-dim);
+}
+
+.similar-mini {
+    white-space: var(--text-flow-nowrap);
+    letter-spacing: var(--similar-mini-letter-spacing);
+}
+
+.similar-mini strong {
+    font-weight: var(--similar-mini-strong-font-weight);
+    font-family: var(--font-family-code);
+}
+
+.similar-mini--similar strong {
+    color: var(--ok);
+}
+
+.similar-mini--changed strong {
+    color: var(--warn);
+}
+
+.similar-mini--new strong {
+    color: var(--accent);
+}
+
+.similar-mini--removed strong {
+    color: var(--danger);
+}
+
+.similar-row__name {
+    display: inline-block;
+    justify-self: start;
+    min-width: var(--similar-row__name-min-width);
+    width: fit-content;
+    max-width: var(--similar-row__name-max-width);
+    overflow: hidden;
+    color: var(--accent);
+    font-family: var(--font-family-code);
+    text-overflow: ellipsis;
+    white-space: var(--text-flow-nowrap);
+    vertical-align: bottom;
+    border-bottom: var(--similar-row__name-border-bottom);
+}
+
+.similar-row__name--link {
+    cursor: var(--cursor-action);
+}
+
+.similar-row__name--link:hover {
+    color: var(--text-bright);
+    color: var(--accent);
+    text-decoration: var(--text-decoration-none);
+}
+
+.similar-row__score {
+    font-family: var(--font-family-code);
+    font-weight: var(--similar-row__score-font-weight);
+    color: var(--text-bright);
+}
+
+.similar-row__date {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--similar-row__date-min-width);
+    height: var(--similar-row__date-height);
+    padding: var(--similar-row__date-padding);
+    border-radius: var(--similar-row__date-border-radius);
+    background: var(--bg-hover);
+    color: var(--text-dim);
+    font-weight: var(--similar-row__date-font-weight);
+    text-transform: none;
+    white-space: var(--text-flow-nowrap);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.similar-row__detail {
+    display: none;
+    padding: var(--similar-row__detail-padding);
+}
+
+.version-list.is-extended .similar-row__detail {
+    display: block;
+}
+
+#similarityToggles {
+    justify-content: flex-start;
+    margin: var(--similarity-toggles-margin);
+}
+
+.similar-row__counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--similar-row__counts-gap);
+    margin: var(--similar-row__counts-margin);
+}
+
+.sim-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sim-pill-gap);
+    padding: var(--sim-pill-padding);
+    border: var(--sim-pill-border);
+    border-radius: var(--sim-pill-border-radius);
+    background: var(--bg-input-well);
+    color: var(--text-dim);
+}
+
+.sim-pill strong {
+    color: var(--text-bright);
+    font-weight: var(--sim-pill-strong-font-weight);
+}
+
+.sim-pill--similar {
+    color: var(--ok);
+    color: var(--ok);
+}
+
+.sim-pill--similar strong {
+    color: var(--ok);
+}
+
+.sim-pill--changed {
+    color: var(--warn);
+    color: var(--warn);
+}
+
+.sim-pill--changed strong {
+    color: var(--warn);
+}
+
+.sim-pill--new {
+    color: var(--accent);
+    color: var(--accent);
+}
+
+.sim-pill--new strong {
+    color: var(--accent);
+}
+
+.sim-pill--removed {
+    color: var(--danger);
+    color: var(--danger);
+}
+
+.sim-pill--removed strong {
+    color: var(--danger);
+}
+
+.similar-row__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--similar-row__stats-gap);
+    margin: var(--similar-row__stats-margin);
+    color: var(--text);
+}
+
+.similar-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--similar-metric-gap);
+    min-height: var(--similar-metric-min-height);
+    padding: var(--similar-metric-padding);
+    border: var(--similar-metric-border);
+    border-radius: var(--similar-metric-border-radius);
+    background: var(--bg-input);
+    white-space: var(--text-flow-nowrap);
+}
+
+.similar-metric__label {
+    color: var(--text-dim);
+}
+
+.similar-metric__value {
+    color: var(--text-bright);
+    font-family: var(--font-family-code);
+    font-weight: var(--similar-metric__value-font-weight);
+}
+
+.sim-breakdown {
+    display: grid;
+    grid-template-columns: var(--sim-breakdown-grid-template-columns);
+    align-items: center;
+    gap: var(--sim-breakdown-gap);
+    margin: var(--sim-breakdown-margin);
+    padding: var(--sim-breakdown-padding);
+    border-radius: var(--sim-breakdown-border-radius);
+    background: var(--bg-input-well);
+}
+
+.sim-aspect {
+    display: contents;
+}
+
+.sim-aspect__label {
+    color: var(--text-dim);
+    white-space: var(--text-flow-nowrap);
+}
+
+.sim-aspect__track {
+    position: relative;
+    height: var(--sim-aspect__track-height);
+    border-radius: var(--sim-aspect__track-border-radius);
+    background: var(--bg-hover);
+    overflow: hidden;
+}
+
+.sim-aspect__fill {
+    position: absolute;
+    left: var(--sim-aspect__fill-left);
+    top: var(--sim-aspect__fill-top);
+    bottom: var(--sim-aspect__fill-bottom);
+    border-radius: var(--sim-aspect__fill-border-radius);
+    color: var(--accent);
+}
+
+.sim-aspect__fill.is-high {
+    color: var(--ok);
+}
+
+.sim-aspect__fill.is-low {
+    color: var(--danger);
+}
+
+.sim-aspect__val {
+    font-family: var(--font-family-code);
+    font-weight: var(--sim-aspect__val-font-weight);
+    color: var(--text-bright);
+    text-align: right;
+    min-width: var(--sim-aspect__val-min-width);
+}
+
+.similar-row__meta {
+    font-family: var(--font-family-code);
+    color: var(--text-dim);
+    line-height: var(--similar-row__meta-line-height);
+}
+
+.similar-row__actions {
+    margin-top: var(--similar-row__actions-margin-top);
+}

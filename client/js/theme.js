@@ -407,9 +407,9 @@ const DejaVuTheme = (() => {
 
     /**
      * Derives a complete UI palette from a single real background
-     * color, anchored against Illustrator's known real chrome values
-     * (Darkest #1E1E1E, Dark #323232, Light #F5F5F5, Lightest #FFFFFF,
-     * with Medium Dark/Medium Light falling between). Rather than
+     * color, anchored against the same chrome values used by def_colors.css
+     * (Darkest #323232, Dark #535353, Light #B9B9B9, Lightest #F0F0F0).
+     * Rather than
      * bucketing into fixed presets, every surface is computed as an
      * offset from the measured background, scaled by how dark/light
      * that background already is — so the relative contrast feels
@@ -450,7 +450,11 @@ const DejaVuTheme = (() => {
         const maxUp = Math.min(40, (255 - bgLum) * 0.6);
 
         const raisedAmount = isDark ? lerp(10, 6, depth) : -lerp(10, 6, depth);
-        const inputAmount = -Math.min(lerp(16, 22, depth), maxDown);
+        // Fields (text inputs, dropdowns, spin-boxes) read LIGHTER than the
+        // panel in Illustrator — near-white on light skins, a touch lighter
+        // than the panel on dark skins — so they stand out from the panel and
+        // from buttons. (Wells stay darker/recessed for chips and tracks.)
+        const inputAmount = isDark ? lerp(16, 11, depth) : 0;
         const wellAmount = -Math.min(lerp(26, 34, depth), maxDown);
         const hoverAmount = isDark
             ? Math.min(lerp(16, 10, depth), maxUp)
@@ -470,7 +474,9 @@ const DejaVuTheme = (() => {
             : -Math.min(60, maxDown);
 
         const bgRaised = shade(bgRgb, raisedAmount);
-        const bgInput = shade(bgRgb, inputAmount);
+        // Light skins: pure-white fields like Illustrator. Dark skins: a step
+        // lighter than the panel.
+        const bgInput = isDark ? shade(bgRgb, inputAmount) : [255, 255, 255];
         const bgInputWell = shade(bgRgb, wellAmount);
         const bgHover = shade(bgRgb, hoverAmount);
         const border = shade(bgRgb, borderAmount);
@@ -513,29 +519,29 @@ const DejaVuTheme = (() => {
         const danger = isDark ? [217, 111, 111] : [168, 54, 54];
 
         return {
-            "--color-base-background": toHex(bgRgb),
-            "--color-base-raised": toHex(bgRaised),
-            "--color-base-input": toHex(bgInput),
-            "--color-base-input-well": toHex(bgInputWell),
-            "--color-base-hover": toHex(bgHover),
-            "--color-base-border": toHex(border),
-            "--color-base-border-soft": toHex(borderSoft),
-            "--color-base-border-strong": toHex(borderStrong),
-            "--color-base-text": toHex(text),
-            "--color-base-text-dim": toHex(textDim),
-            "--color-base-text-bright": toHex(textBright),
-            "--color-base-accent": toHex(accent),
-            "--color-base-accent-dim": toHex(accentDim),
-            "--color-base-accent-text": toHex(accentText),
-            "--color-base-ok": toHex(ok),
-            "--color-base-warn": toHex(warn),
-            "--color-base-danger": toHex(danger),
-            "--color-base-accent-glow": toRgba(
+            "--base-color-background": toHex(bgRgb),
+            "--base-color-raised": toHex(bgRaised),
+            "--base-color-input": toHex(bgInput),
+            "--base-color-input-well": toHex(bgInputWell),
+            "--base-color-hover": toHex(bgHover),
+            "--base-color-border": toHex(border),
+            "--base-color-border-soft": toHex(borderSoft),
+            "--base-color-border-strong": toHex(borderStrong),
+            "--base-color-text": toHex(text),
+            "--base-color-text-dim": toHex(textDim),
+            "--base-color-text-bright": toHex(textBright),
+            "--base-color-accent": toHex(accent),
+            "--base-color-accent-dim": toHex(accentDim),
+            "--base-color-accent-text": toHex(accentText),
+            "--base-color-ok": toHex(ok),
+            "--base-color-warn": toHex(warn),
+            "--base-color-danger": toHex(danger),
+            "--base-color-accent-glow": toRgba(
                 accent,
                 isDark ? 0.28 : 0.22
             ),
-            "--color-base-warn-tint": toRgba(warn, isDark ? 0.16 : 0.13),
-            "--color-base-ok-tint": toRgba(ok, isDark ? 0.16 : 0.13),
+            "--base-color-warn-tint": toRgba(warn, isDark ? 0.16 : 0.13),
+            "--base-color-ok-tint": toRgba(ok, isDark ? 0.16 : 0.13),
             "_isDark": isDark,
             "_skin": skin
         };
@@ -558,13 +564,12 @@ const DejaVuTheme = (() => {
         const largeTabsMultiplier = hasLargeTabs ? 1.08 : 1;
         const effectiveScale = scale * largeTabsMultiplier;
 
-        style.setProperty("--ui-scale-preference", String(rawPreference));
-        style.setProperty("--ui-scale-factor", String(scale));
+        style.setProperty("--primary-ui-scale-preference", String(rawPreference));
+        style.setProperty("--primary-ui-scale", String(scale));
         style.setProperty(
-            "--ui-large-tabs-multiplier",
+            "--primary-large-tabs-scale",
             String(largeTabsMultiplier)
         );
-        style.setProperty("--effective-ui-scale", String(effectiveScale));
         root.classList.toggle("ui-large-tabs", hasLargeTabs);
         root.classList.toggle("ui-compact-tabs", !hasLargeTabs);
         root.dataset.uiScale = String(scale);
@@ -580,17 +585,35 @@ const DejaVuTheme = (() => {
     const applyPalette = (palette, skin) => {
         const root = document.documentElement;
         const style = root.style;
+        // Colours now live in the per-skin CSS map (html[data-skin="…"] in
+        // style.css) — the single editable source of truth. theme.js only
+        // selects the skin; it must NOT write --base-color-* inline, or those
+        // inline values would override (and defeat) the map.
         Object.keys(palette).forEach((key) => {
             if (key.charAt(0) === "_") return;
+            if (key.indexOf("--base-color-") === 0) return;
             style.setProperty(key, palette[key]);
         });
+        // Feed the measured/snapped panel + accent colours into the safe color
+        // seed layer. def_colors.css maps each skin to concrete Illustrator
+        // panel colours, while these values keep the default/root fallback
+        // aligned with the host until the skin is known.
+        if (palette["--base-color-background"]) {
+            style.setProperty(
+                "--primary-color", palette["--base-color-background"]);
+        }
+        if (palette["--base-color-accent"]) {
+            style.setProperty(
+                "--primary-color-accent", palette["--base-color-accent"]);
+        }
+        if (palette["--base-color-accent-dim"]) {
+            style.setProperty("--primary-color-accent-dim",
+                palette["--base-color-accent-dim"]);
+        }
         root.classList.toggle("theme-dark", !!palette._isDark);
         root.classList.toggle("theme-light", !palette._isDark);
         root.dataset.skin = palette._skin
             || (palette._isDark ? "dark" : "light");
-        if (skin.fontSize && skin.fontSize > 0) {
-            style.setProperty("--base-font-size-raw", `${skin.fontSize}px`);
-        }
         applyUiScale(root, style, skin);
         document.dispatchEvent(
             new CustomEvent("dejavuai:theme-applied", {
@@ -615,10 +638,56 @@ const DejaVuTheme = (() => {
         document.documentElement.dataset.theme = isDark ? "dark" : "light";
     };
 
+    // Debug override: when a skin is forced from the UI, the host poll must
+    // not revert it.
+    let forced = false;
+
+    // Canonical panel colours for the four Illustrator brightness presets,
+    // used by the debug skin override.
+    const FORCE_RGB = {
+        darkest: [50, 50, 50],
+        dark: [83, 83, 83],
+        light: [185, 185, 185],
+        lightest: [240, 240, 240]
+    };
+
+    /**
+     * Debug: force a brightness skin (darkest/dark/light/lightest), or "auto"
+     * to resume host-driven sync. Only re-seeds the colour system + data-skin;
+     * it deliberately leaves UI scale/font untouched.
+     * @param {string} name
+     * @return {string|null}
+     */
+    const forceSkin = (name) => {
+        const root = document.documentElement;
+        if (!name || name === "auto") {
+            forced = false;
+            syncTheme();
+            return "auto";
+        }
+        const rgb = FORCE_RGB[name];
+        if (!rgb) return null;
+        forced = true;
+        const palette = derivePalette(rgb);
+        const style = root.style;
+        style.setProperty("--primary-color", palette["--base-color-background"]);
+        style.setProperty(
+            "--primary-color-accent", palette["--base-color-accent"]);
+        style.setProperty(
+            "--primary-color-accent-dim", palette["--base-color-accent-dim"]);
+        root.classList.toggle("theme-dark", !!palette._isDark);
+        root.classList.toggle("theme-light", !palette._isDark);
+        root.dataset.skin = name;
+        root.dataset.themeSource = "forced";
+        onThemeKnown(!!palette._isDark);
+        return name;
+    };
+
     /**
      * Reads the current skin and applies the derived theme.
      */
     const syncTheme = async () => {
+        if (forced) return null;
         const skin = await readHostSkin();
         if (typeof console !== "undefined" && console.log && log) {
             console.log(
@@ -694,7 +763,8 @@ const DejaVuTheme = (() => {
     return {
         init,
         syncTheme,
-        derivePalette
+        derivePalette,
+        forceSkin
     };
 })();
 

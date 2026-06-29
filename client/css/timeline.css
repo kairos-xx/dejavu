@@ -1,89 +1,73 @@
-/* ================================================================
-   Timeline drawer
-   ================================================================ */
-
-.version-list {
-    /* max-height: var(--dimension-280); */
-    margin-top: var(--dimension-4);
-}
-
 .timeline-day {
-    padding: 0;
+    padding: var(--timeline-day-padding);
 }
 
 .timeline-day__header {
     position: sticky;
-    top: 0;
-    z-index: 10;
+    top: var(--timeline-day__header-top);
+    z-index: var(--timeline-day-header-z-index);
     box-sizing: border-box;
-    height: var(--day-header-h, var(--dimension-26));
+    height: var(--timeline-day__header-height);
     display: flex;
     align-items: center;
-    gap: var(--dimension-8);
-    padding: var(--dimension-10);
+    gap: var(--timeline-day__header-gap);
+    padding: var(--timeline-day__header-padding);
     background: var(--bg-raised);
-    border-bottom: var(--dimension-1) solid var(--border-soft);
-    box-shadow: inset 0 var(--dimension-neg-1) 0 var(--border-soft);
+    border-bottom: var(--timeline-day__header-border-bottom);
+    box-shadow: var(--timeline-day__header-box-shadow);
 }
 
 .timeline-day__label {
-    font-size: var(--dimension-10);
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+    font-weight: var(--timeline-day__label-font-weight);
+    letter-spacing: var(--timeline-day__label-letter-spacing);
+    text-transform: none;
     color: var(--text-dim);
 }
 
 .timeline-day__count {
-    width: var(--dimension-26);
-    max-width: var(--dimension-26);
-    height: var(--dimension-14);
+    width: var(--timeline-day__count-width);
+    max-width: var(--timeline-day__count-max-width);
+    height: var(--timeline-day__count-height);
     margin-left: auto;
-    margin-right: var(--dimension-1);
-    padding: 0 var(--dimension-5);
-    min-width: var(--dimension-26);
-    border-radius: var(--dimension-12);
+    margin-right: var(--timeline-day__count-margin-right);
+    padding: var(--timeline-day__count-padding);
+    min-width: var(--timeline-day__count-min-width);
+    border-radius: var(--timeline-day__count-border-radius);
     background: var(--bg-input);
     color: var(--text-dim);
-    font-size: var(--dimension-9);
-    font-family: var(--mono);
+    font-family: var(--font-family-code);
     display: inline-flex;
     align-items: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: var(--text-flow-nowrap);
     justify-content: center;
 }
 
-/* The rail: a single vertical line that the dots sit on. */
 .timeline-rail {
     position: relative;
-    padding: var(--dimension-4) 0;
+    padding: var(--timeline-rail-padding);
 }
 
 .timeline-rail::before {
     content: "";
     position: absolute;
-    left: var(--dimension-14);
-    top: 0;
-    bottom: 0;
-    width: var(--dimension-1);
-    background: var(--border);
+    left: var(--timeline-rail-left);
+    top: var(--timeline-rail-top);
+    bottom: var(--timeline-rail-bottom);
+    width: var(--timeline-rail-width);
+    border-color: var(--border);
 }
 
-/* Light-mode contrast: the panel's soft borders wash out on near-white
-   chrome, so the timeline connector rail and the round select boxes of
-   all three tables need a darker line to stay legible. */
 html.theme-light .timeline-rail::before {
-    background: var(--border-strong);
+    border-color: var(--border-strong);
 }
 
 .snapshot {
     position: relative;
-    padding: var(--dimension-4) var(--dimension-18) var(--dimension-4) var(--dimension-28);
+    padding: var(--snapshot-padding);
     outline: none;
-    transition: background 0.12s ease;
-    /* display: flex; */
+    transition: var(--snapshot-transition);
 }
 
 .snapshot:hover,
@@ -93,116 +77,106 @@ html.theme-light .timeline-rail::before {
 
 .snapshot--selected {
     background: var(--accent-glow);
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent);
+    box-shadow: var(--snapshot-selected-box-shadow);
 }
 
 .snapshot:focus-visible {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent);
+    box-shadow: var(--snapshot-box-shadow);
 }
 
 .snapshot--pinned {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent-dim),
-                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin);
+    box-shadow: var(--snapshot-pinned-box-shadow);
 }
 
 .snapshot--comment {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent-dim),
-                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-note);
+    box-shadow: var(--snapshot-comment-box-shadow);
 }
 
 .snapshot--pinned.snapshot--comment {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent-dim),
-                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin),
-                inset calc(var(--dimension-2) * 3) 0 0 var(--color-row-flag-note);
+    box-shadow: var(--snapshot-pinned-comment-box-shadow);
 }
 
 .snapshot--selected.snapshot--pinned {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent),
-                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin);
+    box-shadow: var(--snapshot-selected-pinned-box-shadow);
 }
 
 .snapshot--selected.snapshot--comment {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent),
-                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-note);
+    box-shadow: var(--snapshot-selected-comment-box-shadow);
 }
 
 .snapshot--selected.snapshot--pinned.snapshot--comment {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent),
-                inset calc(var(--dimension-2) * 2) 0 0 var(--color-row-flag-pin),
-                inset calc(var(--dimension-2) * 3) 0 0 var(--color-row-flag-note);
+    box-shadow: var(--snapshot-selected-pinned-comment-box-shadow);
 }
 
-/* The node dot, centered on the rail line at left:var(--dimension-14). */
 .snapshot__dot {
     -webkit-appearance: none;
     appearance: none;
     position: absolute;
-    left: var(--dimension-10);
-    top: var(--dimension-7);
-    width: var(--dimension-9);
-    height: var(--dimension-9);
-    border-radius: 50%;
-    background: var(--bg-input-well);
-    border: var(--dimension-2) solid var(--border-strong);
+    left: var(--snapshot__dot-left);
+    top: var(--snapshot__dot-top);
+    width: var(--snapshot__dot-width);
+    height: var(--snapshot__dot-height);
+    border-radius: var(--snapshot__dot-border-radius);
+    background: var(--bg-raised);
+    border: var(--snapshot__dot-border);
     box-sizing: border-box;
-    padding: 0;
-    cursor: pointer;
-    transition: border-color 0.12s ease, background 0.12s ease;
+    padding: var(--snapshot__dot-padding);
+    cursor: var(--cursor-action);
+    transition: var(--snapshot__dot-transition);
 }
 
 .snapshot:hover .snapshot__dot {
-    border-color: var(--text-dim);
+    color: var(--border-dim);
 }
 
 .snapshot__dot:focus-visible {
-    outline: var(--dimension-1) solid var(--accent);
-    outline-offset: var(--dimension-2);
+    outline: var(--snapshot__dot-outline);
+    outline-offset: var(--snapshot__dot-outline-offset);
 }
 
 .snapshot__dot:disabled {
-    cursor: not-allowed;
+    cursor: var(--cursor-disabled);
 }
 
 .snapshot--pinned .snapshot__dot {
     background: var(--color-row-pin-fill);
-    border-color: var(--warn-gold);
+    color: var(--warn-gold);
 }
 
-/* The latest snapshot is the current state â€” accent dot + glow. */
 .snapshot--latest .snapshot__dot {
-    background: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 var(--dimension-3) var(--accent-glow);
+    color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--snapshot-latest-snapshot__dot-box-shadow);
 }
 
 .snapshot--protected:not(.snapshot--latest) .snapshot__dot {
-    border-color: var(--warn);
+    color: var(--warn);
     background: var(--warn-tint);
 }
 
-/* Protected (pinned) on latest keeps blue fill and ring, yellow border */
 .snapshot--latest.snapshot--protected .snapshot__dot {
-    background: var(--accent);
-    border-color: var(--warn);
-    box-shadow: 0 0 0 var(--dimension-3) var(--accent-glow);
+    color: var(--accent);
+    color: var(--warn);
+    box-shadow: var(
+        --snapshot-latest-snapshot-protected-snapshot__dot-box-shadow
+    );
 }
 
 .snapshot--protected {
-    box-shadow: inset var(--dimension-2) 0 0 var(--warn-tint);
+    box-shadow: var(--snapshot-protected-box-shadow);
 }
 
 .snapshot--has-note {
-    box-shadow: inset var(--dimension-2) 0 0 var(--accent-glow);
+    box-shadow: var(--snapshot-has-note-box-shadow);
 }
 
-/* Cumulative borders: pinned + note */
 .snapshot--protected.snapshot--has-note {
-    box-shadow: inset var(--dimension-4) 0 0 var(--warn-tint), inset var(--dimension-2) 0 0 var(--accent-glow);
+    box-shadow: var(--snapshot-protected-snapshot-has-note-box-shadow);
 }
 
 .snapshot--missing {
     background: var(--bg-input-well);
-    opacity: 0.72;
+    opacity: var(--snapshot-missing-opacity);
 }
 
 .snapshot--missing:hover {
@@ -211,88 +185,83 @@ html.theme-light .timeline-rail::before {
 
 .snapshot--missing .snapshot__name,
 .snapshot--missing .snapshot__filename {
-    text-decoration: line-through !important;
-    color: var(--text-dim) !important;
+    text-decoration: var(--text-decoration-line-through) !important;
+    color: var(--text-dim);
 }
 
 .snapshot--missing .snapshot__name:hover,
 .snapshot--missing .snapshot__name:focus-visible,
 .snapshot--missing .snapshot__filename:hover,
 .snapshot--missing .snapshot__filename:focus-visible {
-    text-decoration: line-through !important;
+    text-decoration: var(--text-decoration-line-through) !important;
     border-bottom-color: transparent !important;
 }
 
 .snapshot--missing .snapshot__name:disabled,
 .snapshot--missing .snapshot__filename:disabled {
-    cursor: not-allowed;
+    cursor: var(--cursor-disabled);
 }
 
 .snapshot--missing .snapshot__delta {
-    opacity: 0.5;
+    opacity: var(--snapshot-missing-snapshot__delta-opacity);
     background: var(--bg-input-well);
     color: var(--text-dim);
 }
 
 .snapshot--missing .snapshot__dot {
-    opacity: 0.25;
+    opacity: var(--snapshot-missing-snapshot__dot-opacity);
 }
 
 .snapshot__time {
-    font-family: var(--mono);
-    font-size: var(--dimension-11);
+    font-family: var(--font-family-code);
     color: var(--text-bright);
-    font-weight: 500;
+    font-weight: var(--snapshot__time-font-weight);
 }
 
 button.snapshot__time {
     -webkit-appearance: none;
     appearance: none;
-    padding: 0 0 var(--dimension-1) 0;
-    border: var(--dimension-2) solid transparent;
+    padding: var(--button-snapshot__time-padding);
+    border: var(--button-snapshot__time-border);
     outline: none;
-    /* vertical-align: middle; */
     background: none;
-    font-family: var(--mono);
-    font-size: var(--dimension-11);
+    font-family: var(--font-family-code);
     color: var(--accent);
-    font-weight: 500;
-    cursor: pointer;
+    font-weight: var(--button-snapshot__time-font-weight);
+    cursor: var(--cursor-action);
     text-align: left;
-    flex: 0 1 auto;
-    /* min-width: 0; */
-    /* display: flex; */
+    flex: var(--button-snapshot__time-flex);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    border-bottom: var(--dimension-1) dotted transparent;
-    text-decoration: none;
-    text-underline-offset: var(--dimension-3);
+    white-space: var(--text-flow-nowrap);
+    border-bottom: var(--button-snapshot__time-border-bottom);
+    text-decoration: var(--text-decoration-none);
+    text-underline-offset: var(--button-snapshot__time-text-underline-offset);
 }
 
 button.snapshot__time:hover {
     color: var(--text-bright);
     border-bottom-color: transparent;
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
+    text-decoration-line: var(--text-decoration-line-underline);
+    text-decoration-style: var(--text-decoration-style-dotted);
 }
 
 button.snapshot__time:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
+    cursor: var(--cursor-disabled);
+    opacity: var(--button-snapshot__time-opacity);
 }
 
 .snapshot__top {
     display: flex;
     align-items: center;
-    gap: var(--dimension-6);
-    white-space: nowrap;
+    gap: var(--snapshot__top-gap);
+    white-space: var(--text-flow-nowrap);
 }
 
 .snapshot__time-container {
     margin-left: auto;
-    flex-shrink: 0;
-    margin-right: var(--dimension-2);
+    flex-shrink: var(--snapshot__time-container-flex-shrink);
+    margin-right: var(--snapshot__time-container-margin-right);
     display: flex;
     background: var(--bg-hover);
 }
@@ -300,51 +269,47 @@ button.snapshot__time:disabled {
 .snapshot__right-group {
     display: flex;
     align-items: center;
-    gap: var(--dimension-6);
-    flex-shrink: 0;
+    gap: var(--snapshot__right-group-gap);
+    flex-shrink: var(--snapshot__right-group-flex-shrink);
 }
 
 .snapshot__time-separator {
-    margin: 0 var(--dimension-6);
-    color: var(--border-strong);
-    font-size: var(--dimension-10);
+    margin: var(--snapshot__time-separator-margin);
+    border-color: var(--border-strong);
 }
 
-
-
 .snapshot__badge--first {
-    color: var(--text-dim) !important;
-    background: var(--bg-hover) !important;
+    color: var(--text-dim);
+    background: var(--bg-hover);
 }
 
 .snapshot__badge--protected {
     color: var(--warn);
     background: var(--warn-tint);
-    border: var(--dimension-1) solid var(--warn);
-    line-height: 1.2;
+    border: var(--snapshot__badge-protected-border);
+    line-height: var(--snapshot__badge-protected-line-height);
 }
 
 .snapshot__rel {
-    font-weight: 800;
-    width: var(--dimension-72);
-    font-size: var(--dimension-8-5);
-    letter-spacing: 0;
+    font-weight: var(--snapshot__rel-font-weight);
+    width: var(--snapshot__rel-width);
+    letter-spacing: var(--letter-spacing-none);
     color: var(--text-dim);
-    height: var(--dimension-14);
+    height: var(--snapshot__rel-height);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--dimension-2) var(--dimension-6);
-    border-radius: var(--dimension-3);
+    padding: var(--snapshot__rel-padding);
+    border-radius: var(--snapshot__rel-border-radius);
     background: var(--bg-hover);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    text-transform: uppercase;
+    white-space: var(--text-flow-nowrap);
+    text-transform: none;
 }
 
 .snapshot__top > .snapshot__rel {
-    margin-left: 0;
+    margin-left: var(--snapshot__top-rel-margin-left);
 }
 
 .snapshot__rel--under-size {
@@ -358,46 +323,43 @@ button.snapshot__time:disabled {
 .snapshot__meta {
     display: flex;
     align-items: center;
-    gap: var(--dimension-8);
-    margin-top: var(--dimension-2);
+    gap: var(--snapshot__meta-gap);
+    margin-top: var(--snapshot__meta-margin-top);
 }
 
 .snapshot__name {
     -webkit-appearance: none;
     appearance: none;
-    padding: 0;
-    border: 0;
-    border-bottom: var(--dimension-1) dotted transparent;
+    padding: var(--snapshot__name-padding);
+    border: var(--snapshot__name-border);
+    border-bottom: var(--snapshot__name-border-bottom);
     background: transparent;
-    font-family: var(--mono);
-    font-size: var(--dimension-11);
+    font-family: var(--font-family-code);
     color: var(--accent);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
+    white-space: var(--text-flow-nowrap);
+    min-width: var(--snapshot__name-min-width);
     text-align: left;
-    cursor: pointer;
+    cursor: var(--cursor-action);
 }
 
 .snapshot__name:hover,
 .snapshot__name:focus-visible {
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
-    text-underline-offset: var(--dimension-3);
+    text-decoration-line: var(--text-decoration-line-underline);
+    text-decoration-style: var(--text-decoration-style-dotted);
+    text-underline-offset: var(
+        --file-name-underline-offset
+    );
     border-bottom-color: currentColor;
     outline: none;
     color: var(--text-bright);
 }
 
-/* Recovery Center filename uses the exact same link style as the Open
-   Documents filename (N20): blue + monospaced var(--dimension-10), with a colour shift
-   and dotted underline on hover. */
 .snapshot__filename {
-    font-family: var(--mono);
-    font-size: var(--dimension-10);
+    font-family: var(--font-family-code);
     color: var(--accent);
-    border-bottom: var(--dimension-1) dotted transparent;
+    border-bottom: var(--snapshot__filename-border-bottom);
 }
 
 .snapshot__filename:hover,
@@ -408,25 +370,25 @@ button.snapshot__time:disabled {
 }
 
 .snapshot__note {
-    margin-top: var(--dimension-2);
-    padding-left: var(--dimension-7);
-    border-left: var(--dimension-2) solid var(--border-strong);
+    margin-top: var(--snapshot__note-margin-top);
+    padding-left: var(--snapshot__note-padding-left);
+    border-left: var(--snapshot__note-border-left);
     color: var(--accent-dim);
-    font-size: var(--dimension-9-5);
-    height: var(--dimension-16);
-    min-height: var(--dimension-16);
+    height: var(--snapshot__note-height);
+    min-height: var(--snapshot__note-min-height);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    cursor: text;
-    font-family: var(--mono);
+    white-space: var(--text-flow-nowrap);
+    cursor: var(--cursor-text-edit);
+    font-family: var(--font-family-code);
     display: flex;
     align-items: center;
 }
 
 .snapshot__note:not(.snapshot__note--empty) {
-    border-left-color: var(--accent);
+    color: var(--accent);
 }
+
 .snapshot--missing .snapshot__size {
     color: var(--text-dim);
 }
@@ -434,75 +396,73 @@ button.snapshot__time:disabled {
 .snapshot--missing .snapshot__time {
     color: var(--text-dim);
 }
+
 .snapshot--missing .snapshot__badge {
-    background: var(--bg-raised) !important;
-    color: var(--text-dim) !important;
+    background: var(--bg-raised);
+    color: var(--text-dim);
 }
 
 .snapshot--missing .snapshot__note {
-    opacity: 0.5;
-    text-decoration: line-through;
+    opacity: var(--snapshot-missing-snapshot__note-opacity);
+    text-decoration: var(--text-decoration-line-through);
 }
 
 .snapshot__note--empty {
     color: var(--text-dim);
-    font-style: italic;
+    font-style: var(--font-style-italic);
 }
 
 .snapshot__note[role="button"]:hover,
 .snapshot__note[role="button"]:focus-visible {
     color: var(--text-bright);
-    border-left-color: var(--accent);
+    color: var(--accent);
     outline: none;
 }
 
 .snapshot__note[data-editing="true"] {
-    border-left-color: var(--accent);
+    color: var(--accent);
     color: var(--accent-dim);
-    font-style: normal;
+    font-style: var(--font-style-normal);
 }
 
 .snapshot__note-input {
-    height: var(--dimension-16);
+    height: var(--snapshot__note-input-height);
     outline: none;
-    padding: 0 var(--dimension-4) !important;
-    border: var(--dimension-1) solid var(--accent) !important;
+    padding: var(--snapshot__note-input-padding) !important;
+    border: var(--snapshot__note-input-border) !important;
     border-left: none !important;
-    margin-left: calc(-1 * var(--dimension-4));
-    border-radius: 0 var(--radius) var(--radius) 0 !important;
-    background: var(--bg-input) !important;
-    color: var(--accent) !important;
-    font-family: var(--mono) !important;
-    font-size: var(--dimension-9-5) !important;
-    flex: 1 1 auto;
+    margin-left: var(--snapshot__note-input-margin-left);
+    border-radius: var(--snapshot__note-input-border-radius) !important;
+    background: var(--bg-input);
+    color: var(--accent);
+    font-family: var(--font-family-code);
+    flex: var(--snapshot__note-input-flex);
 }
 
 .snapshot__note-input::placeholder {
     color: inherit;
-    opacity: 1;
+    opacity: var(--snapshot__note-input-opacity);
 }
 
 .snapshot__size {
-    font-family: var(--mono);
-    font-size: var(--dimension-9-5);
+    font-family: var(--font-family-code);
     color: var(--text);
-    flex: 0 0 var(--dimension-54);
-    min-width: var(--dimension-54);
+    flex: var(--snapshot__size-flex);
+    min-width: var(--snapshot__size-min-width);
     text-align: right;
-    white-space: nowrap;
+    white-space: var(--text-flow-nowrap);
     margin-left: auto;
 }
 
 .snapshot__delta {
-    font-family: var(--mono);
-    font-size: var(--dimension-9-5);
-    flex: 0 0 var(--dimension-58);
-    min-width: var(--dimension-58);
-    padding: 0 var(--dimension-5);
-    border-radius: var(--dimension-7);
-    line-height: 1.5;
+    font-family: var(--font-family-code);
+    flex: var(--snapshot__delta-flex);
+    min-width: var(--snapshot__delta-min-width);
+    padding: var(--snapshot__delta-padding);
+    border-radius: var(--snapshot__delta-border-radius);
+    line-height: var(--snapshot__delta-line-height);
     text-align: right;
-    white-space: nowrap;
+    white-space: var(--text-flow-nowrap);
 }
 
 .snapshot__delta--initial {
@@ -528,280 +488,273 @@ button.snapshot__time:disabled {
 .snapshot__body {
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-2);
+    gap: var(--snapshot__body-gap);
 }
 
 .snapshot__path {
     -webkit-appearance: none;
     appearance: none;
-    padding: 0;
+    padding: var(--snapshot__path-padding);
     border: none;
     background: none;
-    font-family: var(--mono);
-    font-size: var(--dimension-9-5);
+    font-family: var(--font-family-code);
     color: var(--text-dim);
-    cursor: pointer;
+    cursor: var(--cursor-action);
     text-align: left;
-    white-space: nowrap;
+    white-space: var(--text-flow-nowrap);
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    max-width: var(--snapshot__path-max-width);
 }
 
 .snapshot__path:hover,
 .snapshot__path:focus-visible {
     color: var(--text);
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
-    text-underline-offset: var(--dimension-3);
+    text-decoration-line: var(--text-decoration-line-underline);
+    text-decoration-style: var(--text-decoration-style-dotted);
+    text-underline-offset: var(
+        --file-path-underline-offset
+    );
     outline: none;
 }
 
 .snapshot__path:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
+    cursor: var(--cursor-disabled);
+    opacity: var(--snapshot__path-opacity);
 }
 
 .snapshot__note-container {
-    margin-top: var(--dimension-2);
+    margin-top: var(--snapshot__note-container-margin-top);
 }
 
 .snapshot__note-container--missing {
-    opacity: 0.5;
+    opacity: var(--snapshot__note-container-missing-opacity);
 }
 
 .snapshot__note-btn {
     -webkit-appearance: none;
     appearance: none;
-    padding: 0;
+    padding: var(--snapshot__note-btn-padding);
     border: none;
     background: none;
-    font-size: var(--dimension-9);
     color: var(--text-dim);
-    cursor: pointer;
+    cursor: var(--cursor-action);
     text-align: left;
-    margin-left: var(--dimension-8);
+    margin-left: var(--snapshot__note-btn-margin-left);
 }
 
 .snapshot__note-btn:hover {
     color: var(--text);
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
-    text-underline-offset: var(--dimension-3);
+    text-decoration-line: var(--text-decoration-line-underline);
+    text-decoration-style: var(--text-decoration-style-dotted);
+    text-underline-offset: var(--snapshot__note-btn-text-underline-offset);
 }
 
 .snapshot__note-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
+    cursor: var(--cursor-disabled);
+    opacity: var(--snapshot__note-btn-opacity);
 }
 
 .snapshot__actions {
     display: flex;
-    gap: var(--dimension-4);
-    height: var(--dimension-22);
+    gap: var(--snapshot__actions-gap);
+    height: var(--snapshot__actions-height);
     max-height: none;
-    margin-top: var(--dimension-6);
-    opacity: 0;
+    margin-top: var(--snapshot__actions-margin-top);
+    opacity: var(--snapshot__actions-opacity);
     visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.12s ease, visibility 0s linear 0.12s;
+    transition: var(--snapshot__actions-transition);
 }
 
 .snapshot:hover .snapshot__actions,
 .snapshot:focus-within .snapshot__actions,
 .snapshot:focus-visible .snapshot__actions {
     max-height: none;
-    opacity: 1;
+    opacity: var(
+        --snapshot-actions-visible-opacity
+    );
     visibility: visible;
     pointer-events: auto;
-    transition: opacity 0.12s ease;
+    transition: var(--snapshot-actions-visible-transition);
 }
 
-
-/* Row 1: the filter input + sort dropdown sit together. Row 2 (the
-   action buttons) lives in its own .timeline-actions toolbar below. */
 .timeline-search {
     display: flex;
     align-items: stretch;
-    gap: var(--dimension-6);
+    gap: var(--timeline-search-gap);
 }
 
-/* Compact / Pinned-only / Auto-refresh as small icon toggles pinned to
-   the top-left of the timeline table. */
 .table-toggles {
-    gap: var(--dimension-3);
-    width: 100%;
-    margin-left: var(--dimension-6);
+    gap: var(--table-toggles-compact-gap);
+    width: var(--table-toggles-width);
+    margin-left: var(--table-toggles-margin-left);
 }
 
-/* Export CSV + Clean icon buttons, pushed to the right edge of the
-   table-toggles row. */
 .table-actions {
-    gap: var(--dimension-3);
+    gap: var(--table-actions-compact-gap);
 }
 
 .timeline-actions {
-    margin-top: var(--dimension-6);
+    margin-top: var(--timeline-actions-margin-top);
 }
 
 .timeline-bulk {
-    gap: var(--dimension-4);
-    margin-top: var(--dimension-6);
-    padding: var(--dimension-2) var(--dimension-6);
-    border: var(--dimension-1) solid var(--accent);
-    border-radius: var(--radius);
+    gap: var(--timeline-bulk-gap);
+    margin-top: var(--timeline-bulk-margin-top);
+    padding: var(--timeline-bulk-padding);
+    border: var(--timeline-bulk-border);
+    border-radius: var(--timeline-bulk-border-radius);
     background: var(--accent-glow);
 }
 
 .timeline-bulk__count {
     margin-right: auto;
     color: var(--accent);
-    font-family: var(--mono);
-    font-size: var(--dimension-9-5);
-    flex: 1 1 50%;
+    font-family: var(--font-family-code);
+    flex: var(--timeline-bulk__count-flex);
 }
 
 .timeline-filter {
-    min-width: var(--dimension-106);
-    flex: 1 1 auto;
+    min-width: var(--timeline-filter-min-width);
+    flex: var(--timeline-filter-flex);
 }
 
 .timeline-sort {
-    min-width: var(--dimension-132);
-    flex: 0 0 auto;
+    min-width: var(--timeline-sort-min-width);
+    flex: var(--timeline-sort-flex);
 }
 
 .timeline-range {
-    min-width: var(--dimension-100);
-    flex: 0 0 auto;
+    min-width: var(--timeline-range-min-width);
+    flex: var(--timeline-range-flex);
 }
 
 .timeline-options {
     display: flex;
     align-items: center;
-    gap: var(--dimension-4);
-    padding: var(--dimension-8) var(--dimension-1) 0;
+    gap: var(--timeline-options-gap);
+    padding: var(--timeline-options-padding);
 }
 
 .timeline-options__actions {
     display: flex;
     align-items: center;
-    gap: var(--dimension-4);
-    flex: 1;
-}
-
-.timeline-options .checkbox--inline span {
-    font-size: var(--dimension-9);
+    gap: var(--timeline-options__actions-gap);
+    flex: var(--timeline-options__actions-flex);
 }
 
 .timeline-option-action {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: var(--dimension-2) var(--dimension-5);
-    font-size: var(--dimension-10);
+    flex: var(--timeline-option-action-flex);
+    min-width: var(--timeline-option-action-min-width);
+    padding: var(--timeline-option-action-padding);
 }
 
 .timeline-insights {
-    display: grid;
-    grid-template-columns: var(--dimension-24) minmax(0, 1fr);
+    display: flex;
     align-items: center;
-    margin-top: var(--dimension-8);
-    padding: var(--dimension-8) var(--dimension-8) var(--dimension-8) var(--dimension-4);
-    border: var(--dimension-1) solid var(--border-soft);
-    border-radius: var(--radius);
-    background: var(--bg-input-well);
+    gap: var(--timeline-insights-gap);
+    margin-top: var(--timeline-insights-margin-top);
+    padding: var(--timeline-insights-padding);
+    border: var(--timeline-insights-border);
+    border-radius: var(--timeline-insights-border-radius);
+    background: var(--timeline-insights-background);
     user-select: none;
     -webkit-user-select: none;
 }
 
 .timeline-insights__content {
-    min-width: 0;
+    min-width: var(--timeline-insights-content-min-width);
+    display: var(--timeline-insights__content-display);
+    flex-direction: var(--timeline-insights__content-flex-direction);
+    flex: var(--timeline-insights__content-flex);
 }
+
 .timeline-insights__refresh {
-    width: var(--dimension-22);
-    height: var(--dimension-22);
-    display: flex;
-    justify-content: center;
-    padding: 0;
-    border: none;
-    background: none;
-    color: var(--text-dim);
-    font-family: var(--sans);
-    font-size: var(--dimension-18);
-    line-height: var(--dimension-20);
-    text-align: center;
-    cursor: pointer;
-    transition: color 0.12s ease, border-color 0.12s ease,
-        background 0.12s ease, transform 0.12s ease;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    outline: none;
+    padding-right: var(--timeline-insights__refresh-padding-right);
+    border-right: var(--timeline-insights__refresh-border-right);
+    color: var(--timeline-insights__refresh-color);
+    cursor: var(--cursor-action);
+    transition: var(--timeline-transition);
+    width: var(--timeline-insights__refresh-width);
+    height: var(--timeline-insights__refresh-height);
 }
+
 .timeline-insights__refresh:hover,
 .timeline-insights__refresh:focus-visible {
     color: var(--accent);
-    border: none;
+    border-right: var(--timeline-insights__refresh-border-right);
     background: none;
     outline: none;
 }
+
 .timeline-insights__refresh:focus {
     outline: none;
 }
 
 .timeline-insights__refresh:active {
-    transform: rotate(45deg);
     outline: none;
-    border: none;
+    border-right: var(--timeline-insights__refresh-border-right);
     background: none !important;
+}
+
+.timeline-insights .icon-refresh.is-spinning {
+    color: var(--accent);
+}
+
+.timeline-insights .icon-refresh.is-spinning svg {
+    animation: var(--icon-refresh-spin-animation);
 }
 
 .timeline-insights__labels {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--dimension-8);
+    gap: var(--timeline-insights__labels-gap);
     color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: var(--dimension-9);
-    white-space: nowrap;
+    font-family: var(--font-family-code);
+    white-space: var(--text-flow-nowrap);
 }
 
 .timeline-insights__labels span {
-    min-width: 0;
+    min-width: var(--timeline-insights__labels-span-min-width);
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .timeline-insights__labels span:last-child {
-    flex: 0 0 auto;
+    flex: var(--timeline-insights__labels-span-last-child-flex);
 }
 
 .timeline-insights__track {
-    height: var(--dimension-3);
-    margin-top: var(--dimension-6);
-    border-radius: var(--dimension-2);
+    height: var(--timeline-insights__track-height);
+    margin-top: var(--timeline-insights__track-margin-top);
+    border-radius: var(--timeline-insights__track-border-radius);
     overflow: hidden;
-    background: var(--bg-input);
+    background: var(--bg);
 }
 
 .timeline-insights__fill {
-    width: 0;
-    height: 100%;
+    width: var(--timeline-insights-fill-width);
+    height: var(--timeline-insights__fill-height);
     border-radius: inherit;
-    background: var(--accent);
-    transition: width 0.2s ease, background 0.2s ease;
+    background: var(--timeline-insights__fill-background);
+    transition: var(--timeline-insights__fill-transition);
+}
+
+.timeline-insights.is-refreshing .timeline-insights__fill {
+    width: var(--timeline-insights__fill-refreshing-width) !important;
+    animation: var(--timeline-insights__fill-refreshing-animation);
 }
 
 .timeline-insights__fill--warn {
-    background: var(--warn);
+    background: var(--timeline-insights__fill-warn-background);
 }
 
 .timeline-insights__fill--over {
-    background: var(--danger);
+    background: var(--timeline-insights__fill-over-background);
 }
 
-/* Compact timeline: only hide notes and filename */
 .version-list--compact .snapshot__note {
     display: none;
 }
@@ -819,40 +772,30 @@ button.snapshot__time:disabled {
 }
 
 .version-list--compact .snapshot__dot {
-    top: var(--dimension-7);
+    top: var(--version-list-compact-snapshot__dot-top);
 }
 
 .version-list--compact .snapshot__actions {
     display: none;
-    height: 0;
-    margin: 0;
-    max-height: 0;
+    height: var(--version-list-compact-snapshot__actions-height);
+    margin: var(--version-list-compact-snapshot__actions-margin);
+    max-height: var(--version-list-compact-snapshot__actions-max-height);
 }
 
 .btn,
-.preset-chip,
 .snooze-chip,
 .table-toggle {
-    transition: border-color 0.12s ease,
-        color 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
-}
-
-.btn:active:not(:disabled),
-.preset-chip:active:not(:disabled),
-.snooze-chip:active:not(:disabled),
-.table-toggle:active:not(:disabled) {
-    transform: translateY(var(--dimension-1));
+    transition: var(--timeline-control-transition);
 }
 
 .snapshot__note[role="button"] {
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    transition: color 0.12s ease, background-color 0.12s ease,
-        border-color 0.12s ease;
+    border-radius: var(--snapshot__note-border-radius);
+    transition: var(--snapshot-note-button-transition);
 }
 
 .snapshot__dot::after {
     content: "";
     position: absolute;
-    inset: var(--dimension-neg-4);
-    border-radius: 50%;
+    inset: var(--snapshot__dot-inset);
+    border-radius: var(--snapshot__dot-border-radius);
 }

@@ -1,50 +1,27 @@
-/* ================================================================
-   Advanced drawer
-   ================================================================ */
-
 .mini-grid {
     display: grid;
-    gap: var(--dimension-6);
+    gap: var(--mini-grid-gap);
 }
 
 .mini-grid--three {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: var(--mini-grid-three-grid-template-columns);
 }
 
 .mini-field {
     display: flex;
     flex-direction: column;
-    gap: var(--dimension-4);
+    gap: var(--mini-field-gap);
     color: var(--text-dim);
-    font-size: var(--dimension-10);
 }
 
-.mini-field span{
-    /* font-size: var(--dimension-12); */
-    color: var(--text);
-    color: var(--text);
-    /* font-family: var(--mono); */
-    font-size: var(--dimension-11-5);
-    /* font-weight: 500; */
-    line-height: var(--dimension-16);
-}
 .mini-field input {
-    /* width: auto; */
-    /* width: fit-content; */
-    /* font-family: var(--mono); */
     background: var(--bg-input);
-    /* border: var(--dimension-1) solid var(--border-soft); */
-    border-radius: var(--dimension-3);
-    /* padding: var(--dimension-4) var(--dimension-6); */
-    /* font-size: var(--dimension-10); */
-    /* color: var(--text); */
-    /* flex: 1 0 fit-content; */
-    /* display: flex; */
+    border-radius: var(--mini-field-input-border-radius);
 }
 
 .toolbar {
     display: flex;
-    gap: var(--dimension-6);
+    gap: var(--toolbar-gap);
     align-items: center;
 }
 
@@ -54,56 +31,47 @@
 
 .advanced-actions {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    width: 100%;
+    grid-template-columns: var(--advanced-actions-grid-template-columns);
+    width: var(--advanced-actions-width);
 }
 
 .advanced-actions .btn {
-    width: 100%;
-    min-width: 0;
+    width: var(--advanced-actions-btn-width);
+    min-width: var(--advanced-actions-btn-min-width);
 }
 
 .cache-health {
-    gap: var(--dimension-8);
+    gap: var(--cache-health-gap);
 }
 
-
-
-.cache-health-drawer > .drawer__body {
-    max-height: none;
-    /* padding: 0; */
-}
-
-.cache-health-drawer .cache-health {
-    border-bottom: 0;
-    padding-bottom: var(--dimension-8);
-    padding-top: var(--dimension-8);
+.cache-health-panel .cache-health {
+    border-bottom: var(--advanced-cache-health-border-bottom);
+    padding-bottom: var(--cache-health-panel-cache-health-padding-bottom);
+    padding-top: var(--cache-health-panel-cache-health-padding-top);
 }
 
 .cache-health__disk {
-    margin-top: 0;
+    margin-top: var(--advanced-cache-health-disk-margin-top);
 }
 
 .cache-health__summary {
-    min-height: var(--dimension-24);
-    border: var(--dimension-1) solid var(--border-soft);
-    border-radius: var(--dimension-5);
+    min-height: var(--cache-health__summary-min-height);
+    border: var(--cache-health__summary-border);
+    border-radius: var(--cache-health__summary-border-radius);
     background: var(--bg-input-well);
     color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: var(--dimension-10);
-    line-height: 1.35;
-    padding: var(--dimension-6) var(--dimension-7);
+    font-family: var(--font-family-code);
+    line-height: var(--cache-health__summary-line-height);
+    padding: var(--cache-health__summary-padding);
 }
 
 .cache-health__warning {
-    border: var(--dimension-1) solid var(--warn);
-    border-radius: var(--dimension-5);
+    border: var(--cache-health__warning-border);
+    border-radius: var(--cache-health__warning-border-radius);
     background: var(--warn-tint);
     color: var(--warn);
-    font-size: var(--dimension-10);
-    line-height: 1.35;
-    padding: var(--dimension-6) var(--dimension-7);
+    line-height: var(--cache-health__warning-line-height);
+    padding: var(--cache-health__warning-padding);
 }
 
 .hidden-file-input {

@@ -2,7 +2,7 @@
  * DejaVu reusable table API.
  *
  * Shared controller for Timeline, Recovery Center, and Open Documents lists.
- * It centralizes the repeated table concerns while keeping each drawer's row
+ * It centralizes the repeated table concerns while keeping each panel's row
  * rendering and host actions inside its own responsibility file.
  */
 "use strict";

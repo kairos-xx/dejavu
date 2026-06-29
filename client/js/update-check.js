@@ -18,6 +18,12 @@
     const DAY_MS = 86400000;
     const STARTUP_DELAY_MS = 1500;
 
+    const isBrowserDevMode = () => {
+        // Running in a browser (not CEP) means development mode
+        return typeof window.__adobe_cep__ === "undefined" &&
+            typeof CSInterface === "undefined";
+    };
+
     const getConfig = () => (typeof DEJAVU_CONFIG !== "undefined" &&
         DEJAVU_CONFIG.updateCheck) || null;
 
@@ -106,8 +112,26 @@
             bar.remove();
         });
 
+        // Don't ask again checkbox
+        const checkboxWrapper = document.createElement("label");
+        checkboxWrapper.className = "update-banner__checkbox";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = "updateBannerCheckbox";
+        const checkboxLabel = document.createElement("span");
+        checkboxLabel.textContent = "Don't ask again";
+        checkbox.addEventListener("change", () => {
+            const state = readState();
+            state.neverAsk = checkbox.checked;
+            writeState(state);
+        });
+
+        checkboxWrapper.appendChild(checkbox);
+        checkboxWrapper.appendChild(checkboxLabel);
+
         bar.appendChild(text);
         bar.appendChild(action);
+        bar.appendChild(checkboxWrapper);
         bar.appendChild(close);
 
         const app = document.querySelector(".app") || document.body;
@@ -152,11 +176,16 @@
 
     /** Shows the banner if a known-latest version beats the installed one. */
     const maybeShow = (config, state) => {
+        // Suppress in browser dev mode
+        if (isBrowserDevMode()) return;
+
         if (!state.latest) return;
         if (!isNewer(state.latest, installedVersion())) return;
         // Don't re-nag for a version the user already dismissed (a brand-new
         // version newer than the dismissed one will still surface).
         if (state.dismissed && !isNewer(state.latest, state.dismissed)) return;
+        // Respect "don't ask again" preference
+        if (state.neverAsk) return;
         const asset = config.latestAsset || null;
         const assetUrl = state.latestAssetUrl ||
             (asset && asset.browser_download_url) ||

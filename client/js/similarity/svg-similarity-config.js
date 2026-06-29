@@ -55,7 +55,7 @@
         fingerprintConcurrency: 1,
         saveCacheEvery: 25,
         skipFolders: [".git", "node_modules", "__MACOSX", ".Trash"],
-        externalConverters: { prefer: ["embeddedSVG", "illustrator"] }
+        externalConverters: { prefer: ["embeddedSVG", "ai2svg", "inkscape", "illustrator"] }
       },
       thresholds: { nearDuplicate: 0.9, similar: 0.75, loose: 0.55 },
       ui: { showBreakdown: true, showConvertedFormat: true, showElementReport: true, showFileMetadata: true, openFileOnClick: false, defaultSearchFolderFromCurrentDocument: true }

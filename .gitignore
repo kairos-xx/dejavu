@@ -7,3 +7,5 @@ build/
 node_modules/
 __pycache__/
 *.pyc
+AI_vs_DEJAVU/
+vendor/

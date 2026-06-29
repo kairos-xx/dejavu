@@ -144,6 +144,9 @@ const updateModeIndicator = () => {
     // Toggle animated logo when dejavu is ON
     if (el.appLogo) {
         el.appLogo.classList.toggle("app__logo--anim", isDejavuEnabledForCurrent());
+        if (window.dejavu && window.dejavu.injectIcon) {
+            window.dejavu.injectIcon(el.appLogo);
+        }
     }
 };
 
@@ -158,18 +161,29 @@ const updateFormatIndicator = (format) => {
     if (!el.formatValue) return;
     const normalized = (format || "ai").toUpperCase();
     const formatLower = (format || "ai").toLowerCase();
-    
-    // Clear existing content
+    const row = el.formatValue.closest(".status__row");
+    if (row) {
+        row.classList.remove(
+            "status__row--format-ai",
+            "status__row--format-pdf",
+            "status__row--format-eps",
+            "status__row--format-svg"
+        );
+        row.classList.add("status__row--format", `status__row--format-${formatLower}`);
+    }
+
     el.formatValue.innerHTML = "";
-    
-    // Add format icon with color (N12)
+
     const iconClass = `icon-format-${formatLower}`;
     const icon = document.createElement("span");
-    icon.className = `svg-icon ${iconClass}`;
+    icon.className = DEJAVU.classNames("svg-icon", iconClass);
+    icon.dataset.icon = `format-${formatLower}`;
     icon.setAttribute("aria-hidden", "true");
+    if (window.dejavu && window.dejavu.injectIcon) {
+        window.dejavu.injectIcon(icon);
+    }
     el.formatValue.appendChild(icon);
-    
-    // Add format text
+
     const text = document.createElement("span");
     text.textContent = normalized;
     el.formatValue.appendChild(text);
@@ -248,27 +262,6 @@ const normalizeDonationPlatform = (value) => {
 };
 
 /**
- * Returns the display name of the selected support platform.
- * @param {string} platform Platform key.
- * @return {string} Human readable platform label.
- */
-const getDonationPlatformLabel = (platform) => {
-    const key = normalizeDonationPlatform(platform);
-    return DONATION_CONFIG.platforms[key].label;
-};
-
-/**
- * Updates the donation button text when the platform selector
- * changes.
- */
-const renderDonationPlatformButton = () => {
-    if (!el.donationPayBtn) return;
-    const platform = el.donationPlatformSelect ?
-        el.donationPlatformSelect.value : state.settings.donationPlatform;
-    el.donationPayBtn.textContent = `Open ${getDonationPlatformLabel(platform)}`;
-};
-
-/**
  * Builds a creator support URL for Ko-fi or Buy Me a Coffee. The
  * selected amount and currency are included as query parameters so
  * supported pages can prefill the payment form, while unsupported
@@ -309,10 +302,6 @@ const markDonationSplashDismissed = () => {
         el.donationCurrencySelect ? el.donationCurrencySelect.value :
             state.settings.donationCurrency
     );
-    state.settings.donationPlatform = normalizeDonationPlatform(
-        el.donationPlatformSelect ? el.donationPlatformSelect.value :
-            state.settings.donationPlatform
-    );
     saveSettings();
 };
 
@@ -330,13 +319,8 @@ const showDonationSplash = (forced) => {
     }
     const amount = normalizeDonationAmount(state.settings.donationAmount);
     const currency = normalizeDonationCurrency(state.settings.donationCurrency);
-    const platform = normalizeDonationPlatform(state.settings.donationPlatform);
     if (el.donationAmountInput) el.donationAmountInput.value = amount;
     if (el.donationCurrencySelect) el.donationCurrencySelect.value = currency;
-    if (el.donationPlatformSelect) {
-        el.donationPlatformSelect.value = platform;
-    }
-    renderDonationPlatformButton();
     if (el.donationVersion && typeof DEJAVU_CONFIG !== "undefined") {
         el.donationVersion.textContent = `v${DEJAVU_CONFIG.version}`;
     }
@@ -368,10 +352,10 @@ const closeDonationSplash = () => {
 };
 
 /**
- * Opens the selected Ko-fi or Buy Me a Coffee support page with
- * the selected amount.
+ * Opens a Ko-fi or Buy Me a Coffee support page with the selected amount.
+ * @param {string} platform Support platform key.
  */
-const openDonationPayment = () => {
+const openDonationPayment = (platform) => {
     const amount = normalizeDonationAmount(
         el.donationAmountInput ? el.donationAmountInput.value :
             DONATION_CONFIG.defaultAmount
@@ -380,14 +364,11 @@ const openDonationPayment = () => {
         el.donationCurrencySelect ? el.donationCurrencySelect.value :
             DONATION_CONFIG.defaultCurrency
     );
-    const platform = normalizeDonationPlatform(
-        el.donationPlatformSelect ? el.donationPlatformSelect.value :
-            DONATION_CONFIG.defaultPlatform
-    );
+    const safePlatform = normalizeDonationPlatform(platform);
     state.settings.donationAmount = amount;
     state.settings.donationCurrency = currency;
-    state.settings.donationPlatform = platform;
-    const url = buildDonationUrl(amount, currency, platform);
+    state.settings.donationPlatform = safePlatform;
+    const url = buildDonationUrl(amount, currency, safePlatform);
     try {
         if (window.DejaVuHost &&
                 typeof window.DejaVuHost.dejavu_openExternalUrl === "function") {

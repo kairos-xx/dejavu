@@ -1311,7 +1311,6 @@ const importSettingsObject = (incoming) => {
     merged.fileDejavuOverrides = normalizeFileDejavuOverrides(
         merged.fileDejavuOverrides
     );
-    merged.drawerState = normalizePlainObject(merged.drawerState);
     merged.protectedSnapshots = normalizePlainObject(
         merged.protectedSnapshots
     );
@@ -1333,14 +1332,6 @@ const importSettingsObject = (incoming) => {
 const resetSettings = () => {
     state.settings = clone(DEFAULT_SETTINGS);
     state.settings.fileDejavuOverrides = {};
-    state.settings.drawerState = {
-        saveSettingsDrawer: true,
-        filenameSettingsDrawer: true,
-        retentionSettingsDrawer: true,
-        versionDrawer: true,
-        recoveryCenterDrawer: false,
-        advancedDrawer: false
-    };
     state.settings.protectedSnapshots = {};
     state.settings.snapshotNotes = {};
     saveSettings();
@@ -1365,10 +1356,14 @@ const hydrateForm = () => {
     const s = state.settings;
     syncDejavuModeUi();
     el.intervalInput.value = s.intervalValue;
-    el.intervalUnit.value = String(s.intervalUnit);
-    el.templateInput.value = s.template;
+    if (el.intervalUnit) {
+        el.intervalUnit.value = String(parseInt(s.intervalUnit, 10) || 60);
+    }
     if (state.filenameTokenInput) {
-        state.filenameTokenInput.setParts(templateToParts(s.template));
+        state.filenameTokenInput.setValue(parseTemplateParts(s.template));
+        el.templateInput.value = state.filenameTokenInput.getText();
+    } else if (el.templateInput) {
+        el.templateInput.value = s.template;
     }
     el.overwriteToggle.checked = !!s.overwriteExisting;
     el.onlyIfChangedToggle.checked = !!s.onlySaveWhenChanged;
@@ -1397,14 +1392,13 @@ const hydrateForm = () => {
         );
     }
     s.folderTemplate = normalizeFolderTemplate(s.folderTemplate);
-    el.folderTemplateInput.value = s.folderTemplate;
     renderFolderTemplateEditor(s.folderTemplate);
+    if (el.folderPerDocumentToggle) {
+        el.folderPerDocumentToggle.checked = !!s.folderPerDocument;
+    }
     el.recoveryCheckToggle.checked = !!s.recoveryCheck;
     el.autoRecoverCrashToggle.checked = s.autoRecoverAfterCrash !== false;
-    el.autoPinEveryInput.value = Math.max(
-        0,
-        parseInt(s.autoPinEvery, 10) || 0
-    );
+    el.autoPinEveryToggle.checked = (parseInt(s.autoPinEvery, 10) || 0) > 0;
     el.backupOriginalToggle.checked = !!s.backupOriginalBeforeDejavu;
     el.saveOnEnableToggle.checked = s.saveImmediatelyOnEnable !== false;
     el.saveOnDocumentSwitchToggle.checked = !!s.saveOnDocumentSwitch;
@@ -1422,7 +1416,6 @@ const hydrateForm = () => {
     el.recoverySortSelect.value = s.recoverySort || "newest";
     el.timelineRangeSelect.value = normalizeTimelineRange(s.timelineRange);
     el.recoveryRangeSelect.value = s.recoveryRange || "all";
-    hydrateDrawerState();
     syncIntervalPresets();
     syncSafetyProfiles();
 
@@ -1438,32 +1431,4 @@ const hydrateForm = () => {
     updatePreview();
     updateModeIndicator();
     updateFolderStatus(state.currentDejavuFolder || "");
-};
-
-/**
- * Restores persisted open/closed drawer states.
- */
-const hydrateDrawerState = () => {
-    const drawerState = state.settings.drawerState || {};
-    const drawers = document.querySelectorAll("details.drawer");
-    Array.prototype.forEach.call(drawers, (drawer) => {
-        if (drawer.id && drawerState.hasOwnProperty(drawer.id)) {
-            drawer.open = !!drawerState[drawer.id];
-        }
-    });
-};
-
-/**
- * Persists drawer open/closed state when a section is toggled.
- */
-const bindDrawerState = () => {
-    const drawers = document.querySelectorAll("details.drawer");
-    Array.prototype.forEach.call(drawers, (drawer) => {
-        drawer.addEventListener("toggle", () => {
-            if (!drawer.id) return;
-            state.settings.drawerState = state.settings.drawerState || {};
-            state.settings.drawerState[drawer.id] = !!drawer.open;
-            saveSettings();
-        });
-    });
 };

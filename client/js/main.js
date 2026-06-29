@@ -204,6 +204,12 @@ const DEJAVU_DEV_MODE = (() => {
     }
 })();
 
+// Expose dev mode so the inline debug-skin switcher (index.html) can reveal
+// itself only in development.
+if (typeof window !== "undefined") {
+    window.__DEJAVU_DEV_MODE__ = DEJAVU_DEV_MODE;
+}
+
 // Dev aid: re-load host.jsx via $.evalFile on each CEP panel open so host
 // edits take effect on a simple reopen. Off in production.
 const FORCE_HOST_RELOAD = DEJAVU_DEV_MODE;
@@ -211,8 +217,8 @@ const FORCE_HOST_RELOAD = DEJAVU_DEV_MODE;
 // Must match DEJAVU_HOST_VERSION in host/host.jsx. After load the panel
 // reads the host's version back; a mismatch means an OLD host.jsx
 // is still resident in Illustrator's ExtendScript engine.
-const EXPECTED_HOST_VERSION = "2026.06.25-r33";
-const EXPECTED_UXP_HOST_VERSION = "2026.06.25-r33";
+const EXPECTED_HOST_VERSION = "2026.06.25-r37";
+const EXPECTED_UXP_HOST_VERSION = "2026.06.25-r37";
 
 // Some host panel sessions can stay alive when their tabs are hidden.
 // Reload once when a previously-hidden panel becomes visible so the
@@ -222,6 +228,11 @@ let panelReloading = false;
 
 const reloadPanelAfterReopen = () => {
     if (panelReloading) return;
+    // Skip reload if stop loops is enabled (debug mode)
+    if (window.__DEJAVU_STOP_LOOPS__) {
+        console.log("[Debug] Auto-reload skipped due to stop loops being enabled");
+        return;
+    }
     panelReloading = true;
     window.location.reload(true);
 };
@@ -266,60 +277,37 @@ const installDevelopmentReloadWatcher = () => {
     if (!csInterface) return;
     if (typeof require !== "function") return;
     try {
-        const fs = require("fs");
         const path = require("path");
         const extensionRoot = csInterface.getSystemPath(
             SystemPath.EXTENSION
         );
-        // Recursively fingerprint every source file so any edit triggers a
-        // reload. Skip build output, dependencies and any dot-folder/file —
-        // their churn (a release build, .git, etc.) is not "extension content".
-        const IGNORED_DIRS = { build: 1, "node_modules": 1 };
-        const isIgnoredName = (name) =>
-            !name || name.charAt(0) === "." || IGNORED_DIRS[name] === 1;
+        const comparePath = path.join(extensionRoot, "scripts", "compare.js");
+        const { changed } = require(comparePath);
 
-        const collectSignature = (dir, parts, depth) => {
-            if (depth > 8) return;
-            let entries;
-            try {
-                entries = fs.readdirSync(dir);
-            } catch (eRead) {
-                return;
-            }
-            for (let iEntry = 0; iEntry < entries.length; iEntry++) {
-                const name = entries[iEntry];
-                if (isIgnoredName(name)) continue;
-                const fullPath = path.join(dir, name);
-                let stat;
-                try {
-                    stat = fs.statSync(fullPath);
-                } catch (eStat) {
-                    continue;
-                }
-                if (stat.isDirectory()) {
-                    collectSignature(fullPath, parts, depth + 1);
-                } else {
-                    parts.push(
-                        `${fullPath}:${stat.mtime.getTime()}:${stat.size}`
-                    );
-                }
-            }
-        };
-
-        const getDevelopmentSignature = () => {
-            const parts = [];
-            collectSignature(extensionRoot, parts, 0);
-            parts.sort();
-            return parts.join("|");
-        };
-
-        let signature = getDevelopmentSignature();
+        let lastChanged = false;
         window.__DEJAVU_DEV_RELOAD_WATCHER__ = window.setInterval(
-            () => {
-                const nextSignature = getDevelopmentSignature();
-                if (nextSignature !== signature) {
-                    signature = nextSignature;
-                    reloadPanelAfterReopen();
+            async () => {
+                try {
+                    const isChanged = await changed(extensionRoot, extensionRoot, {
+                        dirs: ["scripts", "jsx", "icons", "host", "client"],
+                        ext: [".js", ".jsx", ".htm", ".html", ".css", ".json", ".svg"],
+                        ignore: [
+                            /(^|\/)\.git(\/|$)/,
+                            /(^|\/)node_modules(\/|$)/,
+                            /(^|\/)\.history(\/|$)/,
+                            /(^|\/)build(\/|$)/,
+                            /(^|\/)\.DS_Store$/,
+                            /(^|\/)vendor(\/|$)/
+                        ]
+                    });
+                    if (isChanged && !lastChanged) {
+                        lastChanged = true;
+                        reloadPanelAfterReopen();
+                    } else if (!isChanged) {
+                        lastChanged = false;
+                    }
+                } catch (eCompare) {
+                    // Fall back to silent failure; auto-reload is a convenience only.
                 }
             },
             1000
@@ -526,29 +514,20 @@ class HostBridge {
         });
     }
 
-    call(fnName, args, retried) {
-        if (DEJAVU_IS_UXP && window.DejaVuHost &&
-                typeof window.DejaVuHost[fnName] === "function") {
-            return Promise.resolve()
-                .then(() => window.DejaVuHost[fnName](...(args || [])))
-                .then((result) => {
-                    if (typeof result === "string") {
-                        try {
-                            return JSON.parse(result);
-                        } catch (eParse) {
-                            return {
-                                ok: false,
-                                error: `Bad UXP host response for ${fnName}(): ${result}`
-                            };
-                        }
-                    }
-                    return result || { ok: true };
-                })
-                .catch((error) => ({
-                    ok: false,
-                    error: error && error.message ? error.message : String(error)
-                }));
-        }
+	    call(fnName, args, retried) {
+	        if (DEJAVU_IS_UXP && window.DejaVuHost) {
+	            if (typeof window.DejaVuHost[fnName] !== "function") {
+	                return Promise.resolve(
+	                    DejaVuHostContract.missingFunction(fnName, "UXP host")
+	                );
+	            }
+	            return Promise.resolve()
+	                .then(() => window.DejaVuHost[fnName](...(args || [])))
+	                .then((result) => {
+	                    return DejaVuHostContract.parseUxpResult(fnName, result);
+	                })
+	                .catch((error) => DejaVuHostContract.fromThrown(error));
+	        }
         return this.ensureLoaded(!!retried).then((hostStatus) => {
             if (!hostStatus || hostStatus.ok === false) {
                 return {
@@ -565,43 +544,16 @@ class HostBridge {
                     })
                     .join(", ");
                 const script = `${fnName}(${serializedArgs})`;
-                csInterface.evalScript(script, (result) => {
-                    if (
-                        result === undefined ||
-                        result === null ||
-                        result === "undefined" ||
-                        result === "EvalScript error."
-                    ) {
-                        resolve({
-                            ok: false,
-                            error:
-                                `ExtendScript call to ${fnName}() failed (host.jsx may not be loaded, or the function threw). Raw response: ${String(result)}`
-                        });
-                        return;
-                    }
-                    try {
-                        resolve(JSON.parse(result));
-                    } catch (e) {
-                        if (
-                            !retried &&
-                            (/is not a function/i.test(String(result)) ||
-                                /Error 24/.test(String(result)))
-                        ) {
-                            resolve({
-                                ok: false,
-                                retryMissingHostFunction: true,
-                                error: String(result)
-                            });
-                            return;
-                        }
-                        resolve({
-                            ok: false,
-                            error:
-                                `Bad host response for ${fnName}(): ${result}`
-                        });
-                    }
-                });
-            });
+	                csInterface.evalScript(script, (result) => {
+	                    resolve(
+	                        DejaVuHostContract.parseCepResult(
+	                            fnName,
+	                            result,
+	                            retried
+	                        )
+	                    );
+	                });
+	            });
         }).then((result) => {
             if (result && result.retryMissingHostFunction) {
                 return this.call(fnName, args, true);
@@ -680,7 +632,6 @@ const DEFAULT_SETTINGS = {
     recoveryRange: "all",
     protectedSnapshots: {},
     snapshotNotes: {},
-    drawerState: {},
     autoFitPanel: true,
     installSignature: "",
     donationDismissedInstallSignature: "",
@@ -689,132 +640,70 @@ const DEFAULT_SETTINGS = {
     donationPlatform: DONATION_CONFIG.defaultPlatform
 };
 
-/**
- * SettingsStore — owns persistence of the panel's settings object:
- * loading (schema-merge of known keys, the two-state migration, and a
- * corrupt → backup → defaults fallback chain) and saving (keeping a
- * backup of the prior good copy). Module-scoped collaborators
- * (DEFAULT_SETTINGS, the normalize* helpers, pathIsInside, state, el)
- * are used directly.
- */
-class SettingsStore {
-    load() {
-        try {
-            const raw = window.localStorage.getItem(STORAGE_KEY);
-            if (!raw) {
-                const defaults = clone(DEFAULT_SETTINGS);
-                defaults.fileDejavuOverrides = {};
-                defaults.drawerState = {};
-                defaults.protectedSnapshots = {};
-                defaults.snapshotNotes = {};
-                return defaults;
-            }
-            const parsed = JSON.parse(raw);
-            // Only adopt keys that are part of the current settings schema,
-            // dropping stale/unknown keys from older data (DEJAVU.adoptKnownKeys,
-            // unit-tested). A throwaway clone is passed so the normalizations
-            // below can mutate the result without touching DEFAULT_SETTINGS.
-            const base = clone(DEFAULT_SETTINGS);
-            base.fileDejavuOverrides = {};
-            const merged = DEJAVU.adoptKnownKeys(base, parsed);
-            // Migrate the original two-state toggle into the global
-            // baseline; per-file overrides are sanitized below.
-            if (typeof merged.enabledForAll !== "boolean") {
-                merged.enabledForAll = !!merged.enabled;
-            }
-            merged.fileDejavuOverrides = normalizeFileDejavuOverrides(
-                merged.fileDejavuOverrides
-            );
-            merged.pendingUnsavedFoldersBySession = normalizePlainObject(
-                merged.pendingUnsavedFoldersBySession
-            );
-            merged.drawerState = normalizePlainObject(merged.drawerState);
-            merged.protectedSnapshots = normalizePlainObject(
-                merged.protectedSnapshots
-            );
-            merged.timelineSort = normalizeTimelineSort(merged.timelineSort);
-            merged.timelineRange = normalizeTimelineRange(merged.timelineRange);
-            merged.timelineFilter = String(merged.timelineFilter || "");
-            merged.snapshotNotes = normalizeStringMap(merged.snapshotNotes);
-            merged.enabled = !!merged.enabledForAll;
-            // Drop a remembered unsaved-document folder that no longer
-            // belongs under the current default folder (prevents a
-            // stale "/Untitled-1"-style path from being retried).
-            if (
-                merged.pendingUnsavedDejavuFolder &&
-                !pathIsInside(
-                    merged.pendingUnsavedDejavuFolder,
-                    merged.folder
-                )
-            ) {
-                merged.pendingUnsavedDejavuFolder = "";
-                merged.pendingUnsavedBaseName = "";
-                merged.pendingUnsavedDocumentSessionId = "";
-            }
-            Object.keys(merged.pendingUnsavedFoldersBySession).forEach((key) => {
-                const record = merged.pendingUnsavedFoldersBySession[key];
-                if (
-                    !record ||
-                    !record.folder ||
-                    !pathIsInside(record.folder, merged.folder)
-                ) {
-                    delete merged.pendingUnsavedFoldersBySession[key];
-                }
-            });
-            return merged;
-        } catch (e) {
-            try {
-                if (raw) {
-                    window.localStorage.setItem(
-                        STORAGE_CORRUPT_KEY,
-                        JSON.stringify({
-                            capturedAt: Date.now(),
-                            error: String(e && e.message ? e.message : e),
-                            raw
-                        })
-                    );
-                }
-                const backupRaw = window.localStorage.getItem(
-                    STORAGE_BACKUP_KEY
-                );
-                if (backupRaw) {
-                    JSON.parse(backupRaw);
-                    window.localStorage.setItem(STORAGE_KEY, backupRaw);
-                    return this.load();
-                }
-            } catch (eBackup) {
-                // Fall through to clean defaults if both copies are invalid.
-            }
-            const fallback = clone(DEFAULT_SETTINGS);
-            fallback.fileDejavuOverrides = {};
-            fallback.drawerState = {};
-            fallback.protectedSnapshots = {};
-            fallback.snapshotNotes = {};
-            return fallback;
+const cleanDefaultSettings = () => {
+    const defaults = clone(DEFAULT_SETTINGS);
+    defaults.fileDejavuOverrides = {};
+    defaults.protectedSnapshots = {};
+    defaults.snapshotNotes = {};
+    return defaults;
+};
+
+const normalizeLoadedSettings = (parsed) => {
+    const base = clone(DEFAULT_SETTINGS);
+    base.fileDejavuOverrides = {};
+    const merged = DEJAVU.adoptKnownKeys(base, parsed);
+    if (typeof merged.enabledForAll !== "boolean") {
+        merged.enabledForAll = !!merged.enabled;
+    }
+    merged.fileDejavuOverrides = normalizeFileDejavuOverrides(
+        merged.fileDejavuOverrides
+    );
+    merged.pendingUnsavedFoldersBySession = normalizePlainObject(
+        merged.pendingUnsavedFoldersBySession
+    );
+    merged.protectedSnapshots = normalizePlainObject(
+        merged.protectedSnapshots
+    );
+    merged.timelineSort = normalizeTimelineSort(merged.timelineSort);
+    merged.timelineRange = normalizeTimelineRange(merged.timelineRange);
+    merged.timelineFilter = String(merged.timelineFilter || "");
+    merged.snapshotNotes = normalizeStringMap(merged.snapshotNotes);
+    merged.enabled = !!merged.enabledForAll;
+    if (
+        merged.pendingUnsavedDejavuFolder &&
+        !pathIsInside(merged.pendingUnsavedDejavuFolder, merged.folder)
+    ) {
+        merged.pendingUnsavedDejavuFolder = "";
+        merged.pendingUnsavedBaseName = "";
+        merged.pendingUnsavedDocumentSessionId = "";
+    }
+    Object.keys(merged.pendingUnsavedFoldersBySession).forEach((key) => {
+        const record = merged.pendingUnsavedFoldersBySession[key];
+        if (
+            !record ||
+            !record.folder ||
+            !pathIsInside(record.folder, merged.folder)
+        ) {
+            delete merged.pendingUnsavedFoldersBySession[key];
+        }
+    });
+    return merged;
+};
+
+const settingsStore = new DejaVuSettingsStore({
+    storage: window.localStorage,
+    storageKey: STORAGE_KEY,
+    backupKey: STORAGE_BACKUP_KEY,
+    corruptKey: STORAGE_CORRUPT_KEY,
+    makeDefaults: cleanDefaultSettings,
+    normalize: normalizeLoadedSettings,
+    onSaveError: (error) => {
+        console.error(`[DejaVu] Settings save failed: ${error}`);
+        if (el.footerHint) {
+            setHint("Settings could not be stored locally.", "warn");
         }
     }
-
-    save() {
-        try {
-            const serialized = JSON.stringify(state.settings);
-            const previous = window.localStorage.getItem(STORAGE_KEY);
-            if (previous) {
-                window.localStorage.setItem(STORAGE_BACKUP_KEY, previous);
-            }
-            window.localStorage.setItem(STORAGE_KEY, serialized);
-            return true;
-        } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error(`[DejaVu] Settings save failed: ${e}`);
-            if (el.footerHint) {
-                setHint("Settings could not be stored locally.", "warn");
-            }
-            return false;
-        }
-    }
-}
-
-const settingsStore = new SettingsStore();
+});
 
 const restoredSnooze = loadPersistedSnoozeState();
 
@@ -898,6 +787,30 @@ const bindEvents = () => {
         window.setTimeout(() => btn.classList.remove("is-active"), 140);
     };
 
+    const spinRefreshIcon = (button) => {
+        if (!button) return;
+        const insights = button.closest(".timeline-insights");
+        button.classList.remove("is-spinning");
+        if (insights) insights.classList.remove("is-refreshing");
+        void button.offsetWidth;
+        button.classList.add("is-spinning");
+        if (insights) insights.classList.add("is-refreshing");
+        button.addEventListener("animationend", () => {
+            button.classList.remove("is-spinning");
+            if (insights) insights.classList.remove("is-refreshing");
+        }, { once: true });
+    };
+
+    document.addEventListener("click", (evt) => {
+        const target = evt.target.closest(".icon-refresh, .table-toggle");
+        const refreshIcon = target && target.classList.contains("icon-refresh")
+            ? target
+            : target
+                ? target.querySelector(".icon-refresh")
+                : null;
+        if (refreshIcon) spinRefreshIcon(refreshIcon);
+    });
+
     // Steps a number input by its step (optionally a factor, e.g. 10x for
     // Shift+Arrow), clamps to min/max, and notifies listeners. Dispatching
     // both input and change keeps the live UI and the persisted setting in
@@ -977,7 +890,11 @@ const bindEvents = () => {
 
             const check = document.createElement("span");
             check.className = "select-menu__check";
+            check.dataset.icon = "check-corner";
             check.setAttribute("aria-hidden", "true");
+            if (window.dejavu && window.dejavu.injectIcon) {
+                window.dejavu.injectIcon(check);
+            }
 
             const label = document.createElement("span");
             label.className = "select-menu__label";
@@ -1029,18 +946,18 @@ const bindEvents = () => {
 
     // Give every <select> a real chevron and replace the native popup with a
     // themed menu that can show the selected checkmark consistently in CEF.
-    // Extracted so dynamically-rendered selects (e.g. the Similarity drawer)
+    // Extracted so dynamically-rendered selects (e.g. the Similarity panel)
     // can be enhanced after the fact via window.dejavuEnhanceSelects(root).
     const enhanceSelectWrapper = (wrap) => {
         if (!wrap.querySelector(".select-chevron")) {
             const chevron = document.createElement("span");
             chevron.className = "select-chevron";
+            chevron.dataset.icon = "chevron-down";
             chevron.setAttribute("aria-hidden", "true");
-            chevron.innerHTML =
-                "<svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" " +
-                "stroke-width=\"2.5\" stroke-linecap=\"round\" " +
-                "stroke-linejoin=\"round\"><path d=\"M2 6l6 4 6-4\"/></svg>";
             wrap.appendChild(chevron);
+            if (window.dejavu && window.dejavu.injectIcon) {
+                window.dejavu.injectIcon(chevron);
+            }
         }
 
         const select = wrap.querySelector("select");
@@ -1050,7 +967,12 @@ const bindEvents = () => {
             menu.className = "select-menu";
             menu.setAttribute("role", "listbox");
             menu.setAttribute("aria-hidden", "true");
-            document.body.appendChild(menu);
+            const menuHost =
+                wrap.closest(".panel-view") ||
+                wrap.closest(".shell-content") ||
+                wrap.closest(".shell") ||
+                document.body;
+            menuHost.appendChild(menu);
 
             select.addEventListener("mousedown", (evt) => {
                 evt.preventDefault();
@@ -1138,41 +1060,29 @@ const bindEvents = () => {
         if (isDejavuEnabledForCurrent()) startLoop();
     });
 
-    el.intervalUnit.addEventListener("change", () => {
-        const oldUnit = parseInt(state.settings.intervalUnit, 10) || 60;
-        const newUnit = parseInt(el.intervalUnit.value, 10) || 60;
-        convertIntervalUnit(oldUnit, newUnit);
-        saveSettings();
-        if (isDejavuEnabledForCurrent()) startLoop();
-    });
+    if (el.intervalUnit) {
+        el.intervalUnit.addEventListener("change", () => {
+            const oldUnit = parseInt(state.settings.intervalUnit, 10) || 60;
+            const newUnit = parseInt(el.intervalUnit.value, 10) || 60;
+            convertIntervalUnit(oldUnit, newUnit);
+            saveSettings();
+            if (isDejavuEnabledForCurrent()) startLoop();
+        });
+    }
 
     if (el.intervalPresets) {
         el.intervalPresets.addEventListener("click", (evt) => {
-            const target = evt.target;
-            if (!target || !target.getAttribute) return;
-            const seconds = target.getAttribute("data-seconds");
-            if (!seconds) return;
-            applyIntervalSeconds(parseInt(seconds, 10));
+            const chip = evt.target.closest("[data-seconds]");
+            if (!chip || !el.intervalPresets.contains(chip)) return;
+            applyIntervalSeconds(chip.getAttribute("data-seconds"));
         });
     }
 
     if (el.safetyProfiles) {
         el.safetyProfiles.addEventListener("click", (evt) => {
-            const chip = evt.target && evt.target.closest
-                ? evt.target.closest("[data-profile]")
-                : null;
-            if (!chip) return;
+            const chip = evt.target.closest("[data-profile]");
+            if (!chip || !el.safetyProfiles.contains(chip)) return;
             applySafetyProfile(chip.getAttribute("data-profile"));
-        });
-    }
-
-    if (el.templatePresets) {
-        el.templatePresets.addEventListener("click", (evt) => {
-            const chip = evt.target && evt.target.closest
-                ? evt.target.closest("[data-template]")
-                : null;
-            if (!chip) return;
-            applyTemplateString(chip.getAttribute("data-template"));
         });
     }
 
@@ -1193,17 +1103,36 @@ const bindEvents = () => {
         el.folderInput.addEventListener("input", onFolderInputTyped);
     }
 
-    // Filename template editor is now managed by the TokenInput
-    // library (see setupFilenameTokenInput); the folder template uses a
-    // dedicated editor whose only editable region is the middle segment
-    // between the fixed $defaultFolder and $filename tokens.
+    if (el.folderPerDocumentToggle) {
+        el.folderPerDocumentToggle.addEventListener("change", () => {
+            state.settings.folderPerDocument =
+                el.folderPerDocumentToggle.checked;
+            saveSettings();
+            updateFolderStatus();
+        });
+    }
+
+    // Filename and folder templates are managed by TokenField.
     bindFolderTemplateEditor();
+
+    if (el.templatePresets) {
+        el.templatePresets.addEventListener("click", (evt) => {
+            const chip = evt.target.closest("[data-template]");
+            if (!chip || !el.templatePresets.contains(chip)) return;
+            applyTemplateString(chip.getAttribute("data-template") || "");
+        });
+    }
+
+    if (el.clearTemplateBtn) {
+        el.clearTemplateBtn.addEventListener("click", () => {
+            applyTemplateString("");
+        });
+    }
 
     el.overwriteToggle.addEventListener("change", () => {
         state.settings.overwriteExisting = el.overwriteToggle.checked;
         saveSettings();
         updatePreview();
-        syncSafetyProfiles();
     });
 
     el.onlyIfChangedToggle.addEventListener("change", () => {
@@ -1310,12 +1239,16 @@ const bindEvents = () => {
         });
     }
 
-    el.autoPinEveryInput.addEventListener("change", () => {
-        state.settings.autoPinEvery = Math.max(
-            0,
-            parseInt(el.autoPinEveryInput.value, 10) || 0
-        );
-        el.autoPinEveryInput.value = state.settings.autoPinEvery;
+    el.autoPinEveryToggle.addEventListener("change", () => {
+        // The number input became a checkbox in the settings refactor:
+        // ON keeps the existing cadence (or a sensible default of every 10
+        // dejavus); OFF disables auto-pinning.
+        if (el.autoPinEveryToggle.checked) {
+            const prev = parseInt(state.settings.autoPinEvery, 10) || 0;
+            state.settings.autoPinEvery = prev > 0 ? prev : 10;
+        } else {
+            state.settings.autoPinEvery = 0;
+        }
         saveSettings();
     });
 
@@ -1538,11 +1471,6 @@ const bindEvents = () => {
             renderOpenDocuments(state.openDocsCache);
         });
     }
-    if (el.openDocsSaveAllBtn) {
-        el.openDocsSaveAllBtn.addEventListener("click", () => {
-            saveOpenDocs(state.openDocsCache.slice());
-        });
-    }
     if (el.openDocsBulkOnBtn) {
         el.openDocsBulkOnBtn.addEventListener("click", () => {
             bulkSetDejavuSelected(true);
@@ -1635,11 +1563,6 @@ const bindEvents = () => {
             auditCacheHealth({ quiet: false });
         });
     }
-
-    el.clearTemplateBtn.addEventListener("click", () => {
-        applyTemplateString(DEFAULT_SETTINGS.template);
-        setHint("Filename template restored to default.", "ok");
-    });
 
     el.exportSettingsBtn.addEventListener("click", () => {
         exportSettings();
@@ -1760,9 +1683,15 @@ const bindEvents = () => {
         });
     }
 
-    if (el.donationPayBtn) {
-        el.donationPayBtn.addEventListener("click", () => {
-            openDonationPayment();
+    if (el.donationBuyMeCoffeeBtn) {
+        el.donationBuyMeCoffeeBtn.addEventListener("click", () => {
+            openDonationPayment("buymeacoffee");
+        });
+    }
+
+    if (el.donationKofiBtn) {
+        el.donationKofiBtn.addEventListener("click", () => {
+            openDonationPayment("kofi");
         });
     }
 
@@ -1779,15 +1708,6 @@ const bindEvents = () => {
             el.donationCurrencySelect.value = normalizeDonationCurrency(
                 el.donationCurrencySelect.value
             );
-        });
-    }
-
-    if (el.donationPlatformSelect) {
-        el.donationPlatformSelect.addEventListener("change", () => {
-            el.donationPlatformSelect.value = normalizeDonationPlatform(
-                el.donationPlatformSelect.value
-            );
-            renderDonationPlatformButton();
         });
     }
 
@@ -1877,12 +1797,14 @@ const runPeriodicRefresh = () => {
     if (state.periodicRefreshBusy || document.hidden) return;
     state.periodicRefreshBusy = true;
     refreshDocStatus().then(() => {
-        return refreshVersions(false);
-    }).then(() => {
         return checkRecoveryWarning();
     }).then(() => {
+        if (isPanelVisible("timelinePanel")) {
+            return refreshVersions(false);
+        }
+    }).then(() => {
         // The overview only matters while it's expanded.
-        if (el.openDocsDrawer && el.openDocsDrawer.open) {
+        if (isPanelVisible("openDocumentsPanel")) {
             return refreshOpenDocuments();
         }
     }).then(() => {
@@ -2038,33 +1960,80 @@ const PANEL_MAX_HEIGHT = 1000;
 const PANEL_MIN_WIDTH = 450;
 const PANEL_MAX_WIDTH = 600;
 
+const outerElementHeight = (node) => {
+    if (!node) return 0;
+    const cs = window.getComputedStyle(node);
+    if (cs.display === "none") return 0;
+    return (
+        node.offsetHeight +
+        (parseFloat(cs.marginTop) || 0) +
+        (parseFloat(cs.marginBottom) || 0)
+    );
+};
+
+const naturalStackHeight = (node) => {
+    if (!node) return 0;
+    const cs = window.getComputedStyle(node);
+    if (cs.display === "none") return 0;
+    const gap = parseFloat(cs.rowGap || cs.gap) || 0;
+    let total = (parseFloat(cs.paddingTop) || 0) +
+        (parseFloat(cs.paddingBottom) || 0);
+    let visibleCount = 0;
+    Array.prototype.forEach.call(node.children, (child) => {
+        const childCs = window.getComputedStyle(child);
+        if (childCs.display === "none") return;
+        if (visibleCount > 0) total += gap;
+        total += child.offsetHeight;
+        total += (parseFloat(childCs.marginTop) || 0) +
+            (parseFloat(childCs.marginBottom) || 0);
+        visibleCount += 1;
+    });
+    return Math.ceil(total);
+};
+
 /**
- * Measures the panel's *natural* content height by summing the
- * heights of the .app's direct children. The footer is pinned with
- * margin-top:auto, so we deliberately ignore that flexible gap (and
- * any element's auto margin) — otherwise an over-tall panel would
- * always measure back its own viewport height and never shrink.
+ * Measures the panel's natural content height from the current shell layout.
+ * The scroll containers are flex-sized in the live UI, so using offsetHeight
+ * directly would measure the viewport rather than the content that should fit.
  * @return {number} Content height in CSS pixels.
  */
 const naturalContentHeight = () => {
-    const app = el.app;
-    if (!app) return 0;
+    const wrapper = document.querySelector(".wrapper");
+    const container = wrapper
+        ? wrapper.querySelector(":scope > .container")
+        : document.querySelector(".container");
+    const activeShell = container
+        ? container.querySelector(".shell:not([hidden])")
+        : document.querySelector(".shell:not([hidden])");
+    const containerCs = container
+        ? window.getComputedStyle(container)
+        : null;
+    const shellCs = activeShell
+        ? window.getComputedStyle(activeShell)
+        : null;
     let total = 0;
-    const kids = app.children;
-    for (let i = 0; i < kids.length; i++) {
-        const child = kids[i];
-        const cs = window.getComputedStyle(child);
-        if (cs.display === "none") continue;
-        total += child.offsetHeight;
-        total += parseFloat(cs.marginBottom) || 0;
-        // Skip the footer's auto top margin (the flexible spacer).
-        if (!child.classList.contains("app__footer")) {
-            total += parseFloat(cs.marginTop) || 0;
-        }
+    if (wrapper) {
+        total += outerElementHeight(wrapper.querySelector(":scope > .header"));
+        total += outerElementHeight(
+            wrapper.querySelector(":scope > .app__footer")
+        );
+        const ws = window.getComputedStyle(wrapper);
+        total += (parseFloat(ws.paddingTop) || 0) +
+            (parseFloat(ws.paddingBottom) || 0);
     }
-    const as = window.getComputedStyle(app);
-    total += (parseFloat(as.paddingTop) || 0) +
-        (parseFloat(as.paddingBottom) || 0);
+    if (containerCs) {
+        total += (parseFloat(containerCs.paddingTop) || 0) +
+            (parseFloat(containerCs.paddingBottom) || 0) +
+            (parseFloat(containerCs.marginTop) || 0) +
+            (parseFloat(containerCs.marginBottom) || 0);
+    }
+    if (shellCs) {
+        total += naturalStackHeight(activeShell) +
+            (parseFloat(shellCs.marginTop) || 0) +
+            (parseFloat(shellCs.marginBottom) || 0);
+    } else if (!total) {
+        total = naturalStackHeight(document.querySelector(".app"));
+    }
     return Math.ceil(total);
 };
 
@@ -2100,15 +2069,17 @@ const schedulePanelAutoSize = () => {
 
 /**
  * Watches the app subtree for the structural changes that affect
- * height (drawers opening, lists re-rendering, bars showing/hiding)
+ * height (panels changing, lists re-rendering, bars showing/hiding)
  * and re-fits the panel. Text-only mutations are ignored so the
  * once-a-second countdown does not thrash the host.
  */
 const initPanelAutoSize = () => {
-    el.app = el.app || document.querySelector(".app");
+    el.app = el.app || document.querySelector(".wrapper") ||
+        document.querySelector(".container") ||
+        document.querySelector(".app");
     if (!el.app || typeof window.MutationObserver !== "function") return;
     panelObserver = new MutationObserver(schedulePanelAutoSize);
-    // Only watch attributes that actually change the panel's height (drawers
+    // Only watch attributes that actually change the panel's height (panels
     // opening, elements hiding). Watching "class"/"style" across the whole
     // subtree made every hover, dropdown toggle and animated width write force
     // a synchronous reflow + host resize, which made the panel feel sluggish.
@@ -2173,15 +2144,104 @@ const updateFlyoutMenuState = () => {
     );
 };
 
-const openPanelDrawer = (drawerId) => {
-    const drawer = document.getElementById(drawerId);
-    if (!drawer) return;
-    drawer.open = true;
-    drawer.scrollIntoView({ block: "nearest" });
-    if (drawerId === "openDocsDrawer") refreshOpenDocuments();
-    if (drawerId === "versionDrawer") refreshVersions(true);
-    if (drawerId === "recoveryCenterDrawer") renderRecoveryCenter();
+const mainPanelIds = [
+    "timelinePanel",
+    "recoveryPanel",
+    "openDocumentsPanel",
+    "similarityPanel"
+];
+
+const settingsPanelIds = [
+    "comparisonSettingsPanel",
+    "cacheHealthPanel",
+    "saveIntervalPanel",
+    "locationsPanel",
+    "advancedPanel"
+];
+
+const isPanelVisible = (panelId) => {
+    const panel = document.getElementById(panelId);
+    return !!panel && !panel.hidden;
+};
+
+const activateMainPanel = (panelId) => {
+    if (!mainPanelIds.includes(panelId)) return;
+    const mainShell = document.getElementById("mainShell");
+    const similarityShell = document.getElementById("similarityShell");
+    const settingsShell = document.getElementById("settingsShell");
+    const shellButtons = document.querySelectorAll("[data-shell-target]");
+    const activeShellId =
+        panelId === "similarityPanel" ? "similarityShell" : "mainShell";
+    if (mainShell) {
+        mainShell.hidden = activeShellId !== "mainShell";
+    }
+    if (similarityShell) {
+        similarityShell.hidden = activeShellId !== "similarityShell";
+    }
+    if (settingsShell) {
+        settingsShell.hidden = true;
+    }
+    Array.prototype.forEach.call(shellButtons, (btn) => {
+        const active =
+            btn.getAttribute("data-shell-target") === activeShellId;
+        btn.classList.toggle("is-on", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    mainPanelIds.forEach((id) => {
+        const panel = document.getElementById(id);
+        const tab = document.querySelector(`[data-panel-tab="${id}"]`);
+        const active = id === panelId;
+        if (panel) {
+            panel.hidden = !active;
+            panel.classList.toggle("is-active", active);
+        }
+        if (tab) {
+            tab.classList.toggle("is-active", active);
+            tab.setAttribute("aria-selected", active ? "true" : "false");
+        }
+    });
+    if (panelId === "openDocumentsPanel") refreshOpenDocuments();
+    if (panelId === "timelinePanel") refreshVersions(true);
+    if (panelId === "recoveryPanel") renderRecoveryCenter();
     schedulePanelAutoSize();
+};
+
+const activateSettingsPanel = (panelId) => {
+    if (!settingsPanelIds.includes(panelId)) return;
+    settingsPanelIds.forEach((id) => {
+        const panel = document.getElementById(id);
+        const tab = document.querySelector(`[data-panel-tab="${id}"]`);
+        const active = id === panelId;
+        if (panel) {
+            panel.hidden = !active;
+            panel.classList.toggle("is-active", active);
+        }
+        if (tab) {
+            tab.classList.toggle("is-active", active);
+            tab.setAttribute("aria-selected", active ? "true" : "false");
+        }
+    });
+    schedulePanelAutoSize();
+};
+
+const openMainPanel = (panelId) => {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    activateMainPanel(panelId);
+    panel.scrollIntoView({ block: "nearest" });
+};
+
+const bindPanelNavigation = () => {
+    document.querySelectorAll("[data-panel-tab]").forEach((tab) => {
+        tab.addEventListener("click", () => {
+            const panelId = tab.getAttribute("data-panel-tab");
+            if (settingsPanelIds.includes(panelId)) {
+                activateSettingsPanel(panelId);
+            } else {
+                activateMainPanel(panelId);
+            }
+        });
+    });
 };
 
 const handleFlyoutMenuClick = (event) => {
@@ -2255,13 +2315,13 @@ const handleFlyoutMenuClick = (event) => {
         }
         break;
     case FLYOUT_MENU_IDS.openTimeline:
-        openPanelDrawer("versionDrawer");
+        openMainPanel("timelinePanel");
         break;
     case FLYOUT_MENU_IDS.openRecovery:
-        openPanelDrawer("recoveryCenterDrawer");
+        openMainPanel("recoveryPanel");
         break;
     case FLYOUT_MENU_IDS.openDocuments:
-        openPanelDrawer("openDocsDrawer");
+        openMainPanel("openDocumentsPanel");
         break;
     case FLYOUT_MENU_IDS.pauseFive:
         snoozeFor(300);
@@ -2358,7 +2418,6 @@ const init = () => {
     el.headerResetSettingsBtn = document.getElementById(
         "headerResetSettingsBtn"
     );
-    // el.modeTag = document.getElementById("modeTag");
     el.modeSeg = document.getElementById("modeSeg");
     el.modeSegButtons = el.modeSeg
         ? Array.prototype.slice.call(
@@ -2389,14 +2448,7 @@ const init = () => {
     el.intervalPresets = document.getElementById("intervalPresets");
     el.safetyProfiles = document.getElementById("safetyProfiles");
     el.folderInput = document.getElementById("folderInput");
-    el.folderField = document.getElementById("folderField");
-    el.folderValidity = document.getElementById("folderValidity");
     el.browseFolderBtn = document.getElementById("browseFolderBtn");
-    el.templateInput = document.getElementById("templateInput");
-    el.templateEditor = document.getElementById("templateEditor");
-    el.tokensList = document.getElementById("tokensList");
-    el.templatePresets = document.getElementById("templatePresets");
-    el.templatePreview = document.getElementById("templatePreview");
     el.overwriteToggle = document.getElementById("overwriteToggle");
     el.onlyIfChangedToggle = document.getElementById(
         "onlyIfChangedToggle"
@@ -2422,9 +2474,15 @@ const init = () => {
     );
     el.cacheDiskSpaceFill = document.getElementById("cacheDiskSpaceFill");
     el.folderTemplateInput = document.getElementById("folderTemplateInput");
-    el.folderTemplateEditor = document.getElementById(
-        "folderTemplateEditor"
+    el.folderPerDocumentToggle = document.getElementById(
+        "folderPerDocumentToggle"
     );
+    el.templateEditor = document.getElementById("templateEditor");
+    el.templateInput = document.getElementById("templateInput");
+    el.tokensList = document.getElementById("tokensList");
+    el.templatePresets = document.getElementById("templatePresets");
+    el.templatePreview = document.getElementById("templatePreview");
+    el.clearTemplateBtn = document.getElementById("clearTemplateBtn");
     el.recoveryCheckToggle = document.getElementById("recoveryCheckToggle");
     el.autoRecoverCrashToggle = document.getElementById(
         "autoRecoverCrashToggle"
@@ -2432,14 +2490,14 @@ const init = () => {
     el.checkForUpdatesToggle = document.getElementById(
         "checkForUpdatesToggle"
     );
-    el.autoPinEveryInput = document.getElementById("autoPinEveryInput");
+    el.autoPinEveryToggle = document.getElementById("autoPinEveryToggle");
     el.recoveryCandidateList = document.getElementById(
         "recoveryCandidateList"
     );
     el.recoveryCandidateCount = document.getElementById(
         "recoveryCandidateCount"
     );
-    el.openDocsDrawer = document.getElementById("openDocsDrawer");
+    el.openDocumentsPanel = document.getElementById("openDocumentsPanel");
     el.openDocsList = document.getElementById("openDocsList");
     el.openDocsCount = document.getElementById("openDocsCount");
     el.openDocsSelectAllToggle = document.getElementById(
@@ -2451,7 +2509,6 @@ const init = () => {
     el.openDocsFilterInput = document.getElementById("openDocsFilterInput");
     el.openDocsSortSelect = document.getElementById("openDocsSortSelect");
     el.openDocsRangeSelect = document.getElementById("openDocsRangeSelect");
-    el.openDocsSaveAllBtn = document.getElementById("openDocsSaveAllBtn");
     el.openDocsBulkBar = document.getElementById("openDocsBulkBar");
     el.openDocsSelectionCount = document.getElementById(
         "openDocsSelectionCount"
@@ -2462,7 +2519,6 @@ const init = () => {
     el.openDocsBulkSaveMenuBtn = document.getElementById(
         "openDocsBulkSaveMenuBtn"
     );
-    el.recoveryOpenAllBtn = document.getElementById("recoveryOpenAllBtn");
     el.recoveryClearMissingBtn = document.getElementById(
         "recoveryClearMissingBtn"
     );
@@ -2514,7 +2570,6 @@ const init = () => {
     el.bulkClearBtn = document.getElementById("bulkClearBtn");
     el.revealLogBtn = document.getElementById("revealLogBtn");
     el.healthCheckBtn = document.getElementById("healthCheckBtn");
-    el.clearTemplateBtn = document.getElementById("clearTemplateBtn");
     el.exportSettingsBtn = document.getElementById("exportSettingsBtn");
     el.importSettingsBtn = document.getElementById("importSettingsBtn");
     el.importSettingsInput = document.getElementById("importSettingsInput");
@@ -2524,30 +2579,25 @@ const init = () => {
     el.donationScrim = document.getElementById("donationScrim");
     el.donationCloseBtn = document.getElementById("donationCloseBtn");
     el.donationLaterBtn = document.getElementById("donationLaterBtn");
-    el.donationPayBtn = document.getElementById("donationPayBtn");
+    el.donationBuyMeCoffeeBtn = document.getElementById(
+        "donationBuyMeCoffeeBtn"
+    );
+    el.donationKofiBtn = document.getElementById("donationKofiBtn");
     el.donationAmountInput = document.getElementById("donationAmountInput");
     el.donationCurrencySelect = document.getElementById(
         "donationCurrencySelect"
-    );
-    el.donationPlatformSelect = document.getElementById(
-        "donationPlatformSelect"
     );
     el.donationVersion = document.getElementById("donationVersion");
     el.donationGithubUrl = document.getElementById("donationGithubUrl");
 
     setupFilenameTokenInput();
-    renderFolderTokenPalette();
+    setupFolderTemplateInput();
     hydrateForm();
     bindEvents();
-    bindDrawerState();
+    bindPanelNavigation();
     Tooltip.init();
     suppressBrowserContextMenu();
     initFlyoutMenu();
-    if (el.openDocsDrawer) {
-        el.openDocsDrawer.addEventListener("toggle", () => {
-            if (el.openDocsDrawer.open) refreshOpenDocuments();
-        });
-    }
     renderRecoveryCenter();
     updateSessionStats();
     if (isSnoozed()) {
@@ -2564,10 +2614,7 @@ const init = () => {
         validateFolderInput();
         syncInstallSignatureAndSplash();
         refreshDocStatus().then(() => {
-            refreshVersions(true);
-            auditCacheHealth({ quiet: true });
             checkRecoveryWarning();
-            refreshOpenDocuments();
         }).then(() => {
             if (
                 crashDetected &&
@@ -2582,7 +2629,7 @@ const init = () => {
 
     state.periodicRefreshId = window.setInterval(
         runPeriodicRefresh,
-        4000
+        12000
     );
 
     // Surface the post-reset confirmation that survived the reload kicked
@@ -2597,7 +2644,7 @@ const init = () => {
     }
 
     // Start watching content height once the first layout settles, so
-    // the panel fits its expanded/collapsed drawers from the outset.
+    // the panel fits its expanded/collapsed panels from the outset.
     initPanelAutoSize();
 };
 

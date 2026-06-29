@@ -197,15 +197,6 @@ const syncDejavuModeUi = () => {
             : `Set dejavu: ${getDejavuModeLabel(btnMode)}`;
     });
 
-    // Compact at-a-glance label in the header.
-    // if (el.modeTag) {
-    //     el.modeTag.textContent = label;
-    //     el.modeTag.classList.toggle(
-    //         "app__mode-tag--on",
-    //         isDejavuEnabledForCurrent()
-    //     );
-    // }
-
     state.settings.enabled = isDejavuEnabledForCurrent();
     updateModeIndicator();
 };

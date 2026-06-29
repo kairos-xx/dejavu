@@ -44,6 +44,15 @@
   SVGSimilarityCEPAdapter.prototype.binaryRuns = function binaryRuns(cmd) {
     if (!cmd || !this.cp || typeof this.cp.spawnSync !== "function") return false;
     if (this._binCache[cmd] != null) return this._binCache[cmd];
+    if (/Inkscape_mac_|inkscape_windows_intel|inkscape-win|Inkscape\.app/.test(String(cmd))) {
+      try {
+        this._binCache[cmd] = this.fs.existsSync(cmd);
+        return this._binCache[cmd];
+      } catch (ignoredBundledExists) {
+        this._binCache[cmd] = false;
+        return false;
+      }
+    }
     var ok = false;
     try {
       var res = this.cp.spawnSync(cmd, ["--version"],
@@ -56,23 +65,155 @@
     return ok;
   };
 
-  // Locate an Inkscape binary: the configured path, PATH, then the usual
-  // per-OS install locations (Inkscape is rarely on PATH on macOS/Windows).
+  SVGSimilarityCEPAdapter.prototype.baseDirs = function baseDirs() {
+    var dirs = [];
+    var self = this;
+    var add = function (dir) {
+      if (dir && dirs.indexOf(dir) === -1) dirs.push(dir);
+    };
+    try {
+      if (typeof process !== "undefined" && typeof process.cwd === "function") {
+        add(process.cwd());
+      }
+    } catch (ignoredCwd) {}
+    try {
+      if (typeof process !== "undefined" && process.execPath) {
+        add(self.path.dirname(process.execPath));
+      }
+    } catch (ignoredExecPath) {}
+    try {
+      if (typeof __dirname !== "undefined") add(__dirname);
+    } catch (ignoredDirname) {}
+    try {
+      if (global.document && document.currentScript && document.currentScript.src) {
+        var src = decodeURIComponent(String(document.currentScript.src).replace(/^file:\/\//, ""));
+        add(this.path.dirname(src));
+      }
+    } catch (ignoredScript) {}
+    dirs.slice().forEach(function (dir) {
+      var current = dir;
+      for (var i = 0; i < 6; i += 1) {
+        add(current);
+        current = self.path.dirname(current);
+        if (!current || current === self.path.dirname(current)) break;
+      }
+    });
+    return dirs;
+  };
+
+  SVGSimilarityCEPAdapter.prototype.platformTarget = function platformTarget() {
+    var platform = (this.os && this.os.platform && this.os.platform()) || "";
+    var arch = (this.os && this.os.arch && this.os.arch()) ||
+      (typeof process !== "undefined" && process.arch) || "";
+    if (platform === "darwin") return arch === "arm64" ? "mac-arm64" : "mac-intel";
+    if (platform === "win32") return arch === "arm64" ? "win-arm64" : "win-intel";
+    return platform || "unknown";
+  };
+
+  SVGSimilarityCEPAdapter.prototype.pathRuns = function pathRuns(cmd, args) {
+    if (!cmd) return false;
+    if (/[\\/]/.test(String(cmd))) {
+      try {
+        if (!this.fs.existsSync(cmd)) return false;
+      } catch (ignoredExists) {
+        return false;
+      }
+    }
+    if (!this.cp || typeof this.cp.spawnSync !== "function") return true;
+    try {
+      var res = this.cp.spawnSync(cmd, args || [], {
+        encoding: "utf8",
+        timeout: 8000,
+        windowsHide: true
+      });
+      return !!(res && !res.error);
+    } catch (ignoredSpawn) {
+      return false;
+    }
+  };
+
+  SVGSimilarityCEPAdapter.prototype.bundledInkscapeCandidates =
+      function bundledInkscapeCandidates() {
+    var candidates = [];
+    var platform = (this.os && this.os.platform && this.os.platform()) || "";
+    var target = this.platformTarget();
+    var bases = this.baseDirs();
+    var self = this;
+    bases.forEach(function (base) {
+      [
+        self.path.join(base, "inkscape"),
+        base,
+        self.path.join(base, "vendor"),
+        self.path.join(base, "vendor", "inkscape"),
+        self.path.join(base, "tools"),
+        self.path.join(base, "tools", "inkscape"),
+        self.path.join(base, "bin"),
+        self.path.join(base, "ai2svg-mac"),
+        self.path.join(base, "ai2svg-windows")
+      ].forEach(function (dir) {
+        if (platform === "darwin") {
+          if (target === "mac-arm64") {
+            candidates.push(self.path.join(dir, "Inkscape_mac_arm64.app", "Contents", "MacOS", "inkscape"));
+          } else if (target === "mac-intel") {
+            candidates.push(self.path.join(dir, "Inkscape_mac_intel.app", "Contents", "MacOS", "inkscape"));
+          }
+          candidates.push(self.path.join(dir, "Inkscape.app", "Contents", "MacOS", "inkscape"));
+        } else if (platform === "win32" && target === "win-intel") {
+          candidates.push(self.path.join(dir, "inkscape_windows_intel", "bin", "inkscape.com"));
+          candidates.push(self.path.join(dir, "inkscape-win", "bin", "inkscape.com"));
+        }
+      });
+    });
+    return candidates;
+  };
+
+  SVGSimilarityCEPAdapter.prototype.resolveAI2SVGBinary =
+      function resolveAI2SVGBinary() {
+    if (this._ai2svgBin !== undefined) return this._ai2svgBin;
+    var candidates = [];
+    var configured = this.external && this.external.ai2svgPath;
+    if (configured) candidates.push(configured);
+    candidates.push("ai2svg");
+    var platform = (this.os && this.os.platform && this.os.platform()) || "";
+    var exe = platform === "win32" ? "ai2svg.exe" : "ai2svg";
+    var bases = this.baseDirs();
+    var self = this;
+    bases.forEach(function (base) {
+      [
+        base,
+        self.path.join(base, "ai2svg-mac"),
+        self.path.join(base, "ai2svg-windows"),
+        self.path.join(base, "vendor", "ai2svg-mac"),
+        self.path.join(base, "vendor", "ai2svg-windows"),
+        self.path.join(base, "tools", "ai2svg-mac"),
+        self.path.join(base, "tools", "ai2svg-windows")
+      ].forEach(function (dir) {
+        candidates.push(self.path.join(dir, exe));
+      });
+    });
+    var found = null;
+    for (var i = 0; i < candidates.length; i += 1) {
+      if (this.pathRuns(candidates[i], [])) { found = candidates[i]; break; }
+    }
+    this._ai2svgBin = found;
+    return found;
+  };
+
+  // Locate an Inkscape binary: a configured path, a bundled distribution,
+  // PATH, then the usual per-OS install locations.
   SVGSimilarityCEPAdapter.prototype.resolveInkscapeBinary =
       function resolveInkscapeBinary() {
     if (this._inkscapeBin !== undefined) return this._inkscapeBin;
     var candidates = [];
     var configured = this.external && this.external.inkscapePath;
     if (configured) candidates.push(configured);
+    candidates = candidates.concat(this.bundledInkscapeCandidates());
     candidates.push("inkscape");
     var platform = (this.os && this.os.platform && this.os.platform()) || "";
     if (platform === "darwin") {
       candidates.push("/Applications/Inkscape.app/Contents/MacOS/inkscape");
-      candidates.push("/opt/homebrew/bin/inkscape");
-      candidates.push("/usr/local/bin/inkscape");
     } else if (platform === "win32") {
-      candidates.push("C:\\Program Files\\Inkscape\\bin\\inkscape.exe");
-      candidates.push("C:\\Program Files\\Inkscape\\inkscape.exe");
+      candidates.push("C:\\Program Files\\Inkscape\\bin\\inkscape.com");
     } else {
       candidates.push("/usr/bin/inkscape");
       candidates.push("/usr/local/bin/inkscape");
@@ -86,8 +227,96 @@
     return found;
   };
 
-  // Convert any vector file (AI/PDF/EPS/SVG) to plain SVG via Inkscape — no
-  // Illustrator involved, so nothing opens or closes. Handles both the
+  SVGSimilarityCEPAdapter.prototype.convertWithAI2SVG =
+      function convertWithAI2SVG(filePath) {
+    var self = this;
+    return new Promise(function (resolve, reject) {
+      var bin = self.resolveAI2SVGBinary();
+      if (!bin) { reject(new Error("AI2SVG converter not found.")); return; }
+      if (!self.cp || typeof self.cp.spawn !== "function") {
+        reject(new Error("Shell access is unavailable for AI2SVG."));
+        return;
+      }
+      var out = self.tempSVGPath("svgsim_ai2svg");
+      var ctx = self._progressContext || {};
+      if (typeof self.progress === "function" && ctx.total) {
+        self.progress({
+          stage: "ai2svg",
+          done: ctx.done || 0,
+          current: (ctx.done || 0) + 0.35,
+          total: ctx.total,
+          file: ctx.file,
+          attempt: 1
+        });
+      }
+      var child;
+      var stderr = "";
+      var finished = false;
+      var timer = null;
+      var finish = function (error) {
+        if (finished) return;
+        finished = true;
+        if (timer) clearTimeout(timer);
+        if (error) {
+          self.deleteFileQuietly(out);
+          reject(error);
+          return;
+        }
+        var exists = false;
+        try { exists = self.fs.existsSync(out); } catch (ignoredExists) {}
+        if (!exists) {
+          reject(new Error("AI2SVG produced no SVG output." + (stderr ? " " + stderr : "")));
+          return;
+        }
+        try {
+          var text = self.readTextAndDelete(out);
+          if (text && text.indexOf("<svg") !== -1) {
+            resolve(text);
+            return;
+          }
+          reject(new Error("AI2SVG output was not SVG."));
+        } catch (readError) {
+          reject(readError);
+        }
+      };
+      try {
+        child = self.cp.spawn(bin, [filePath, out], { windowsHide: true });
+      } catch (spawnError) {
+        reject(spawnError);
+        return;
+      }
+      timer = setTimeout(function () {
+        try { child.kill(); } catch (ignoredKill) {}
+        finish(new Error("AI2SVG timed out."));
+      }, 90000);
+      if (child.stderr) {
+        child.stderr.on("data", function (chunk) { stderr += String(chunk || ""); });
+      }
+      child.on("error", finish);
+      child.on("close", function (code) {
+        if (typeof self.progress === "function" && ctx.total) {
+          self.progress({
+            stage: "ai2svg",
+            done: ctx.done || 0,
+            current: (ctx.done || 0) + 0.85,
+            total: ctx.total,
+            file: ctx.file,
+            attempt: 1
+          });
+        }
+        if (code !== 0) {
+          finish(new Error("AI2SVG failed." + (stderr ? " " + stderr : "")));
+          return;
+        }
+        finish();
+      });
+    });
+  };
+
+  // Convert AI/PDF/SVG-ish files to plain SVG via Inkscape — no Illustrator
+  // involved, so nothing opens or closes. EPS is intentionally excluded
+  // because Inkscape often treats it as XML and fails before conversion.
+  // Handles both the
   // Inkscape 1.x and 0.92 command-line syntaxes.
   SVGSimilarityCEPAdapter.prototype.convertWithInkscape =
       function convertWithInkscape(filePath) {
@@ -96,12 +325,59 @@
       var bin = self.resolveInkscapeBinary();
       if (!bin) { reject(new Error("Inkscape not found.")); return; }
       var out = self.tempSVGPath("svgsim_inkscape");
+      var ctx = self._progressContext || {};
       var argSets = [
+        [filePath, "--export-type=svg", "--export-plain-svg",
+          "--export-filename=" + out],
         ["--export-type=svg", "--export-plain-svg",
           "--export-filename=" + out, filePath],
+        [filePath, "--export-plain-svg=" + out],
         ["--export-plain-svg=" + out, filePath]
       ];
       var tried = 0;
+      var runInkscape = function (args, done) {
+        if (!self.cp || typeof self.cp.spawn !== "function") {
+          try {
+            var res = self.cp.spawnSync(bin, args,
+              { encoding: "utf8", timeout: 90000, windowsHide: true });
+            done(null, res);
+          } catch (eSync) {
+            done(eSync);
+          }
+          return;
+        }
+        var child;
+        var stdout = "";
+        var stderr = "";
+        var finished = false;
+        var timer = null;
+        var finish = function (error, result) {
+          if (finished) return;
+          finished = true;
+          if (timer) clearTimeout(timer);
+          done(error, result);
+        };
+        try {
+          child = self.cp.spawn(bin, args, { windowsHide: true });
+        } catch (eSpawn) {
+          finish(eSpawn);
+          return;
+        }
+        timer = setTimeout(function () {
+          try { child.kill(); } catch (ignoredKill) {}
+          finish(new Error("Inkscape timed out."));
+        }, 90000);
+        if (child.stdout) {
+          child.stdout.on("data", function (chunk) { stdout += String(chunk || ""); });
+        }
+        if (child.stderr) {
+          child.stderr.on("data", function (chunk) { stderr += String(chunk || ""); });
+        }
+        child.on("error", function (error) { finish(error); });
+        child.on("close", function (code) {
+          finish(null, { status: code, stdout: stdout, stderr: stderr });
+        });
+      };
       var attempt = function () {
         if (tried >= argSets.length) {
           reject(new Error("Inkscape produced no SVG output."));
@@ -109,21 +385,29 @@
         }
         var args = argSets[tried];
         tried += 1;
-        try {
-          self.cp.spawnSync(bin, args,
-            { encoding: "utf8", timeout: 90000, windowsHide: true });
-        } catch (e) { attempt(); return; }
-        var exists = false;
-        try { exists = self.fs.existsSync(out); } catch (eEx) {}
-        if (exists) {
-          var text = "";
-          try { text = self.readTextAndDelete(out); } catch (eRead) {
-            reject(eRead);
-            return;
-          }
-          if (text && text.indexOf("<svg") !== -1) { resolve(text); return; }
+        if (typeof self.progress === "function" && ctx.total) {
+          self.progress({
+            stage: "inkscape",
+            done: ctx.done || 0,
+            current: (ctx.done || 0) + Math.min(0.65, 0.25 + tried * 0.12),
+            total: ctx.total,
+            file: ctx.file,
+            attempt: tried
+          });
         }
-        attempt();
+        runInkscape(args, function () {
+          var exists = false;
+          try { exists = self.fs.existsSync(out); } catch (eEx) {}
+          if (exists) {
+            var text = "";
+            try { text = self.readTextAndDelete(out); } catch (eRead) {
+              reject(eRead);
+              return;
+            }
+            if (text && text.indexOf("<svg") !== -1) { resolve(text); return; }
+          }
+          attempt();
+        });
       };
       attempt();
     });
@@ -134,7 +418,7 @@
       function canConvertWithoutIllustrator(filePath) {
     var ext = extOf(filePath);
     if (ext === ".svg" || ext === ".svgz") return true;
-    return !!this.resolveInkscapeBinary();
+    return !!(this.resolveAI2SVGBinary() || this.resolveInkscapeBinary());
   };
 
   SVGSimilarityCEPAdapter.prototype.deleteFileQuietly = function deleteFileQuietly(filePath) {
@@ -203,7 +487,17 @@
     var filePath = typeof file === "string" ? file : file.path;
     var ext = extOf(filePath), self = this;
     if (ext === ".svg" || ext === ".svgz") return self.readText(filePath).then(function (svgText) { return { svgText: svgText, format: ext.slice(1), converted: false, sourcePath: filePath }; });
-    return self.convertVectorFileToSVG(filePath).then(function (svgText) { return { svgText: svgText, format: ext.slice(1), converted: true, sourcePath: filePath, conversionPlan: self._lastConversionPlan ? self._lastConversionPlan.slice() : [] }; });
+    if (ext === ".ai" || ext === ".pdf") {
+      return self.convertVectorFileToSVG(filePath, self.resolveConversionPlanForExtension(ext)).then(function (svgText) {
+        return { svgText: svgText, format: ext.slice(1), converted: true, sourcePath: filePath, converter: self._lastConverter || null, conversionPlan: self._lastConversionPlan ? self._lastConversionPlan.slice() : [] };
+      });
+    }
+    if (ext === ".eps") {
+      return self.convertVectorFileToSVG(filePath, self.resolveConversionPlanForExtension(ext)).then(function (svgText) {
+        return { svgText: svgText, format: ext.slice(1), converted: true, sourcePath: filePath, converter: self._lastConverter || null, conversionPlan: self._lastConversionPlan ? self._lastConversionPlan.slice() : [] };
+      });
+    }
+    return self.convertVectorFileToSVG(filePath).then(function (svgText) { return { svgText: svgText, format: ext.slice(1), converted: true, sourcePath: filePath, converter: self._lastConverter || null, conversionPlan: self._lastConversionPlan ? self._lastConversionPlan.slice() : [] }; });
   };
 
   SVGSimilarityCEPAdapter.prototype.readHeader = function readHeader(filePath, maxBytes) {
@@ -241,51 +535,54 @@
     });
   };
 
-  SVGSimilarityCEPAdapter.prototype.resolveConversionPlan = function resolveConversionPlan(filePath) {
-    var external = this.external || {};
-    var prefer = external.prefer || ["embeddedSVG", "illustrator"];
-    var supported = {};
-
-    supported.embeddedSVG = true;
-    supported.illustrator = true;
-    if (this.resolveInkscapeBinary()) supported.inkscape = true;
-
-    var out = [];
-    for (var i = 0; i < prefer.length; i += 1) {
-      var name = prefer[i];
-      if (name === "auto") continue;
-      if (supported[name] && out.indexOf(name) === -1) out.push(name);
-    }
-
-    if (out.length === 0 || prefer.indexOf("auto") !== -1) {
-      var auto = ["embeddedSVG"];
-      if (supported.illustrator) auto.push("illustrator");
-      for (var j = 0; j < auto.length; j += 1) {
-        if (supported[auto[j]] && out.indexOf(auto[j]) === -1) out.push(auto[j]);
-      }
-    }
-
-    if (supported.illustrator && out.indexOf("illustrator") === -1) {
-      out.push("illustrator");
-    }
-
-    this._lastConversionPlan = out.slice();
-    return out;
+  SVGSimilarityCEPAdapter.prototype.converterSupport = function converterSupport() {
+    return {
+      embeddedSVG: true,
+      ai2svg: !!this.resolveAI2SVGBinary(),
+      inkscape: true,
+      illustrator: true
+    };
   };
 
-  SVGSimilarityCEPAdapter.prototype.convertVectorFileToSVG = function convertVectorFileToSVG(filePath) {
+  SVGSimilarityCEPAdapter.prototype.resolveConversionPlan = function resolveConversionPlan() {
+    var external = this.external || {};
+    var planner = global.SVGSimilarityConverters;
+    var plan = planner.resolvePlan({
+      prefer: external.prefer,
+      supported: this.converterSupport()
+    });
+    this._lastConversionPlan = plan.slice();
+    return plan;
+  };
+
+  SVGSimilarityCEPAdapter.prototype.resolveConversionPlanForExtension =
+      function resolveConversionPlanForExtension(ext) {
+    var external = this.external || {};
+    var planner = global.SVGSimilarityConverters;
+    var plan = planner.planForExtension(ext, {
+      prefer: external.prefer,
+      supported: this.converterSupport()
+    });
+    this._lastConversionPlan = plan.slice();
+    return plan;
+  };
+
+  SVGSimilarityCEPAdapter.prototype.convertVectorFileToSVG = function convertVectorFileToSVG(filePath, planOverride) {
     var self = this;
-    var plan = this.resolveConversionPlan(filePath);
+    var plan = planOverride ? planOverride.slice() : this.resolveConversionPlan(filePath);
     var errors = [];
+    this._lastConversionPlan = plan.slice();
+    this._lastConverter = null;
     var chain = Promise.reject(new Error("No converter attempted."));
     plan.forEach(function (name) {
       chain = chain.catch(function (previous) {
         if (previous && previous.message !== "No converter attempted.") {
           errors.push(previous.message || String(previous));
         }
-        if (name === "embeddedSVG") return self.extractEmbeddedSVGText(filePath);
-        if (name === "inkscape") return self.convertWithInkscape(filePath);
-        if (name === "illustrator") return self.convertWithIllustrator(filePath);
+        if (name === "embeddedSVG") return self.extractEmbeddedSVGText(filePath).then(function (text) { self._lastConverter = "embeddedSVG"; return text; });
+        if (name === "ai2svg") return self.convertWithAI2SVG(filePath).then(function (text) { self._lastConverter = "ai2svg"; return text; });
+        if (name === "inkscape") return self.convertWithInkscape(filePath).then(function (text) { self._lastConverter = "inkscape"; return text; });
+        if (name === "illustrator") return self.convertWithIllustrator(filePath).then(function (text) { self._lastConverter = "illustrator"; return text; });
         return Promise.reject(new Error("Unknown converter: " + name));
       });
     });

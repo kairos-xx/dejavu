@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <circle cx="6.03" cy="9.96" r="4.16" fill="none" stroke="currentColor" stroke-width="1"/>
+  <line x1=".53" y1="15.47" x2="3.09" y2="12.92" fill="none" stroke="currentColor" stroke-width="1" style="stroke-linecap: round;"/>
+  <polyline points="10.21 15.47 15.47 15.47 15.47 4.47 11.55 .53 3.44 .53 3.44 6.61" fill="none" stroke="currentColor" stroke-width="1" style="stroke-linecap: round;"/>
+  <polyline points="11.55 .53 11.55 4.41 15.47 4.41" fill="none" stroke="currentColor" stroke-width="1" style="stroke-linecap: round;"/>
+</svg>
+

@@ -6,10 +6,11 @@
     this.config = o.config || SVGSimilarityConfig.defaults();
     this.engine = o.engine || new SVGSimilarityEngine(this.config.engine || {});
     this.adapter = o.adapter || SVGSimilarityEnv.createAdapter(this.config);
+    this.progress = o.onProgress || function () {};
+    if (this.adapter) this.adapter.progress = this.progress;
     this.cache = { version: 9, engineFingerprintVersion: 9, files: {} };
     this.cacheFolderPath = null;
     this.lastTotal = 0;
-    this.progress = o.onProgress || function () {};
   }
 
   SVGSimilarityIndex.prototype.findSimilarToSVGText = function findSimilarToSVGText(svgText, folderOrEntry, options) {
@@ -116,16 +117,22 @@
         return Promise.resolve(null);
       }
       return convertPool.run(function () {
-        self.progress({ stage: "converting", done: done, total: files.length, file: file });
+        self.progress({ stage: "converting", done: done, current: done + 0.2, total: files.length, file: file });
+        if (self.adapter) {
+          self.adapter._progressContext = { done: done, total: files.length, file: file };
+        }
         return self.adapter.normalizeToSVG(file);
       }).then(function (converted) {
+        if (self.adapter) self.adapter._progressContext = null;
         return fingerPool.run(function () {
-          self.progress({ stage: "fingerprinting", done: done, total: files.length, file: file });
+          self.progress({ stage: "fingerprinting", done: done, current: done + 0.7, total: files.length, file: file });
           var fp = self.engine.fingerprint(converted.svgText);
           var meta = {
             cached: false,
             converted: converted.converted,
             format: converted.format,
+            converter: converted.converter || (converted.converted ? "unknown" : "direct"),
+            conversionPlan: converted.conversionPlan || [],
             sourcePath: converted.sourcePath,
             sizeBytes: file.size || null,
             mtimeMs: file.mtimeMs || null,
@@ -138,6 +145,7 @@
           return null;
         });
       }).catch(function (error) {
+        if (self.adapter) self.adapter._progressContext = null;
         self.cache.files[cacheKey] = { error: String(error && error.message ? error.message : error), mtimeMs: file.mtimeMs || 0, size: file.size || 0, name: file.name || file.path };
         done += 1; self.progress({ stage: "error", done: done, total: files.length, file: file, error: error });
         return null;
@@ -221,6 +229,8 @@
       mtimeMs: file.mtimeMs || meta.mtimeMs || null,
       format: meta.format || file.ext || null,
       converted: !!meta.converted,
+      converter: meta.converter || (meta.converted ? "unknown" : "direct"),
+      conversionPlan: meta.conversionPlan || [],
       canvas: fingerprint && fingerprint.summary ? fingerprint.summary.canvas : null,
       bbox: fingerprint && fingerprint.summary ? fingerprint.summary.bbox : null,
       elementCount: fingerprint && fingerprint.summary ? fingerprint.summary.elementCount : 0,

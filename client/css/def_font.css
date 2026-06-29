@@ -1,0 +1,130 @@
+:root {
+    --primary-font-family-ui: var(
+        --uxp-host-font-family,
+        "Adobe Clean",
+        "Segoe UI",
+        "Helvetica Neue",
+        Arial,
+        sans-serif
+    );
+    --primary-font-family-code: var(--primary-font-family-ui);
+    --primary-font-family-inherit: inherit;
+
+    --primary-font-2xs: 9;
+    --primary-font-xs: 10;
+    --primary-font-sm: 11;
+    --primary-font-md: 12;
+    --primary-font-lg: 14;
+    --primary-font-xl: 18;
+    --primary-font-weight-regular: 400;
+    --primary-font-weight-medium: 500;
+    --primary-font-weight-semibold: 600;
+    --primary-font-weight-bold: 700;
+    --primary-font-weight-extrabold: 800;
+
+    --primary-font-style-normal: normal;
+    --primary-font-style-italic: italic;
+
+    --primary-line-height-solid: 1;
+    --primary-line-height-tight: 1.2;
+    --primary-line-height-compact: 1.3;
+    --primary-line-height-snug: 1.35;
+    --primary-line-height-readable: 1.4;
+    --primary-line-height-body: 1.45;
+    --primary-line-height-relaxed: 1.5;
+    --primary-line-height-flow: 1.6;
+    --primary-line-height-control: 16;
+    --primary-line-height-editor: 24;
+    --primary-line-height-option: 21;
+
+    --primary-letter-spacing-none: 0;
+    --primary-letter-spacing-tight: 0.01em;
+    --primary-letter-spacing-tabs: 0.3;
+    --primary-letter-spacing-soft: 0.02em;
+    --primary-letter-spacing-label: 0.03em;
+    --primary-letter-spacing-badge: 0.05em;
+    --primary-letter-spacing-wide: 0.06em;
+
+    --primary-text-decoration-none: none;
+    --primary-text-decoration-underline: underline;
+    --primary-text-decoration-line-through: line-through;
+    --primary-text-decoration-style-dotted: dotted;
+    --primary-text-decoration-thickness-none: 0;
+    --primary-text-underline-offset-tight: 2;
+
+    --base-font-family-ui: var(--primary-font-family-ui);
+    --base-font-family-code: var(--primary-font-family-code);
+    --base-font-family-inherit: var(--primary-font-family-inherit);
+    --base-font-2xs: calc(
+        var(--primary-font-2xs) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-font-xs: calc(
+        var(--primary-font-xs) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-font-sm: calc(
+        var(--primary-font-sm) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-font-md: calc(
+        var(--primary-font-md) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-font-lg: calc(
+        var(--primary-font-lg) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-font-xl: calc(
+        var(--primary-font-xl) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-font-weight-regular: var(--primary-font-weight-regular);
+    --base-font-weight-medium: var(--primary-font-weight-medium);
+    --base-font-weight-semibold: var(--primary-font-weight-semibold);
+    --base-font-weight-bold: var(--primary-font-weight-bold);
+    --base-font-weight-extrabold: var(--primary-font-weight-extrabold);
+
+    --base-font-style-normal: var(--primary-font-style-normal);
+    --base-font-style-italic: var(--primary-font-style-italic);
+
+    --base-line-height-solid: var(--primary-line-height-solid);
+    --base-line-height-tight: var(--primary-line-height-tight);
+    --base-line-height-compact: var(--primary-line-height-compact);
+    --base-line-height-snug: var(--primary-line-height-snug);
+    --base-line-height-readable: var(--primary-line-height-readable);
+    --base-line-height-body: var(--primary-line-height-body);
+    --base-line-height-relaxed: var(--primary-line-height-relaxed);
+    --base-line-height-flow: var(--primary-line-height-flow);
+    --base-line-height-control: calc(
+        var(--primary-line-height-control) * 1px *
+            var(--base-effective-ui-scale)
+    );
+    --base-line-height-editor: calc(
+        var(--primary-line-height-editor) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-line-height-option: calc(
+        var(--primary-line-height-option) * 1px * var(--base-effective-ui-scale)
+    );
+
+    --base-letter-spacing-none: var(--primary-letter-spacing-none);
+    --base-letter-spacing-tight: var(--primary-letter-spacing-tight);
+    --base-letter-spacing-tabs: calc(
+        var(--primary-letter-spacing-tabs) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-letter-spacing-soft: var(--primary-letter-spacing-soft);
+    --base-letter-spacing-label: var(--primary-letter-spacing-label);
+    --base-letter-spacing-badge: var(--primary-letter-spacing-badge);
+    --base-letter-spacing-wide: var(--primary-letter-spacing-wide);
+
+    --base-text-decoration-none: var(--primary-text-decoration-none);
+    --base-text-decoration-underline: var(--primary-text-decoration-underline);
+    --base-text-decoration-line-through: var(
+        --primary-text-decoration-line-through
+    );
+    --base-text-decoration-style-dotted: var(
+        --primary-text-decoration-style-dotted
+    );
+    --base-text-decoration-thickness-none: calc(
+        var(--primary-text-decoration-thickness-none) * 1px *
+            var(--base-effective-ui-scale)
+    );
+    --base-text-underline-offset-tight: calc(
+        var(--primary-text-underline-offset-tight) * 1px *
+            var(--base-effective-ui-scale)
+    );
+}

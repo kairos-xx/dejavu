@@ -17,7 +17,7 @@ const log = false;
         return;
     }
 
-    const DEJAVU_HOST_VERSION = "2026.06.25-r33";
+    const DEJAVU_HOST_VERSION = "2026.06.25-r37";
     const sessionRefs = [];
     const sessionIds = [];
     const openedDejavuSessionIds = new Set();
@@ -492,6 +492,8 @@ const log = false;
         }
     };
 
+    const dejavu_closeDocument = async (...args) => unsupported("dejavu_closeDocument");
+
     const dejavu_checkFolder = async (path) => {
         try {
             const entry = await entryFromPath(path);
@@ -794,15 +796,298 @@ const log = false;
         }
         return fail("No UXP shell.openExternal or window.open is available.");
     };
+
+    const execFileHost = (cmd, args, timeout = 20 * 60 * 1000) => {
+        const cp = requireModule("child_process");
+        if (!cp || typeof cp.execFile !== "function") {
+            return Promise.reject(new Error("Shell access is unavailable."));
+        }
+        return new Promise((resolve, reject) => {
+            cp.execFile(
+                cmd,
+                args || [],
+                { windowsHide: true, timeout },
+                (error, stdout, stderr) => {
+                    if (error) {
+                        error.stdout = stdout;
+                        error.stderr = stderr;
+                        reject(error);
+                        return;
+                    }
+                    resolve({ stdout, stderr });
+                }
+            );
+        });
+    };
+
+    const commandWorksHost = async (cmd, args) => {
+        if (/Inkscape_mac_|inkscape_windows_intel|inkscape-win|Inkscape\.app/.test(String(cmd || ""))) {
+            const fs = requireModule("fs");
+            try {
+                return !!(fs && fs.existsSync(cmd));
+            } catch {
+                return false;
+            }
+        }
+        try {
+            await execFileHost(cmd, args || ["--version"], 10000);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    const pushUniqueHost = (list, value) => {
+        if (value && list.indexOf(value) === -1) list.push(value);
+    };
+
+    const platformTargetHost = () => {
+        const p = typeof process !== "undefined" ? process.platform : "";
+        const arch = typeof process !== "undefined" && process.arch ? process.arch : "";
+        if (p === "darwin") return arch === "arm64" ? "mac-arm64" : "mac-intel";
+        if (p === "win32") return arch === "arm64" ? "win-arm64" : "win-intel";
+        return p || "unknown";
+    };
+
+    const hostBaseDirs = () => {
+        const path = requireModule("path");
+        const dirs = [];
+        const add = (dir) => {
+            if (dir && dirs.indexOf(dir) === -1) dirs.push(dir);
+        };
+        try {
+            if (typeof process !== "undefined" && process.cwd) add(process.cwd());
+        } catch {}
+        try {
+            if (path && typeof process !== "undefined" && process.execPath) {
+                add(path.dirname(process.execPath));
+            }
+        } catch {}
+        if (path) {
+            dirs.slice().forEach((dir) => {
+                let current = dir;
+                for (let i = 0; i < 6; i += 1) {
+                    add(current);
+                    const next = path.dirname(current);
+                    if (!next || next === current) break;
+                    current = next;
+                }
+            });
+        }
+        return dirs;
+    };
+
+    const bundledInkscapeCandidatesHost = () => {
+        const path = requireModule("path");
+        if (!path) return [];
+        const p = typeof process !== "undefined" ? process.platform : "";
+        const target = platformTargetHost();
+        const list = [];
+        hostBaseDirs().forEach((root) => {
+            [path.join(root, "inkscape"), root].forEach((dir) => {
+                if (p === "darwin") {
+                    if (target === "mac-arm64") {
+                        pushUniqueHost(list, path.join(dir, "Inkscape_mac_arm64.app", "Contents", "MacOS", "inkscape"));
+                    } else if (target === "mac-intel") {
+                        pushUniqueHost(list, path.join(dir, "Inkscape_mac_intel.app", "Contents", "MacOS", "inkscape"));
+                    }
+                    pushUniqueHost(list, path.join(dir, "Inkscape.app", "Contents", "MacOS", "inkscape"));
+                } else if (p === "win32" && target === "win-intel") {
+                    pushUniqueHost(list, path.join(dir, "inkscape_windows_intel", "bin", "inkscape.com"));
+                    pushUniqueHost(list, path.join(dir, "inkscape-win", "bin", "inkscape.com"));
+                }
+            });
+        });
+        return list;
+    };
+
+    const hostFetchText = (url, redirects = 0) => {
+        const http = requireModule(String(url).startsWith("https:") ? "https" : "http");
+        if (!http || typeof http.get !== "function") {
+            return Promise.reject(new Error("Network download is unavailable."));
+        }
+        return new Promise((resolve, reject) => {
+            const req = http.get(url, { headers: { "User-Agent": "DejaVuAI" } }, (res) => {
+                const location = res.headers.location;
+                if (res.statusCode >= 300 && res.statusCode < 400 && location && redirects < 8) {
+                    res.resume();
+                    resolve(hostFetchText(new URL(location, url).toString(), redirects + 1));
+                    return;
+                }
+                if (res.statusCode < 200 || res.statusCode >= 300) {
+                    res.resume();
+                    reject(new Error(`Download page returned HTTP ${res.statusCode}.`));
+                    return;
+                }
+                let text = "";
+                res.setEncoding("utf8");
+                res.on("data", (chunk) => { text += chunk; });
+                res.on("end", () => resolve(text));
+            });
+            req.on("error", reject);
+            req.setTimeout(30000, () => req.destroy(new Error("Connection timed out.")));
+        });
+    };
+
+    const hostLatestInkscapeRelease = async () => {
+        try {
+            const text = await hostFetchText("https://inkscape.org/release/");
+            const match = text.match(/\/release\/inkscape-([0-9][0-9A-Za-z.\-]*)\//);
+            return match ? match[1] : "1.4.4";
+        } catch {
+            return "1.4.4";
+        }
+    };
+
+    const hostInkscapeInstallerUrl = async () => {
+        const version = await hostLatestInkscapeRelease();
+        const p = typeof process !== "undefined" ? process.platform : "";
+        const arch = typeof process !== "undefined" && process.arch ? process.arch : "";
+        if (p === "darwin") {
+            const dmgKind = arch === "arm64" ? "dmg-arm64" : "dmg";
+            return `https://inkscape.org/release/inkscape-${version}/mac-os-x/${dmgKind}/dl/`;
+        }
+        if (p === "win32") {
+            const winArch = arch === "arm64" ? "arm64" : "64-bit";
+            return `https://inkscape.org/release/inkscape-${version}/windows/${winArch}/exe/dl/`;
+        }
+        return "";
+    };
+
+    const hostInstallerName = (headers, fallbackName) => {
+        const disposition = String(headers && headers["content-disposition"] || "");
+        const match = disposition.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
+        if (!match) return fallbackName;
+        try {
+            return decodeURIComponent(match[1].replace(/^"|"$/g, ""));
+        } catch {
+            return match[1].replace(/^"|"$/g, "") || fallbackName;
+        }
+    };
+
+    const hostDownloadLinkFromHtml = (html) => {
+        const text = String(html || "");
+        const refresh = text.match(/http-equiv=["']Refresh["'][^>]*content=["'][^"']*url=([^"']+)["']/i);
+        if (refresh && refresh[1]) return refresh[1].replace(/&amp;/g, "&").trim();
+        const direct = text.match(/href=["']([^"']+\.(?:dmg|exe|msi)(?:\?[^"']*)?)["']/i);
+        return direct && direct[1] ? direct[1].replace(/&amp;/g, "&").trim() : "";
+    };
+
+    const hostDownloadInstaller = (url, fallbackName, redirects = 0) => {
+        const fs = requireModule("fs");
+        const os = requireModule("os");
+        const path = requireModule("path");
+        const http = requireModule(String(url).startsWith("https:") ? "https" : "http");
+        if (!fs || !os || !path || !http || typeof http.get !== "function") {
+            return Promise.reject(new Error("Installer download is unavailable."));
+        }
+        return new Promise((resolve, reject) => {
+            const req = http.get(url, { headers: { "User-Agent": "DejaVuAI" } }, (res) => {
+                const location = res.headers.location;
+                if (res.statusCode >= 300 && res.statusCode < 400 && location && redirects < 8) {
+                    res.resume();
+                    resolve(hostDownloadInstaller(new URL(location, url).toString(), fallbackName, redirects + 1));
+                    return;
+                }
+                if (res.statusCode < 200 || res.statusCode >= 300) {
+                    res.resume();
+                    reject(new Error(`Download failed with HTTP ${res.statusCode}.`));
+                    return;
+                }
+                const type = String(res.headers["content-type"] || "").toLowerCase();
+                if (type.includes("text/html")) {
+                    let html = "";
+                    res.setEncoding("utf8");
+                    res.on("data", (chunk) => { html += chunk; });
+                    res.on("end", () => {
+                        const nextUrl = hostDownloadLinkFromHtml(html);
+                        if (nextUrl && redirects < 8) {
+                            resolve(hostDownloadInstaller(new URL(nextUrl, url).toString(), fallbackName, redirects + 1));
+                            return;
+                        }
+                        reject(new Error("Inkscape returned a download page instead of an installer."));
+                    });
+                    return;
+                }
+                const dir = path.join(os.homedir(), "Downloads", "DejaVu", "Inkscape");
+                fs.mkdirSync(dir, { recursive: true });
+                const target = path.join(dir, hostInstallerName(res.headers, fallbackName));
+                const stream = fs.createWriteStream(target);
+                res.pipe(stream);
+                stream.on("finish", () => stream.close(() => resolve(target)));
+                stream.on("error", reject);
+            });
+            req.on("error", reject);
+            req.setTimeout(120000, () => req.destroy(new Error("Download timed out.")));
+        });
+    };
+
+    const hostLaunchInstaller = async (installerPath) => {
+        const cp = requireModule("child_process");
+        const p = typeof process !== "undefined" ? process.platform : "";
+        if (p === "darwin") {
+            await execFileHost("open", [installerPath], 30000);
+            return;
+        }
+        if (p === "win32" && cp && typeof cp.spawn === "function") {
+            const child = cp.spawn(installerPath, [], {
+                detached: true,
+                stdio: "ignore",
+                windowsHide: false
+            });
+            child.unref();
+            return;
+        }
+        throw new Error("Automatic install is only available on macOS and Windows.");
+    };
+
+    const inkscapeCandidatesHost = () => {
+        const p = typeof process !== "undefined" ? process.platform : "";
+        const list = bundledInkscapeCandidatesHost();
+        pushUniqueHost(list, "inkscape");
+        if (p === "darwin") {
+            pushUniqueHost(list, "/Applications/Inkscape.app/Contents/MacOS/inkscape");
+        } else if (p === "win32") {
+            pushUniqueHost(list, "C:\\Program Files\\Inkscape\\bin\\inkscape.com");
+        }
+        return list;
+    };
+
+    const dejavu_checkInkscape = async () => {
+        const candidates = inkscapeCandidatesHost();
+        for (let i = 0; i < candidates.length; i += 1) {
+            if (await commandWorksHost(candidates[i], ["--version"])) {
+                return ok({ installed: true, path: candidates[i] });
+            }
+        }
+        return ok({ installed: false });
+    };
+
+    const dejavu_installInkscape = async () => {
+        const p = typeof process !== "undefined" ? process.platform : "";
+        if (p !== "darwin" && p !== "win32") {
+            await dejavu_openExternalUrl("https://inkscape.org/release/");
+            return fail("Automatic install is only available on macOS and Windows.");
+        }
+        const url = await hostInkscapeInstallerUrl();
+        const fallbackName = p === "darwin" ? "Inkscape-macOS.dmg" : "Inkscape-Windows.exe";
+        const installerPath = await hostDownloadInstaller(url, fallbackName);
+        await hostLaunchInstaller(installerPath);
+        return ok({ installerOpened: true, path: installerPath });
+    };
+
     const api = {
         dejavu_getHostVersion,
         dejavu_getUiBrightness,
         dejavu_openExternalUrl,
+        dejavu_checkInkscape,
+        dejavu_installInkscape,
         dejavu_pathExists,
         dejavu_getFileSize,
         dejavu_getActiveDocInfo,
         dejavu_listOpenDocuments,
         dejavu_activateDocument,
+        dejavu_closeDocument,
         dejavu_checkFolder,
         dejavu_chooseFolder,
         dejavu_dejavu,

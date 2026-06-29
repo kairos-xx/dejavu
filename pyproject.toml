@@ -3,22 +3,20 @@ name = "illustrator-bridge"
 version = "0.1.48"
 description = "Versioned Python state bridge for querying and manipulating Adobe Illustrator objects."
 requires-python = ">=3.13"
-dependencies = [
-    "rich>=13.0.0",
-]
+dependencies = ["rich>=13.0.0"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff]
-exclude = [".history", ".dev","**/stubs/**"]
+exclude = [".history", ".dev", "**/stubs/**", "**/vendor/**", "**/build/**"]
 line-length = 79
 
 [tool.ruff.lint]
 select = ["ALL"]
 
 [tool.basedpyright]
-exclude = [".history", ".dev","**/stubs/**"]
+exclude = [".history", ".dev", "**/stubs/**", "**/vendor/**", "**/build/**"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 stubPath = "./stubs"
@@ -27,7 +25,5 @@ stubPath = "./stubs"
 stubPath = "./stubs"
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-extraPaths = [
-  "/opt/anaconda3/lib/python3.13/site-packages",
-]
-exclude = [".history", ".dev","**/stubs/**"]
+extraPaths = ["/opt/anaconda3/lib/python3.13/site-packages"]
+exclude = [".history", ".dev", "**/stubs/**", "**/vendor/**", "**/build/**"]
