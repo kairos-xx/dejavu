@@ -1,6 +1,5 @@
 {
-  "mac-arm64": "03ff4bf4d7a115ad31b354b119a58e04e0d21127fa9c53d959f483b5e6078472",
+  "mac-arm64": "8efd4f9e8b9e544782382bc9df5e0658bc4875e448b177afaacacb1730f8426a",
   "mac-intel": "1b7eab9b98cd60f3110f7edaf93fbd8fabdc56add7cf862eedca0fd9229ab698",
-  "win-arm64": "",
   "win-intel": "d4effec0c86b76beb0856cab88bbbb42227e2600ab3415fcb6fcf648d1767155"
 }

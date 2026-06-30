@@ -90,6 +90,7 @@
     height: var(--update-install-progress__bar-height);
     border-radius: var(--update-install-progress__bar-border-radius);
     color: var(--accent);
+    background: var(--update-install-progress__bar-background);
     transition: var(--update-install-progress__bar-transition);
 }
 

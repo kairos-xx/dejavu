@@ -67,6 +67,32 @@
         if (value && !list.includes(value)) list.push(value);
     };
 
+    // Vendor binaries are installed outside the (read-only) extension folder,
+    // into the per-user DejaVu data directory. Keep this in sync with
+    // getVendorBase() in vendor-autoinstall.js.
+    const vendorBaseDir = () => {
+        if (!hasNode()) return null;
+        try {
+            const path = require("path");
+            const os = require("os");
+            const home = os.homedir();
+            const p = platform();
+            if (p === "darwin") {
+                return path.join(home, "Library", "Application Support", "DejaVu");
+            }
+            if (p === "win32") {
+                const appData = (typeof process !== "undefined" && process.env.APPDATA) ||
+                    path.join(home, "AppData", "Roaming");
+                return path.join(appData, "DejaVu");
+            }
+            const xdg = (typeof process !== "undefined" && process.env.XDG_DATA_HOME) ||
+                path.join(home, ".local", "share");
+            return path.join(xdg, "DejaVu");
+        } catch {
+            return null;
+        }
+    };
+
     const appRootCandidates = () => {
         if (!hasNode()) return [];
         const path = require("path");
@@ -74,6 +100,7 @@
         const add = (dir) => {
             if (dir && !roots.includes(dir)) roots.push(dir);
         };
+        try { add(vendorBaseDir()); } catch {}
         try { add(process.cwd()); } catch {}
         try { add(path.dirname(process.execPath)); } catch {}
         try { add(__dirname); } catch {}

@@ -94,49 +94,6 @@
     display: none;
 }
 
-.settings__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--settings__header-padding);
-    border-bottom: var(--settings__header-border-bottom);
-}
-
-.settings__header h1 {
-    font-weight: var(--settings__header-h1-font-weight);
-    color: var(--text-bright);
-    letter-spacing: var(--settings__header-h1-letter-spacing);
-}
-
-.settings__close-btn {
-    --icon-size: var(--settings__close-btn-icon-size);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--settings__close-btn-padding);
-    border: var(--settings__close-btn-border);
-    border-radius: var(--settings__close-btn-border-radius);
-    background: var(--settings__close-btn-background);
-    color: var(--settings__close-btn-color);
-    cursor: var(--cursor-action);
-    transition: var(--settings-close-button-transition);
-}
-
-.settings__close-btn:hover {
-    color: var(--settings__close-btn-hover-color);
-    background: var(--settings__close-btn-hover-background);
-}
-
-.settings__close-btn:active {
-    color: var(--settings__close-btn-active-color);
-    background: var(--settings__close-btn-active-background);
-}
-
-.settings__close-btn:focus-visible {
-    outline: var(--settings__close-btn-focus-outline);
-    outline-offset: var(--settings__close-btn-focus-outline-offset);
-}
-
 .settings__content {
     padding: var(--settings__content-padding);
 }

@@ -65,12 +65,40 @@
     return ok;
   };
 
+  SVGSimilarityCEPAdapter.prototype.vendorBaseDir = function vendorBaseDir() {
+    // Vendor binaries are installed outside the (read-only) extension folder,
+    // into the per-user DejaVu data directory. Keep this in sync with
+    // getVendorBase() in vendor-autoinstall.js.
+    try {
+      var os = this.os;
+      var path = this.path;
+      if (!os || !path || typeof os.homedir !== "function") return null;
+      var home = os.homedir();
+      var plat = (os.platform && os.platform()) ||
+        (typeof process !== "undefined" && process.platform) || "";
+      if (plat === "darwin") {
+        return path.join(home, "Library", "Application Support", "DejaVu");
+      }
+      if (plat === "win32") {
+        var appData = (typeof process !== "undefined" && process.env.APPDATA) ||
+          path.join(home, "AppData", "Roaming");
+        return path.join(appData, "DejaVu");
+      }
+      var xdg = (typeof process !== "undefined" && process.env.XDG_DATA_HOME) ||
+        path.join(home, ".local", "share");
+      return path.join(xdg, "DejaVu");
+    } catch (ignoredVendorBase) {
+      return null;
+    }
+  };
+
   SVGSimilarityCEPAdapter.prototype.baseDirs = function baseDirs() {
     var dirs = [];
     var self = this;
     var add = function (dir) {
       if (dir && dirs.indexOf(dir) === -1) dirs.push(dir);
     };
+    try { add(this.vendorBaseDir()); } catch (ignoredVendor) {}
     try {
       if (typeof process !== "undefined" && typeof process.cwd === "function") {
         add(process.cwd());

@@ -87,8 +87,6 @@
     --mode-segment-button-transition:
         background var(--base-time-100ms) var(--base-ease-standard),
         color var(--base-time-100ms) var(--base-ease-standard);
-    --ms-transition: border-color var(--base-time-100ms)
-        var(--base-ease-standard);
     --number-spin-button-transition:
         color var(--base-time-100ms) var(--base-ease-standard),
         background var(--base-time-100ms) var(--base-ease-standard);
@@ -283,8 +281,6 @@
     --mode-seg__btn-font-weight: var(--base-font-weight-semibold);
     --mode-seg__btn-line-height: var(--base-line-height-solid);
     --mode-seg__btn-on-font-weight: var(--base-font-weight-semibold);
-    --ms__trigger-font-size: var(--base-font-sm);
-    --ms__trigger-line-height: var(--base-line-height-solid);
     --number-spin-button-font-size: var(--base-font-sm);
     --number-spin-button-line-height: var(--base-line-height-solid);
     --open-doc__bulk-save-main-font-size: var(--base-font-sm);
@@ -296,15 +292,9 @@
     --preset-chip-line-height: var(--base-line-height-solid);
     --preview__label-font-size: var(--base-font-sm);
     --preview__value-font-size: var(--base-font-sm);
-    --recovery-item__action-font-size: var(--base-font-sm);
-    --recovery-item__action-line-height: var(--base-line-height-tight);
     --recovery-action-underline-offset: var(
         --base-text-underline-offset-tight
     );
-    --recovery-item__age-font-size: var(--base-font-sm);
-    --recovery-item__name-font-size: var(--base-font-sm);
-    --recovery-item__name-font-weight: var(--base-font-weight-semibold);
-    --recovery-item__path-font-size: var(--base-font-sm);
     --section-title-font-size: var(--base-font-sm);
     --select-menu__item-font-size: var(--base-font-sm);
     --select-menu__item-font-weight: var(--base-font-weight-medium);
@@ -396,8 +386,6 @@
     --template-editor-font-size: var(--base-font-sm);
     --template-editor-letter-spacing: var(--base-letter-spacing-none);
     --template-editor-line-height: var(--base-line-height-control);
-    --template-token-font-size: var(--base-font-sm);
-    --template-token-line-height: var(--base-line-height-control);
     --templateinput-letter-spacing: var(--base-letter-spacing-none);
     --timeline-bulk__count-font-size: var(--base-font-sm);
     --bulk-count-font-size: var(--base-font-sm);
@@ -411,8 +399,6 @@
     --timeline-insights__refresh-line-height: var(--base-line-height-control);
     --timeline-option-action-font-size: var(--base-font-sm);
     --timeline-options-checkbox-inline-span-font-size: var(--base-font-sm);
-    --tok__add-font-weight: var(--base-font-weight-bold);
-    --tok__input-font-size: var(--base-font-sm);
     --token-chip-icon-font-size: var(--base-font-sm);
     --token-chip__pill-font-size: var(--base-font-sm);
     --token-chip__pill-font-weight: var(--base-font-weight-medium);
@@ -608,7 +594,6 @@
     );
     --switch__thumb-border-radius: var(--base-pct-50);
     --table-select-all-icon-circle-border-radius: var(--base-pct-50);
-    --template-token__remove-border-radius: var(--base-pct-50);
     --update-install-card__close-border-radius: var(--base-pct-50);
 
     --btn-opacity: var(--base-opacity-muted);
@@ -625,7 +610,6 @@
     --mode-seg__btn-opacity: var(--base-opacity-muted);
     --open-doc__select-opacity: var(--base-opacity-muted);
     --open-docs-busy-opacity: var(--base-opacity-subtle);
-    --recovery-item-missing-opacity: var(--base-opacity-muted);
     --saving-bar-is-active-opacity: var(--base-opacity-full);
     --saving-bar-opacity: var(--base-opacity-hidden);
     --select-menu__item-opacity: var(--base-opacity-muted);
@@ -651,7 +635,6 @@
     --table-toggle-table-action-opacity: var(--base-opacity-muted);
     --icon-pin-opacity: var(--base-opacity-030);
     --table-toggle-is-on-icon-pin-opacity: var(--base-opacity-full);
-    --tok__chip-is-dragging-opacity: var(--base-opacity-muted);
     --token-chip-is-disabled-opacity: var(--base-opacity-muted);
     --token-chip-is-drag-source-opacity: var(--base-opacity-disabled);
     --token-editor-opacity: var(--base-opacity-muted);
@@ -802,13 +785,6 @@
     --mode-seg__btn-box-shadow: inset 0 0 0 var(--base-space-0)
         var(--base-color-accent);
     --mode-seg__btn-opacity: var(--base-opacity-muted);
-    --ms-border: var(--base-border-w) solid var(--base-color-border);
-    --ms-border-radius: var(--base-radius);
-    --ms__menu-border: var(--base-border-w) solid
-        var(--base-color-border-strong);
-    --ms__menu-border-radius: var(--base-radius);
-    --multi-select-menu-item-border-radius: var(--base-radius);
-
     --number-input-group-border: var(--base-border-w) solid
         var(--base-color-border);
     --number-input-group-border-radius: var(--base-radius);
@@ -868,14 +844,6 @@
     --progress-indeterminate-mid-margin-right: var(--base-pct-0);
     --progress-indeterminate-end-margin-left: var(--base-pct-100);
     --progress-indeterminate-end-margin-right: var(--base-pct-0);
-
-    --recovery-item-border-bottom: var(--base-border-w) solid
-        var(--base-color-border-soft);
-    --recovery-item-missing-opacity: var(--base-opacity-muted);
-    --recovery-item__name-border-bottom: var(--base-border-w) dotted
-        var(--base-color-transparent);
-    --recovery-item__path-border-bottom: var(--base-border-w) dotted
-        var(--base-color-transparent);
 
     --scrollbar-thumb-background: var(--base-color-border-strong);
     --scrollbar-track-background: var(--base-color-input-well);
@@ -1029,11 +997,6 @@
     --template-editor-border-radius: var(--base-radius);
     --template-editor-template-editor-box-shadow: 0 0 0 var(--base-space-0)
         var(--base-color-accent-glow);
-    --template-token-border: var(--base-border-w) solid
-        var(--base-color-accent-dim);
-    --template-token-border-radius: var(--base-radius-lg);
-    --template-token__remove-border-radius: var(--base-pct-50);
-
     --timeline-bulk-border: var(--base-border-w) solid var(--base-color-accent);
     --timeline-bulk-border-radius: var(--base-radius);
     --timeline-bulk-table-bulk-border: var(--base-border-w) solid
@@ -1065,9 +1028,6 @@
     --timeline-insights__track-border-radius: var(--base-radius-sm);
     --timeline-search-table-filters-gap: var(--base-space-3);
 
-    --tok__chip-is-dragging-opacity: var(--base-opacity-muted);
-    --tok__chips-border: var(--base-border-w) solid var(--base-color-border);
-    --tok__chips-border-radius: var(--base-radius);
     --token-border: var(--base-border-w) solid var(--base-color-border-soft);
     --token-border-radius: var(--base-radius);
     --token-chip-icon-color: var(--base-color-accent);
@@ -1160,10 +1120,6 @@
     --update-install-modal-z-index: var(--base-z-index-install-modal);
     --update-install-progress-border-radius: var(--base-radius);
     --update-install-progress__bar-border-radius: var(--base-radius);
-
-    --version-list-recovery-list-open-docs-border: var(--base-border-w) solid
-        var(--base-color-border-soft);
-    --version-list-recovery-list-open-docs-border-radius: var(--base-radius);
 
     --advanced-actions-btn-width: var(--base-pct-100);
     --advanced-actions-btn-min-width: var(--base-space-0);
@@ -1489,28 +1445,6 @@
     --mode-seg-btn-on-color: var(--base-color-text);
     --mode-seg__btn-padding: var(--base-space-3) var(--base-space-2);
 
-    --ms-height: var(--base-size-21);
-    --ms-min-height: var(--base-size-21);
-    --ms-width: var(--base-pct-100);
-    --ms-summary-flex: var(--base-flex-fluid-auto);
-    --ms__menu-gap: var(--base-space-1);
-    --ms__menu-grid-template-columns: repeat(
-        2,
-        minmax(var(--base-space-9), 1fr)
-    );
-    --ms__menu-margin-top: var(--base-space-2);
-    --ms__menu-max-height: var(--base-size-120);
-    --ms__menu-padding: var(--base-space-2);
-    --ms__menu-list-padding: var(--base-space-2) 0;
-    --multi-select-menu-item-min-width: var(--base-size-54);
-    --ms__trigger-gap: var(--base-space-3);
-    --ms__trigger-border: var(--base-border-none);
-    --ms__trigger-height: var(--base-pct-100);
-    --ms__trigger-min-height: var(--base-space-0);
-    --ms__trigger-padding: 0 var(--base-space-3);
-    --ms__trigger-padding-right: var(--base-space-7);
-    --ms__trigger-width: var(--base-pct-100);
-
     --number-input-group-height: var(--base-size-22);
     --number-input-group-input-border: var(--base-border-none);
     --number-input-group-input-height: var(--base-size-22);
@@ -1619,31 +1553,6 @@
     --preview-margin-top: var(--base-space-1);
     --preview-padding: var(--base-space-2) var(--base-space-4);
     --preview-value-min-width: var(--base-space-0);
-
-    --recovery-actions-width: var(--base-pct-100);
-    --recovery-actions-btn-flex: var(--base-flex-fluid-zero);
-    --recovery-actions-btn-min-width: var(--base-space-0);
-    --recovery-item-gap: var(--base-space-4);
-    --recovery-item-padding: var(--base-space-3) var(--base-space-4)
-        var(--base-space-3) var(--base-space-4);
-    --recovery-item-padding-right: var(--base-space-6);
-    --recovery-item-last-child-border-bottom: var(--base-border-none);
-    --recovery-item__actions-gap: var(--base-space-3);
-    --recovery-item__actions-flex: var(--base-flex-none);
-    --recovery-item__action-border: var(--base-border-none);
-    --recovery-item__action-padding: var(--base-space-0);
-    --recovery-item__age-margin-top: var(--base-space-1);
-    --recovery-item__info-flex: var(--base-flex-fluid-auto);
-    --recovery-item__info-min-width: var(--base-space-0);
-    --recovery-item__name-border: var(--base-border-none);
-    --recovery-item__name-max-width: var(--base-pct-100);
-    --recovery-item__name-padding: var(--base-space-0);
-    --recovery-item__path-border: var(--base-border-none);
-    --recovery-item__path-margin-top: var(--base-space-1);
-    --recovery-item__path-max-width: var(--base-pct-100);
-    --recovery-item__path-padding: var(--base-space-0);
-    --recovery-list-margin-top: var(--base-space-3);
-    --recovery-list-max-height: var(--base-size-210);
 
     --root-rule-height: var(--base-size-10);
     --root-rule-width: var(--base-size-10);
@@ -1847,8 +1756,6 @@
     --sim-aspect__fill-left: var(--base-space-0);
     --sim-aspect__fill-top: var(--base-space-0);
     --comparison-settings-responsive-grid-template-columns: var(--base-grid-fr-1);
-    --similar-token-editor-min-height: var(--base-size-42);
-    --similar-token-pool-gap: var(--base-space-2);
     --similarity-panel-token-chip-pill-gap: var(--base-space-0);
     --similarity-toggles-margin: var(--base-space-2) 0 var(--base-space-1);
 
@@ -2059,16 +1966,6 @@
     --template-editor-min-height: var(--base-size-30);
     --template-editor-padding: var(--base-space-2) var(--base-space-3);
     --template-editor-width: var(--base-pct-100);
-    --template-token-gap: var(--base-space-2);
-    --template-token-height: var(--base-size-18);
-    --template-token-margin: 0 var(--base-space-0);
-    --template-token-padding: 0 var(--base-space-2);
-    --template-token__remove-border: var(--base-border-none);
-    --template-token__remove-height: var(--base-pct-100);
-    --template-token__remove-padding: var(--base-space-0);
-    --template-token__remove-svg-height: var(--base-size-9);
-    --template-token__remove-svg-width: var(--base-size-9);
-    --template-token__remove-width: var(--base-size-13);
     --templateinput-width: var(--base-pct-100);
 
     --timeline-actions-margin-top: var(--base-space-3);
@@ -2152,20 +2049,6 @@
     --version-list-compact-snapshot__actions-margin: var(--base-space-0);
     --version-list-compact-snapshot__actions-max-height: var(--base-space-0);
 
-    --tok-width: var(--base-pct-100);
-    --tok-flex: var(--base-flex-fill);
-    --tok__chips-gap: var(--base-space-1);
-    --tok__chips-min-height: var(--base-size-22);
-    --tok__chips-padding: var(--base-space-2) var(--base-space-2);
-    --tok__input-flex: 0 0 var(--base-size-170);
-    --tok__input-border: var(--base-border-none);
-    --tok__input-focus-border: var(--base-border-none);
-    --tok__input-height: var(--base-size-16);
-    --tok__input-min-width: var(--base-size-80);
-    --tok__input-padding: 0 var(--base-space-1);
-    --tok__input-background: var(--base-color-transparent);
-    --tok__chips-input-focus-background: var(--base-color-segment-active);
-    --tok__chips-input-focus-color: var(--base-color-white);
     --token-chip-margin: 0 var(--base-space-0);
     --token-chip-token-placeholder-height: var(--base-size-22);
     --token-chip__pill-gap: var(--base-space-2);
@@ -2308,6 +2191,7 @@
     --update-install-progress__bar-height: var(--base-pct-100);
     --update-install-progress__bar-indeterminate-width: var(--base-pct-100);
     --update-install-progress__bar-width: var(--base-pct-0);
+    --update-install-progress__bar-background: var(--base-color-accent);
     --update-install-status-margin: var(--base-space-4) 0 0;
     --update-install-status-min-height: var(--base-size-14);
 
@@ -2316,9 +2200,6 @@
     --version-list-scrollbar-thumb-border-top: var(--base-space-4) solid
         var(--base-color-transparent);
     --version-list-scrollbar-track-margin-top: var(--base-space-0);
-    --version-list-recovery-list-margin-top: var(--base-space-7);
-    --version-list-recovery-list-open-docs-max-height: var(--base-size-280);
-
     --wide-menu-width: var(--base-size-420);
 
     --accent: var(--base-color-accent);

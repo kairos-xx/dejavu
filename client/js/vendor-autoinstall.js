@@ -180,6 +180,56 @@
         return null;
     };
 
+    // The CEP extension folder lives inside the Illustrator application
+    // bundle, which is typically read-only (and SIP-protected on macOS), so
+    // vendor binaries must be installed into a user-writable location outside
+    // the app. This returns the per-user DejaVu data directory.
+    const getVendorBase = () => {
+        if (typeof require !== "function") return null;
+        try {
+            const os = require("os");
+            const path = require("path");
+            const home = os.homedir();
+            const plat =
+                (typeof process !== "undefined" && process.platform) ||
+                os.platform();
+            if (plat === "darwin") {
+                return path.join(
+                    home,
+                    "Library",
+                    "Application Support",
+                    "DejaVu"
+                );
+            }
+            if (plat === "win32") {
+                const appData =
+                    (typeof process !== "undefined" && process.env.APPDATA) ||
+                    path.join(home, "AppData", "Roaming");
+                return path.join(appData, "DejaVu");
+            }
+            const xdg =
+                (typeof process !== "undefined" &&
+                    process.env.XDG_DATA_HOME) ||
+                path.join(home, ".local", "share");
+            return path.join(xdg, "DejaVu");
+        } catch (e) {
+            console.warn("Failed to resolve vendor base:", e.message);
+            return null;
+        }
+    };
+
+    const ensureDir = (dir) => {
+        if (!dir) return;
+        try {
+            const fs = require("fs");
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+        } catch (e) {
+            console.warn("Failed to create directory:", dir, e.message);
+        }
+    };
+
     const getVendorVersion = (root) => {
         if (!root) return null;
         try {
@@ -226,6 +276,11 @@
             const fs = require("fs");
             const path = require("path");
             const lockFile = path.join(root, VENDOR_LOCK_FILE);
+            const lockDir = path.dirname(lockFile);
+            // Ensure the lock directory exists before writing the lock file
+            if (!fs.existsSync(lockDir)) {
+                fs.mkdirSync(lockDir, { recursive: true });
+            }
             if (fs.existsSync(lockFile)) {
                 const lockTime = fs.statSync(lockFile).mtimeMs;
                 const now = Date.now();
@@ -437,10 +492,13 @@
     };
 
     const installVendor = async (owner, repo) => {
-        const root = getExtensionRoot();
+        // Install into a user-writable directory outside the Illustrator app
+        // bundle to avoid permission errors writing into the extension folder.
+        const root = getVendorBase();
         if (!root) {
-            throw new Error("Cannot determine extension root");
+            throw new Error("Cannot determine vendor install directory");
         }
+        ensureDir(root);
 
         if (!acquireLock(root)) {
             console.log("Vendor installation already in progress");
@@ -470,7 +528,7 @@
 
             const fs = require("fs");
             const path = require("path");
-            const tempDir = path.join(root, "build", "temp");
+            const tempDir = path.join(root, "temp");
             const zipPath = path.join(tempDir, asset.name);
             const vendorDir = path.join(root, "vendor");
 
@@ -549,9 +607,11 @@
             console.warn("Failed to read repo info from manifest:", e.message);
         }
 
-        const currentVersion = getVendorVersion(root);
-        const currentHash = getVendorHash(root);
-        const exists = vendorExists(root);
+        // Vendor binaries are stored outside the (read-only) extension folder.
+        const vendorRoot = getVendorBase();
+        const currentVersion = getVendorVersion(vendorRoot);
+        const currentHash = getVendorHash(vendorRoot);
+        const exists = vendorExists(vendorRoot);
         const target = platformTarget();
 
         console.log(`Current vendor version: ${currentVersion || "none"}`);

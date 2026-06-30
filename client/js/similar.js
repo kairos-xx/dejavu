@@ -23,41 +23,8 @@
     let busy = false;
     let folderValid = false;
 
-    // The multi-select menu is appended to <body> and fixed-positioned so it
-    // floats above everything and is never clipped by the .app scroll box.
-    let msOpen = null;
     const classNames = (typeof DEJAVU !== "undefined" && DEJAVU.classNames) ||
         ((...names) => names.filter(Boolean).join(" "));
-
-    const closeAllMultiselects = () => {
-        if (!msOpen) return;
-        msOpen.menu.hidden = true;
-        msOpen.menu.style.left = "";
-        msOpen.menu.style.minWidth = "";
-        msOpen.menu.style.maxHeight = "";
-        msOpen.menu.style.top = "";
-        msOpen.ms.classList.remove("is-open");
-        msOpen.trigger.setAttribute("aria-expanded", "false");
-        msOpen = null;
-    };
-
-    const positionMsMenu = (trigger, menu) => {
-        const r = trigger.getBoundingClientRect();
-        const gap = 2;
-        const below = window.innerHeight - r.bottom - 4;
-        const above = r.top - 4;
-        const openBelow = below >= Math.min(menu.scrollHeight, 220) ||
-            below >= above;
-        const maxH = Math.max(80, Math.min(240, openBelow ? below : above));
-        menu.style.position = "fixed";
-        menu.style.left = `${Math.round(r.left)}px`;
-        menu.style.minWidth = `${Math.round(r.width)}px`;
-        menu.style.maxHeight = `${Math.round(maxH)}px`;
-        menu.style.top = openBelow
-            ? `${Math.round(r.bottom + gap)}px`
-            : `${Math.round(Math.max(4,
-                r.top - Math.min(menu.scrollHeight, maxH) - gap))}px`;
-    };
 
     // The "Find similar" button stays disabled until a real folder is set
     // and we are not mid-scan.
@@ -1861,19 +1828,6 @@
                 render();
             });
         }
-        // Collapse open multi-selects / token "Add" menus on outside click.
-        document.addEventListener("click", (evt) => {
-            if (!evt.target.closest(".ms") &&
-                !evt.target.closest(".ms__menu")) {
-                closeAllMultiselects();
-            }
-        });
-        window.addEventListener("resize", () => {
-            if (msOpen) positionMsMenu(msOpen.trigger, msOpen.menu);
-        });
-        window.addEventListener("scroll", () => {
-            if (msOpen) positionMsMenu(msOpen.trigger, msOpen.menu);
-        }, true);
     };
 
     if (document.readyState === "loading") {

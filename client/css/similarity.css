@@ -141,33 +141,15 @@
     gap: var(--comparison-settings-token-field-gap);
 }
 
-.similar-token-editor {
-    min-height: var(--similar-token-editor-min-height);
-    cursor: var(--cursor-default);
-}
-
-.similar-token-pool {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--similar-token-pool-gap);
-}
-
-.similar-token-pool[hidden] {
-    display: none;
-}
-
 .comparison-settings__field.is-disabled {
     opacity: var(--comparison-settings-disabled-opacity);
 }
 
-.comparison-settings__field.is-disabled .checkbox,
-.comparison-settings__field.is-disabled .ms__trigger {
+.comparison-settings__field.is-disabled .checkbox {
     cursor: var(--cursor-disabled);
 }
 
 .comparison-settings__field.is-disabled .number-input-group,
-.comparison-settings__field.is-disabled .ms,
-.comparison-settings__field.is-disabled .tok,
 .comparison-settings__field.is-disabled .token-shell,
 .comparison-settings__field.is-disabled .bytesize {
     pointer-events: none;
@@ -413,7 +395,6 @@
 
 .sim-pill--similar {
     color: var(--ok);
-    color: var(--ok);
 }
 
 .sim-pill--similar strong {
@@ -421,7 +402,6 @@
 }
 
 .sim-pill--changed {
-    color: var(--warn);
     color: var(--warn);
 }
 
@@ -431,7 +411,6 @@
 
 .sim-pill--new {
     color: var(--accent);
-    color: var(--accent);
 }
 
 .sim-pill--new strong {
@@ -439,7 +418,6 @@
 }
 
 .sim-pill--removed {
-    color: var(--danger);
     color: var(--danger);
 }
 

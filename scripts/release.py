@@ -1026,25 +1026,21 @@ def _compute_file_hash(path: Path) -> str:
     return hash_obj.hexdigest()
 
 
-def _update_vendor_hashes(vendor_zip: Path, target: str) -> None:
-    """Update vendor-hashes.json with the hash of the built vendor zip."""
+def _write_vendor_hashes(hashes: dict[str, str]) -> None:
+    """Write vendor-hashes.json for the current release only.
+
+    Only platforms whose vendor zip was actually built in this release are
+    recorded. Writing the file fresh (instead of merging into the existing
+    one) prevents it from advertising a hash for a platform whose asset is
+    not present in the release the client will resolve, which would make the
+    auto-installer fail with "No vendor asset found for platform ...".
+    """
     hashes_file: Path = ROOT / "vendor-hashes.json"
-    hashes: dict[str, str] = {}
-    # Load existing hashes
-    if hashes_file.exists():
-        try:
-            with hashes_file.open("r", encoding="utf-8") as f:
-                hashes = loads(s=f.read())
-        except (OSError, ValueError) as e:
-            warn(msg=f"Failed to load vendor-hashes.json: {e}")
-    # Compute hash
-    hash_value: str = _compute_file_hash(path=vendor_zip)
-    hashes[target] = hash_value
-    # Write back
     try:
         with hashes_file.open("w", encoding="utf-8") as f:
-            f.write(dumps(obj=hashes, indent=2, sort_keys=True))
-        ok(msg=f"Updated vendor-hashes.json for {target}: {hash_value}")
+            f.write(dumps(obj=hashes, indent=2, sort_keys=True) + "\n")
+        for target, hash_value in sorted(hashes.items()):
+            ok(msg=f"vendor-hashes.json {target}: {hash_value}")
     except OSError as e:
         warn(msg=f"Failed to write vendor-hashes.json: {e}")
 
@@ -1062,6 +1058,7 @@ def _build_vendor_zip(version: str) -> list[Path]:
         "win-arm64": vendor_src / "inkscape" / "inkscape_windows_arm64",
     }
     built_zips: list[Path] = []
+    built_hashes: dict[str, str] = {}
     for target, binary_path in platforms.items():
         if not binary_path.exists():
             continue
@@ -1086,10 +1083,12 @@ def _build_vendor_zip(version: str) -> list[Path]:
                 if path.is_file():
                     arcname: str = str(path.relative_to(vendor_src))
                     zf.write(filename=path, arcname=arcname)
-        # Update hashes file
-        _update_vendor_hashes(vendor_zip=vendor_zip, target=target)
+        built_hashes[target] = _compute_file_hash(path=vendor_zip)
         built_zips.append(vendor_zip)
-    if not built_zips:
+    if built_zips:
+        # Record hashes for exactly the platforms shipped in this release.
+        _write_vendor_hashes(hashes=built_hashes)
+    else:
         warn(msg="No vendor binaries found for any platform")
     return built_zips
 
@@ -1840,12 +1839,26 @@ def _run_github_operations(
         )
     advance()
     step("Creating release")
+    # vendor-hashes.json (on the default branch) always advertises the latest
+    # vendor hashes, but the client resolves vendor assets from the latest
+    # *stable* release. If this release ships vendor assets it must not be a
+    # prerelease, or the auto-installer would fail to find the matching asset.
+    ships_vendor: bool = any(
+        "-vendor-" in artifact.name for artifact in ctx.artifacts
+    )
+    prerelease: bool = ctx.args.prerelease
+    if prerelease and ships_vendor:
+        warn(
+            msg="Release ships vendor assets; publishing as stable so the "
+            "auto-installer can resolve them.",
+        )
+        prerelease = False
     release: dict[str, Json] = get_or_create_release(
         owner=ctx.owner,
         repo=ctx.repo,
         token=ctx.token,
         version=ctx.new_version,
-        prerelease=ctx.args.prerelease,
+        prerelease=prerelease,
     )
     advance()
     step("Uploading assets")

@@ -153,19 +153,17 @@
     cursor: var(--cursor-action);
     transition: var(--open-doc__action-arrow-transition);
 }
-.open-doc__action-arrow  .select-chevron{
+.open-doc__action-arrow .select-chevron {
     border: none;
 }
+
 .open-doc__chevron {
     position: static;
     width: var(--open-doc__chevron-width);
-    /* height: var(--open-doc__chevron-height); */
     display: inline-flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-        width: stretch;
-
 }
 
 .open-doc__chevron svg {
@@ -234,7 +232,6 @@
     border-bottom-right-radius: var(
         --open-doc__bulk-save-main-border-bottom-right-radius
     );
-    color: var(--accent-dim);
     color: var(--text);
     font-family: var(--font-family-app);
     padding: var(--open-doc__bulk-save-main-padding);

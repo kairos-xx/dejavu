@@ -1,9 +1,3 @@
-.table-shell {
-    display: flex;
-    flex-direction: column;
-    gap: var(--table-shell-gap);
-}
-
 .table-list {
     border: var(--table-list-border);
     border-radius: var(--table-list-border-radius);
@@ -11,23 +5,6 @@
     max-height: var(--table-list-max-height);
     overflow-x: var(--table-list-overflow-x);
     overflow-y: var(--table-list-overflow-y);
-}
-
-.timeline-search,
-.table-filters {
-    display: grid;
-    grid-template-columns: var(--table-filters-grid-template-columns);
-    gap: var(--timeline-search-table-filters-gap);
-    align-items: center;
-}
-
-.timeline-filter,
-.timeline-sort,
-.timeline-range,
-.table-filter,
-.table-sort,
-.table-range {
-    min-width: var(--table-filter-min-width);
 }
 
 .table-toggles {
@@ -158,27 +135,6 @@
     color: var(--text-dim);
 }
 
-.timeline-bulk,
-.table-bulk {
-    display: flex;
-    align-items: center;
-    gap: var(--timeline-bulk-table-bulk-gap);
-    border: var(--timeline-bulk-table-bulk-border);
-    border-radius: var(--timeline-bulk-table-bulk-border-radius);
-    background: transparent;
-}
-
-.timeline-bulk[hidden],
-.table-bulk[hidden] {
-    visibility: hidden;
-}
-
-.timeline-bulk__count,
-.table-bulk__count {
-    min-width: var(--bulk-count-min-width);
-    color: var(--text-dim);
-}
-
 .table-select,
 .snapshot__select,
 .open-doc__select {
@@ -208,10 +164,6 @@
     border-left: var(--open-doc__select-border-left);
     opacity: var(--open-doc__select-opacity);
     transition: var(--open-doc__select-transition);
-}
-
-.snapshot__select--hidden {
-    visibility: hidden;
 }
 
 .snapshot:hover .snapshot__select,
@@ -303,19 +255,7 @@ html.theme-light .open-doc__select input {
 }
 
 @media (max-width: var(--timeline-responsive-breakpoint)) {
-    .timeline-search,
-    .table-filters {
-        grid-template-columns: var(
-            --table-filters-responsive-grid-template-columns
-        );
-    }
-
     .table-toggles {
-        flex-wrap: wrap;
-    }
-
-    .timeline-bulk,
-    .table-bulk {
         flex-wrap: wrap;
     }
 }
