@@ -18,7 +18,24 @@
 }
 
 .tf__field:focus-within {
-    border-color: var(--accent);
+    background: var(--token-field-focus-background);
+    border: var(--token-field-focus-border);
+    color: var(--token-field-focus-color);
+}
+
+.tf__field:focus-within .tf__flow {
+    caret-color: var(--token-field-focus-caret-color);
+}
+
+.tf__field:focus-within .tf__flow:empty::before,
+.tf__field:focus-within .tf__placeholder {
+    color: var(--token-field-focus-placeholder-color);
+}
+
+.tf__field:focus-within .tf__chip {
+    background: var(--token-field-focus-chip-background);
+    border: var(--token-field-focus-chip-border);
+    color: var(--token-field-focus-chip-color);
 }
 
 .tf__field-wrap {
@@ -106,8 +123,6 @@
 }
 
 .tf__flow {
-    flex: var(--token-field-flow-flex);
-    min-width: var(--token-field-flow-min-width);
     outline: none;
     line-height: var(--token-field-flow-line-height);
     caret-color: var(--text-bright);
@@ -117,6 +132,10 @@
     content: attr(data-placeholder);
     color: var(--text-dim);
     pointer-events: none;
+}
+
+.tf__field:focus-within .tf__flow:empty::before {
+    content: "";
 }
 
 .tf__placeholder {
@@ -229,6 +248,17 @@ body.tf-dragging {
     color: var(--text-dim);
     margin: var(--token-field-chip-separator-margin);
     pointer-events: none;
+}
+
+.tf__fixed-separator {
+    color: var(--token-field-fixed-separator-color);
+    margin: var(--token-field-fixed-separator-margin);
+    pointer-events: none;
+    user-select: none;
+}
+
+.tf__fixed-separator[hidden] {
+    display: none;
 }
 
 .tf__palette {

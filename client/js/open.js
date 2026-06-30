@@ -355,6 +355,12 @@ const renderOpenDocuments = (docs) => {
             ? "No documents with unsaved changes."
             : "No documents open.";
         el.openDocsList.appendChild(empty);
+        if (window.DejaVuTable) {
+            window.DejaVuTable.syncEmptyToggles(
+                el.openDocsList,
+                document.getElementById("openDocsToggles")
+            );
+        }
         syncOpenDocsBulkUi();
         return;
     }
@@ -383,6 +389,12 @@ const renderOpenDocuments = (docs) => {
         fragment.appendChild(section);
     });
     el.openDocsList.appendChild(fragment);
+    if (window.DejaVuTable) {
+        window.DejaVuTable.syncEmptyToggles(
+            el.openDocsList,
+            document.getElementById("openDocsToggles")
+        );
+    }
     syncOpenDocsBulkUi();
 };
 
@@ -589,7 +601,7 @@ const buildOpenDocRow = (doc) => {
 
     const name = document.createElement("button");
     name.type = "button";
-    name.className = "open-doc__name";
+    name.className = "open-doc__name file-link";
     name.textContent = doc.name;
     name.title = doc.hasPath
         ? `${doc.fullPath}  ·  Shift-click to reveal in Finder`

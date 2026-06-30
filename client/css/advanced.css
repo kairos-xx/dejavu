@@ -32,6 +32,7 @@
 .advanced-actions {
     display: grid;
     grid-template-columns: var(--advanced-actions-grid-template-columns);
+    margin-top: var(--advanced-actions-margin-top);
     width: var(--advanced-actions-width);
 }
 

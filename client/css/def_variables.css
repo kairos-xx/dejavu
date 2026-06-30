@@ -209,6 +209,8 @@
     --app__title-h1-font-size: var(--base-font-sm);
     --app__title-h1-font-weight: var(--base-font-weight-bold);
     --app__title-h1-letter-spacing: var(--base-letter-spacing-none);
+    --btn-danger-armed-background: var(--base-color-danger-armed-background);
+    --btn-danger-armed-border-color: var(--base-color-danger-armed-border);
     --btn-danger-armed-font-weight: var(--base-font-weight-semibold);
     --btn-danger-confirm-font-weight: var(--base-font-weight-semibold);
     --btn-font-size: var(--base-font-sm);
@@ -246,11 +248,18 @@
     --empty-state-line-height: var(--base-line-height-relaxed);
     --field-hint-font-size: var(--base-font-sm);
     --field-hint-line-height: var(--base-line-height-readable);
+    --field-hint-color: var(--base-color-field-hint);
     --field-label-font-size: var(--base-font-sm);
     --field-label-font-weight: var(--base-font-weight-regular);
+    --file-link-font-size: var(--base-font-sm);
+    --file-link-hover-color: var(--base-color-text-bright);
+    --file-link-text-underline-offset: var(
+        --base-text-underline-offset-tight
+    );
     --folder-balloon__action-font-size: var(--base-font-sm);
     --folderinput-font-size: var(--base-font-sm);
     --form-placeholder-font-style: var(--base-font-style-italic);
+    --form-placeholder-focus-opacity: var(--base-opacity-hidden);
     --folder-status-link-underline-offset: var(
         --base-text-underline-offset-tight
     );
@@ -368,8 +377,9 @@
     --file-path-underline-offset: var(
         --base-text-underline-offset-tight
     );
-    --snapshot__rel-font-size: var(--base-font-sm);
+    --snapshot__rel-font-size: var(--base-font-2xs);
     --snapshot__rel-font-weight: var(--base-font-weight-extrabold);
+    --snapshot__rel-letter-spacing: var(--base-letter-spacing-tabs);
     --snapshot__size-font-size: var(--base-font-sm);
     --snapshot__time-font-size: var(--base-font-sm);
     --snapshot__time-font-weight: var(--base-font-weight-medium);
@@ -378,6 +388,7 @@
     --snooze-bar__label-font-weight: var(--base-font-weight-regular);
     --snooze-chip-font-size: var(--base-font-sm);
     --snooze-chip-line-height: var(--base-line-height-solid);
+    --status__label-color: var(--base-color-text-dim);
     --status__label-font-size: var(--base-font-sm);
     --status__label-font-weight: var(--base-font-weight-bold);
     --status__row-letter-spacing: var(--base-letter-spacing-tight);
@@ -471,7 +482,7 @@
     --snapshot-latest-snapshot-protected-snapshot__dot-box-shadow: 0 0 0
         var(--base-space-1) var(--base-color-accent-glow);
     --snapshot-latest-snapshot__dot-box-shadow: 0 0 0 var(--base-space-1)
-        var(--base-color-accent-glow);
+        var(--base-color-accent-dim);
     --snapshot-protected-box-shadow: inset var(--base-space-1) 0 0
         var(--base-color-warn-tint);
     --snapshot-protected-snapshot-has-note-box-shadow:
@@ -479,6 +490,8 @@
         inset var(--base-space-1) 0 0 var(--base-color-accent-glow);
     --snapshot-selected-box-shadow: inset var(--base-space-1) 0 0
         var(--base-color-accent);
+    --snapshot-hover-background: var(--base-color-hover-alpha-50);
+    --snapshot-selected-hover-background: var(--base-color-selected-hover-mix);
     --snapshot-pinned-box-shadow:
         inset var(--base-border-w) var(--base-space-0) var(--base-space-0)
             var(--base-color-accent-dim),
@@ -580,7 +593,7 @@
     --border-strong: var(--base-color-border-strong);
     --menu-border: var(--base-color-border-strong);
     --btn-border: var(--base-border-w) solid var(--base-color-border);
-    --btn-background: var(--base-color-accent);
+    --btn-background: transparent;
     --btn-micro-background: var(--base-color-input);
     --border-none: var(--base-border-none);
     --btn-border-radius: var(--base-radius);
@@ -811,8 +824,12 @@
         var(--base-color-accent-dim);
     --open-doc-chevron-open-transform: var(--base-transform-chevron-open);
     --open-doc-menu-z-index: var(--base-z-index-open-doc-menu);
+    --open-doc-menu__item-hover-background: var(--base-color-accent-dim);
+    --open-doc-menu__item-hover-color: var(--base-color-accent-hover-text);
     --open-doc-selected-box-shadow: inset var(--base-space-1) 0 0
         var(--base-color-accent);
+    --open-doc-hover-background: var(--base-color-hover-alpha-50);
+    --open-doc-selected-hover-background: var(--base-color-selected-hover-mix);
     --open-doc__action-arrow-border-radius: 0 var(--base-radius)
         var(--base-radius) 0;
     --open-doc__action-border-radius: var(--base-radius);
@@ -826,6 +843,8 @@
         var(--base-color-text-dim);
     --open-doc__select-opacity: var(--base-opacity-muted);
     --open-doc__split-action-bulk-border-radius: var(--base-radius);
+    --open-doc__split-action-bulk-open-border-color: var(--base-color-accent);
+    --open-doc__split-action-bulk-open-btn-background: var(--base-color-segment-active);
     --open-docs-busy-opacity: var(--base-opacity-subtle);
     --open-docs__day-open-doc-border-bottom: var(--base-border-w) solid
         var(--base-color-border-soft);
@@ -833,7 +852,7 @@
     --preset-chip-border: var(--base-border-w) solid
         var(--base-color-border-soft);
     --preset-chip-border-radius: var(--base-radius-lg);
-    --preset-chip-active-background: var(--base-color-hover);
+    --preset-chip-active-background: var(--base-color-accent-glow);
     --preset-chip-background: var(--base-color-segment-active);
     --preset-chip-clear-border: var(--base-border-w) solid
         var(--base-color-border);
@@ -918,7 +937,7 @@
     --snapshot-latest-snapshot-protected-snapshot__dot-box-shadow: 0 0 0
         var(--base-space-1) var(--base-color-accent-glow);
     --snapshot-latest-snapshot__dot-box-shadow: 0 0 0 var(--base-space-1)
-        var(--base-color-accent-glow);
+        var(--base-color-accent-dim);
     --snapshot-missing-opacity: var(--base-opacity-idle);
     --snapshot-missing-snapshot__delta-opacity: var(--base-opacity-muted);
     --snapshot-missing-snapshot__dot-opacity: var(--base-opacity-disabled);
@@ -1075,6 +1094,16 @@
         var(--base-color-border-strong);
     --token-field-menu-border-radius: var(--base-radius);
     --token-field-menu-box-shadow: var(--base-shadow-menu);
+    --token-field-focus-background: var(--base-color-input-focus);
+    --token-field-focus-border: var(--base-border-w) solid
+        var(--base-color-accent);
+    --token-field-focus-color: var(--base-color-input-focus-text);
+    --token-field-focus-caret-color: var(--base-color-input-focus-text);
+    --token-field-focus-placeholder-color: var(--base-color-input-focus-text);
+    --token-field-focus-chip-background: var(--base-color-accent-glow);
+    --token-field-focus-chip-border: var(--base-border-w) solid
+        var(--base-color-accent);
+    --token-field-focus-chip-color: var(--base-color-accent-dark-text);
     --token-field-chip-border: var(--base-border-w) solid
         var(--base-color-border-soft);
     --token-field-chip-border-radius: var(--base-radius);
@@ -1142,6 +1171,7 @@
         var(--base-grid-repeat-4),
         minmax(var(--base-space-0), var(--base-grid-fr-1))
     );
+    --advanced-actions-margin-top: var(--base-size-20);
     --advanced-actions-width: var(--base-pct-100);
     --advanced-cache-health-border-bottom: var(--base-border-none);
     --advanced-cache-health-disk-margin-top: var(--base-space-0);
@@ -1240,7 +1270,7 @@
         var(--base-space-4);
 
     --btn-height: var(--base-size-22);
-    --btn-micro-padding: var(--base-space-0) var(--base-space-3);
+    --btn-micro-padding: var(--base-space-1) var(--base-space-3);
     --btn-micro-flex: 0;
     --btn-outline: var(--base-space-1) solid var(--base-color-accent);
     --btn-outline-offset: var(--base-space-0);
@@ -1354,6 +1384,15 @@
     --field-group-row-padding-top: var(--base-space-2);
     --field-hint-margin: var(--base-space-2) 0 0;
     --field-row-gap: var(--base-space-3);
+    --file-link-background: var(--base-color-transparent);
+    --file-link-border: var(--base-border-none);
+    --file-link-border-bottom: var(--base-border-w) dotted
+        var(--base-color-transparent);
+    --file-link-color: var(--base-color-accent);
+    --file-link-disabled-color: var(--base-color-text-dim);
+    --file-link-disabled-opacity: var(--base-opacity-muted);
+    --file-link-font-family: var(--base-font-family-code);
+    --file-link-padding: var(--base-space-0);
 
     --folder-balloon-padding: var(--base-space-2);
     --folder-balloon-right: var(--base-space-0);
@@ -1391,7 +1430,7 @@
     --settings-reset-gap: var(--base-size-5);
     --settings-reset-margin-left: var(--base-space-3);
     --settings-reset-padding: var(--base-space-0);
-    --settings-reset-icon-size: var(--base-space-5);
+    --settings-reset-icon-size: var(--base-space-4-5);
 
     --formatvalue-gap: var(--base-space-2);
     --formatvalue-align-self: var(--base-align-self-stretch);
@@ -1504,13 +1543,13 @@
     --open-doc-menu__item-min-height: var(--base-size-21);
     --open-doc-menu__item-padding-left: var(--base-space-4);
     --open-doc-menu__item-padding-right: var(--base-space-4);
-    --open-doc-padding: var(--base-space-3) var(--base-space-6)
-        var(--base-space-3) var(--base-space-4);
+    --open-doc-padding: var(--base-space-1) var(--base-space-6-5)
+        var(--base-space-1) var(--base-space-4);
     --open-doc-main-flex: var(--base-flex-fluid-auto);
     --open-doc-main-min-width: var(--base-space-0);
     --open-doc__action-arrow-height: var(--base-size-22);
     --open-doc__action-arrow-border: var(--base-border-none);
-    --open-doc__action-arrow-padding: var(--base-space-0);
+    --open-doc__action-arrow-padding: var(--base-space-2);
     --open-doc__action-height: var(--base-size-22);
     --open-doc__action-border: var(--base-border-none);
     --open-doc__action-padding: var(--base-space-0);
@@ -1519,10 +1558,16 @@
     --open-doc__action-width: var(--base-size-22);
     --open-doc__actions-gap: var(--base-space-1);
     --open-doc__actions-flex: var(--base-flex-none);
-    --open-doc__bulk-save-arrow-flex: 0 0 var(--base-size-20);
+    --open-doc__bulk-save-arrow-flex: 0 1 var(--base-size-22);
     --open-doc__bulk-save-arrow-border-bottom-left-radius: var(--base-space-0);
+    --open-doc__bulk-save-arrow-border-color: var(--base-color-border);
+    --open-doc__bulk-save-arrow-color: var(--base-color-text-dim);
+    --open-doc__bulk-save-hover-border-color: var(--base-color-border-strong);
+    --open-doc__bulk-save-hover-color: var(--base-color-accent-text);
     --open-doc__bulk-save-arrow-border-top-left-radius: var(--base-space-0);
     --open-doc__bulk-save-arrow-margin-left: var(--base-space-0);
+    --open-doc__bulk-save-chevron-color: var(--base-color-text-bright);
+    --open-doc__bulk-save-chevron-hover-color: var(--base-color-accent);
     --open-doc__bulk-save-main-flex: var(--base-flex-none);
     --open-doc__bulk-save-main-border-bottom-right-radius: var(--base-space-0);
     --open-doc__bulk-save-main-border-top-right-radius: var(--base-space-0);
@@ -1548,8 +1593,9 @@
     --open-doc__select-margin-left: var(--base-space-0);
     --open-doc__select-order: var(--base-order-10);
     --open-doc__select-padding-left: var(--base-space-5);
-    --open-doc__split-action-bulk-border: var(--base-border-none);
+    --open-doc__split-action-bulk-border: var(--base-border-w) solid var(--base-color-border-strong);
     --open-doc__split-action-bulk-flex: var(--base-flex-none);
+    --open-doc__split-action-bulk-width: var(--base-size-80);
     --open-doc__split-action-save-border-bottom-right-radius: var(
         --base-space-0
     );
@@ -1621,6 +1667,8 @@
     --select-chevron-padding: var(--base-space-3);
     --select-chevron-right: var(--base-space-3);
     --select-chevron-top: var(--base-space-0);
+    --select-chevron-width: var(--base-size-22);
+    --select-chevron-hover-background: var(--base-color-hover);
     --select-wrapper-open-background: var(--base-color-segment-active);
     --select-menu-padding: var(--base-space-2) 0;
     --select-menu__check-height: var(--base-size-14);
@@ -1701,7 +1749,7 @@
     );
     --comparison-settings-panel-field-gap: var(--base-space-2);
     --comparison-settings-panel-field-title-color: var(--base-color-text-dim);
-    --comparison-settings-panel-group-title-color: var(--base-color-text-dim);
+    --comparison-settings-panel-group-title-color: var(--base-color-text);
     --comparison-settings-panel-row-min-height: var(--base-size-54);
     --comparison-settings-panel-checkbox-min-height: var(--base-size-22);
     --comparison-settings-panel-embedded-border-bottom: var(
@@ -1723,11 +1771,13 @@
     );
     --comparison-settings-group-hint-margin: 0 0 var(--base-space-1);
     --comparison-settings-group-border-bottom: var(--base-border-w) solid
-        var(--base-color-border-soft);
+        var(--base-color-border);
     --comparison-settings-group-gap: var(--base-space-3);
-    --comparison-settings-group-padding: var(--base-space-0) var(--base-space-0)
-        var(--base-space-7);
-    --comparison-settings-group-title-margin-bottom: var(--base-space-2);
+    --comparison-settings-group-padding-block-start: var(--base-space-7);
+    --comparison-settings-group-padding-block-end: var(--base-space-7);
+    --comparison-settings-group-padding-inline: var(--base-space-0);
+    --comparison-settings-group-edge-padding: var(--base-space-0);
+    --comparison-settings-group-title-margin-bottom-top: var(--base-space-2);
     --comparison-settings-group-title-margin-left: var(--base-size-2);
     --comparison-settings-group-field-padding-bottom: var(--base-space-1);
     --comparison-settings-grid-group-gap: var(--base-space-3);
@@ -1862,9 +1912,10 @@
     --snapshot__path-max-width: var(--base-pct-100);
     --snapshot__rel-height: var(--base-size-14);
     --snapshot__rel-padding: var(--base-space-1) var(--base-space-3);
-    --snapshot__rel-width: var(--base-size-72);
+    --snapshot__rel-width: var(--base-size-80);
     --snapshot__right-group-gap: var(--base-space-3);
     --snapshot__right-group-flex-shrink: var(--base-flex-shrink-none);
+    --snapshot__right-group-margin-right: var(--base-space-6);
     --row-select-control-height: var(--base-size-12);
     --row-select-control-focus-outline: var(
             --base-border-w
@@ -1946,6 +1997,12 @@
     --table-action-svg-icon-size: var(--base-size-12);
     --table-actions-gap: var(--base-space-3);
     --table-actions-compact-gap: var(--base-space-1);
+    --table-list-background: var(--base-color-input-well);
+    --table-list-border: var(--base-border-w) solid var(--base-color-border);
+    --table-list-border-radius: var(--base-radius);
+    --table-list-max-height: var(--base-size-280);
+    --table-list-overflow-x: hidden;
+    --table-list-overflow-y: auto;
     --table-filter-min-width: var(--base-space-0);
     --table-filters-grid-template-columns: minmax(
             var(--base-space-0),
@@ -1991,6 +2048,9 @@
     --table-toggle-table-action-width: var(--base-size-26);
     --table-toggles-gap: var(--base-space-3);
     --table-toggles-compact-gap: var(--base-space-1);
+    --table-empty-control-color: var(--base-color-border-strong);
+    --table-empty-control-border-color: var(--base-color-border-strong);
+    --table-empty-control-radio-outer: var(--base-color-border-strong);
     --table-toggles-margin-left: var(--base-space-3);
     --table-toggles-width: var(--base-pct-100);
     --table-select-all-margin-right: var(--base-space-5);
@@ -2012,14 +2072,15 @@
     --templateinput-width: var(--base-pct-100);
 
     --timeline-actions-margin-top: var(--base-space-3);
+    --timeline-bulk__btn-min-width: var(--base-size-80);
     --timeline-bulk-gap: var(--base-space-2);
     --timeline-bulk-margin-top: var(--base-space-3);
-    --timeline-bulk-padding: var(--base-space-1) var(--base-space-3);
+    --timeline-bulk-padding: var(--base-space-1) var(--base-space-1) var(--base-space-1) var(--base-space-3);
     --timeline-bulk-table-bulk-gap: var(--base-space-3);
     --timeline-bulk__count-flex: 1 1 var(--base-pct-50);
     --bulk-count-min-width: var(--base-size-70);
     --timeline-day__count-height: var(--base-size-14);
-    --timeline-day__count-margin-right: var(--base-space-0);
+    --timeline-day__count-margin-right: var(--base-space-0-5);
     --timeline-day__count-max-width: var(--base-size-26);
     --timeline-day__count-min-width: var(--base-size-26);
     --timeline-day__count-padding: 0 var(--base-space-2);
@@ -2070,8 +2131,13 @@
     --timeline-rail-bottom: calc(
         var(--base-size-8) + (var(--base-size-9) / 2)
     );
-    --timeline-rail-padding: var(--base-space-2) var(--base-space-6)
-        var(--base-space-2) 0;
+    --timeline-rail-first-line-top: var(--timeline-rail-top);
+    --timeline-rail-last-line-height-offset: var(--base-size-10);
+    --timeline-rail-line-full-height: var(--base-pct-100);
+    --timeline-rail-middle-line-height: var(--base-pct-100);
+    --timeline-rail-middle-line-top: var(--base-space-0);
+    --timeline-rail-edge-margin-bottom: var(--base-size-2);
+    --timeline-rail-padding: var(--base-space-2) 0;
     --timeline-rail-top: calc(
         var(--base-size-8) + (var(--base-size-9) / 2)
     );
@@ -2162,6 +2228,9 @@
     --token-field-chip-separator-content: "";
     --token-field-chip-separator-margin: var(--base-space-0)
         var(--base-space-1-5) var(--base-space-0) var(--base-size-neg-1);
+    --token-field-fixed-separator-color: var(--base-color-text-dim);
+    --token-field-fixed-separator-margin: var(--base-space-0)
+        var(--base-space-1-5);
     --token-field-ghost-margin: var(--base-space-0);
     --token-flex: var(--base-flex-none);
     --token-margin: var(--base-space-0);

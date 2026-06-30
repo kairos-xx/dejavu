@@ -292,15 +292,55 @@ const folderTemplateEditableTokens = () =>
 const folderTemplateToParts = (template) => {
     const mid = folderTemplateMidValue(template);
     if (!mid) return [];
-    return DEJAVU.tokenizeTemplate(
-        mid,
-        folderTemplateEditableTokens().map((t) => t.token)
-    ).map((part) => {
-        if (part.type === "token") {
-            return { token: `$${(part.path || [])[0] || ""}` };
-        }
-        return { text: part.value || "" };
+    return [{ text: mid }];
+};
+
+const folderTemplateMiddleHasText = () => {
+    if (!state.folderTemplateTokenInput) return false;
+    return state.folderTemplateTokenInput.getValues().some((value) => {
+        return String(value || "").trim().length > 0;
     });
+};
+
+const syncFolderTemplateSeparators = () => {
+    const editor = el.folderTemplateInput;
+    if (!editor) return;
+    const second = editor.querySelector(
+        ".tf__fixed-separator--after-middle"
+    );
+    if (second) second.hidden = !folderTemplateMiddleHasText();
+};
+
+const makeFolderTemplateSeparator = (modifier) => {
+    const sep = document.createElement("span");
+    sep.className = `tf__fixed-separator ${modifier}`;
+    sep.textContent = "/";
+    sep.setAttribute("aria-hidden", "true");
+    sep.contentEditable = "false";
+    return sep;
+};
+
+const installFolderTemplateSeparators = () => {
+    const editor = el.folderTemplateInput;
+    const field = editor && editor.querySelector(".tf__field");
+    const flow = field && field.querySelector(".tf__flow");
+    const endPin = field && field.querySelector(".tf__chip--end");
+    if (!field || !flow || !endPin) return;
+
+    if (!field.querySelector(".tf__fixed-separator--after-start")) {
+        field.insertBefore(
+            makeFolderTemplateSeparator("tf__fixed-separator--after-start"),
+            flow
+        );
+    }
+    if (!field.querySelector(".tf__fixed-separator--after-middle")) {
+        field.insertBefore(
+            makeFolderTemplateSeparator("tf__fixed-separator--after-middle"),
+            endPin
+        );
+    }
+    syncFolderTemplateSeparators();
+    flow.addEventListener("input", syncFolderTemplateSeparators);
 };
 
 /**
@@ -335,11 +375,6 @@ const setupFolderTemplateInput = () => {
                     title: "Default dejavu folder",
                     pin: "start"
                 },
-                ...folderTemplateEditableTokens().map((t) => ({
-                    key: t.token,
-                    label: t.token,
-                    title: t.hint
-                })),
                 {
                     key: "$filename",
                     label: "$filename",
@@ -351,15 +386,18 @@ const setupFolderTemplateInput = () => {
             allowFreeText: true,
             allowCustomTokens: false,
             singleUse: true,
-            showPalette: true,
+            showPalette: false,
             reorder: false,
             separator: "/",
             placeholder: "Folder segment",
-            suggest: suggestFolderTemplateTokens,
             hideUsedSuggestions: true,
-            onChange: () => commitFolderTemplate()
+            onChange: () => {
+                syncFolderTemplateSeparators();
+                commitFolderTemplate();
+            }
         }
     );
+    installFolderTemplateSeparators();
     refreshDefaultFolderTokenLabel();
 };
 
@@ -389,6 +427,7 @@ const commitFolderTemplate = () => {
 const renderFolderTemplateEditor = (value) => {
     if (state.folderTemplateTokenInput) {
         state.folderTemplateTokenInput.setValue(folderTemplateToParts(value));
+        syncFolderTemplateSeparators();
     }
     refreshDefaultFolderTokenLabel();
 };

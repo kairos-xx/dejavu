@@ -470,6 +470,7 @@ const setRecoverySelected = (path, selected) => {
     } else {
         updateRecoveryBulkBar();
     }
+    updateRecoveryBulkBar();
 };
 
 const bulkDeleteRecoveryEntries = (paths) => {
@@ -680,7 +681,7 @@ const bulkDeleteSelected = () => {
         // User confirmed - proceed with deletion
         state.deleteConfirming = false;
         el.bulkDelBtn.textContent = "Remove";
-        el.bulkDelBtn.classList.remove("btn--danger-confirm");
+        el.bulkDelBtn.classList.remove("btn--danger-armed");
         
         let deleteCount = 0;
         let chain = Promise.resolve();
@@ -708,7 +709,7 @@ const bulkDeleteSelected = () => {
         // First click - show confirmation
         state.deleteConfirming = true;
         el.bulkDelBtn.textContent = "Confirm";
-        el.bulkDelBtn.classList.add("btn--danger-confirm");
+        el.bulkDelBtn.classList.add("btn--danger-armed");
         setHint("Click Remove again to confirm deletion.", "warn");
         
         // Auto-reset after 5 seconds if not confirmed
@@ -719,7 +720,7 @@ const bulkDeleteSelected = () => {
             state.deleteConfirming = false;
             if (el.bulkDelBtn) {
                 el.bulkDelBtn.textContent = "Remove";
-                el.bulkDelBtn.classList.remove("btn--danger-confirm");
+                el.bulkDelBtn.classList.remove("btn--danger-armed");
             }
         }, 5000);
     }
@@ -920,6 +921,12 @@ const renderVersions = (items) => {
             "No snapshots yet. They'll appear here as dejavu runs.";
         el.versionList.appendChild(empty);
         if (el.versionCount) el.versionCount.textContent = "0";
+        if (window.DejaVuTable) {
+            window.DejaVuTable.syncEmptyToggles(
+                el.versionList,
+                document.getElementById("timelineToggles")
+            );
+        }
         return;
     }
 
@@ -930,6 +937,12 @@ const renderVersions = (items) => {
         el.versionList.appendChild(noMatch);
         if (el.versionCount) {
             el.versionCount.textContent = String(state.versions.length);
+        }
+        if (window.DejaVuTable) {
+            window.DejaVuTable.syncEmptyToggles(
+                el.versionList,
+                document.getElementById("timelineToggles")
+            );
         }
         return;
     }
@@ -963,7 +976,7 @@ const renderVersions = (items) => {
             chronologicalItems[iChronological - 1];
     }
 
-    groups.forEach((group) => {
+    groups.forEach((group, groupIndex) => {
         const section = document.createElement("div");
         section.className = "timeline-day";
 
@@ -980,7 +993,15 @@ const renderVersions = (items) => {
         section.appendChild(header);
 
         const rail = document.createElement("div");
-        rail.className = "timeline-rail";
+        rail.className = DEJAVU.classNames(
+            "timeline-rail",
+            groupIndex === 0 && "timeline-rail--first",
+            groupIndex === groups.length - 1 && "timeline-rail--last"
+        );
+        rail.style.setProperty(
+            "--timeline-rail-snapshot-count",
+            String(Math.max(1, group.items.length))
+        );
 
         group.items.forEach((item) => {
             const isLatest = !!(state.latestSnapshot &&
@@ -1150,7 +1171,7 @@ const renderVersions = (items) => {
 
             const nameEl = document.createElement("button");
             nameEl.type = "button";
-            nameEl.className = "snapshot__name";
+            nameEl.className = "snapshot__name file-link";
             nameEl.textContent = item.name;
             nameEl.title = `Open ${item.name}  ·  Shift-click to reveal in Finder`;
             
@@ -1221,6 +1242,12 @@ const renderVersions = (items) => {
     });
 
     el.versionList.appendChild(fragment);
+    if (window.DejaVuTable) {
+        window.DejaVuTable.syncEmptyToggles(
+            el.versionList,
+            document.getElementById("timelineToggles")
+        );
+    }
 };
 
 const removeMissingFromManifest = (path) => {

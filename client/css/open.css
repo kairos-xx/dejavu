@@ -21,7 +21,7 @@
 }
 
 .open-doc:hover {
-    background: var(--bg-hover);
+    background: var(--open-doc-hover-background);
 }
 
 .open-doc--active {
@@ -31,6 +31,11 @@
 .open-doc--selected {
     background: var(--accent-glow);
     box-shadow: var(--open-doc-selected-box-shadow);
+}
+
+.open-doc--selected:hover,
+.open-doc--selected:focus-visible {
+    background: var(--open-doc-selected-hover-background);
 }
 
 .open-doc__dot {
@@ -66,27 +71,7 @@
 }
 
 .open-doc__name {
-    -webkit-appearance: none;
-    appearance: none;
-    padding: var(--open-doc__name-padding);
-    border: var(--open-doc__name-border);
-    border-bottom: var(--open-doc__name-border-bottom);
-    background: transparent;
-    font-family: var(--font-family-code);
-    color: var(--accent);
-    text-align: left;
-    cursor: var(--cursor-action);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: var(--text-flow-nowrap);
     min-width: var(--open-doc__name-min-width);
-}
-
-.open-doc__name:hover,
-.open-doc__name:focus-visible {
-    color: var(--text-bright);
-    border-bottom-color: currentColor;
-    outline: none;
 }
 
 .open-doc__unsaved {
@@ -133,6 +118,17 @@
     border-radius: var(--open-doc__split-action-bulk-border-radius);
     background: transparent;
     overflow: visible;
+    width: var(--open-doc__split-action-bulk-width);
+}
+
+.open-doc__split-action--bulk:hover,
+.open-doc__split-action--bulk.is-open {
+    border-color: var(--open-doc__split-action-bulk-open-border-color);
+}
+
+.open-doc__bulk-save-arrow,
+.open-doc__bulk-save-main {
+    border: none;
 }
 
 .open-doc__split-action .open-doc__action--save {
@@ -157,15 +153,19 @@
     cursor: var(--cursor-action);
     transition: var(--open-doc__action-arrow-transition);
 }
-
+.open-doc__action-arrow  .select-chevron{
+    border: none;
+}
 .open-doc__chevron {
     position: static;
     width: var(--open-doc__chevron-width);
-    height: var(--open-doc__chevron-height);
+    /* height: var(--open-doc__chevron-height); */
     display: inline-flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
+        width: stretch;
+
 }
 
 .open-doc__chevron svg {
@@ -175,11 +175,8 @@
     color: currentColor;
 }
 
-.open-doc__action-arrow:hover,
-.open-doc__action-arrow[aria-expanded="true"],
-.open-doc__split-action.is-open .open-doc__action-arrow {
-    color: var(--text-bright);
-    background: var(--bg-hover);
+.open-doc__action-arrow:hover .open-doc__chevron {
+    color: var(--accent);
 }
 
 .open-doc__action-arrow[aria-expanded="true"] .open-doc__chevron,
@@ -196,6 +193,9 @@
     min-width: var(--open-doc-menu-min-width);
     overflow: visible;
     max-height: var(--open-doc-menu-max-height);
+    background: var(--accent-dim);
+    box-shadow: none;
+    border-color: var(--accent);
 }
 
 .open-doc-menu[aria-hidden="false"] {
@@ -213,6 +213,12 @@
     white-space: var(--text-flow-nowrap);
 }
 
+.open-doc-menu__item:hover,
+.open-doc-menu__item:focus-visible {
+    background: var(--open-doc-menu__item-hover-background);
+    color: var(--open-doc-menu__item-hover-color);
+}
+
 .open-doc-menu__item .select-menu__label {
     overflow: visible;
     text-overflow: clip;
@@ -220,7 +226,7 @@
 }
 
 .open-doc__bulk-save-main {
-    flex: var(--open-doc__bulk-save-main-flex);
+    flex: 1;
     min-height: var(--open-doc__bulk-save-main-min-height);
     border-top-right-radius: var(
         --open-doc__bulk-save-main-border-top-right-radius
@@ -239,35 +245,40 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-left: var(--open-doc__bulk-save-arrow-margin-left);
-    border-color: var(--border);
-    border-left: var(--open-doc__bulk-save-arrow-border-left);
+    min-height: var(--open-doc__bulk-save-main-min-height);
+    border-color: var(--open-doc__bulk-save-arrow-border-color);
     border-top-left-radius: var(
         --open-doc__bulk-save-arrow-border-top-left-radius
     );
     border-bottom-left-radius: var(
         --open-doc__bulk-save-arrow-border-bottom-left-radius
     );
-    color: var(--accent-dim);
-    color: var(--text-dim);
+    color: var(--open-doc__bulk-save-arrow-color);
+    padding: 0;
 }
 
 .open-doc__split-action--bulk .open-doc__chevron {
-    color: var(--text-bright);
+    color: var(--open-doc__bulk-save-chevron-color);
 }
 
 .open-doc__split-action--bulk:hover .open-doc__bulk-save-main,
-.open-doc__split-action--bulk:hover .open-doc__bulk-save-arrow,
-.open-doc__split-action--bulk.is-open .open-doc__bulk-save-main,
-.open-doc__split-action--bulk.is-open .open-doc__bulk-save-arrow {
-    color: var(--accent);
-    border-color: var(--border-strong);
-    color: var(--accent-text);
+.open-doc__split-action--bulk:hover .open-doc__bulk-save-arrow {
+    border-color: var(--open-doc__bulk-save-hover-border-color);
 }
 
-.open-doc__split-action--bulk:hover .open-doc__chevron,
-.open-doc__split-action--bulk.is-open .open-doc__chevron {
-    color: var(--accent-text);
+.open-doc__split-action--bulk.is-open .open-doc__bulk-save-main,
+.open-doc__split-action--bulk.is-open .open-doc__bulk-save-arrow {
+    border-color: var(--open-doc__bulk-save-hover-border-color);
+    color: var(--accent);
+}
+
+.open-doc__split-action--bulk.is-open .btn {
+    background: var(--open-doc__split-action-bulk-open-btn-background);
+}
+
+.open-doc__bulk-save-arrow:hover .open-doc__chevron
+{
+    color: var(--open-doc__bulk-save-chevron-hover-color);
 }
 
 .open-doc__action {
@@ -301,10 +312,6 @@
 
 .open-doc__action:hover {
     color: var(--text-bright);
-}
-
-.open-doc__action:hover .svg-icon::before {
-    background: var(--bg-hover);
 }
 
 .open-doc__action--on,

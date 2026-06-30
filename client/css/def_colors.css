@@ -20,12 +20,15 @@
     --primary-color-border-strong: #5f5f5f;
     --primary-color-text-default: var(--primary-color-text);
     --primary-color-text-dim: #a6a6a6;
+    --primary-color-field-hint: #616161;
     --primary-color-text-bright: #f5f5f5;
     --primary-color-timeline-refresh: #838383;
 
     --primary-color-accent-dim: #3d6e96;
     --primary-color-accent: #60a6ec;
     --primary-color-accent-text: #ffffff;
+    --primary-color-accent-hover-text: #96caff;
+    --primary-color-accent-dark-text: #284358;
     --primary-color-accent-glow: rgba(96, 166, 236, 0.28);
 
     --primary-color-ok: #6fbf73;
@@ -34,6 +37,8 @@
     --primary-color-warn-gold: #e6a400;
     --primary-color-warn-tint: rgba(217, 162, 59, 0.16);
     --primary-color-danger: #d96f6f;
+    --primary-color-danger-armed-background: #352222;
+    --primary-color-danger-armed-border: #9a4f4f;
 
     --primary-color-shadow: rgba(0, 0, 0, 0.45);
     --primary-color-shadow-transparent: rgba(0, 0, 0, 0);
@@ -41,6 +46,16 @@
     --primary-color-row-pin-fill: rgba(230, 164, 0, 0.45);
     --primary-color-menu-hover: rgba(255, 255, 255, 0.1);
     --primary-color-progress-shine: rgba(255, 255, 255, 0.28);
+    --primary-color-hover-alpha-50: color-mix(
+        in srgb,
+        var(--primary-color-hover) 50%,
+        var(--primary-color-transparent)
+    );
+    --primary-color-selected-hover-mix: color-mix(
+        in srgb,
+        var(--primary-color-accent-glow) 60%,
+        var(--primary-color-hover-alpha-50)
+    );
 
     --primary-color-format-ai: #ff9a00;
     --primary-color-format-pdf: #ff4040;
@@ -67,20 +82,27 @@
         --primary-color-number-spin-buttons-background
     );
     --base-color-hover: var(--primary-color-hover);
+    --base-color-hover-alpha-50: var(--primary-color-hover-alpha-50);
+    --base-color-selected-hover-mix: var(--primary-color-selected-hover-mix);
     --base-color-border: var(--primary-color-border-default);
     --base-color-border-soft: var(--primary-color-border-soft);
     --base-color-border-strong: var(--primary-color-border-strong);
     --base-color-text: var(--primary-color-text-default);
     --base-color-text-dim: var(--primary-color-text-dim);
+    --base-color-field-hint: var(--primary-color-field-hint);
     --base-color-text-bright: var(--primary-color-text-bright);
     --base-color-timeline-refresh: var(--primary-color-timeline-refresh);
     --base-color-accent: var(--primary-color-accent);
     --base-color-accent-dim: var(--primary-color-accent-dim);
     --base-color-accent-text: var(--primary-color-accent-text);
+    --base-color-accent-hover-text: var(--primary-color-accent-hover-text);
+    --base-color-accent-dark-text: var(--primary-color-accent-dark-text);
     --base-color-ok: var(--primary-color-ok);
     --base-color-warn: var(--primary-color-warn);
     --base-color-warn-gold: var(--primary-color-warn-gold);
     --base-color-danger: var(--primary-color-danger);
+    --base-color-danger-armed-background: var(--primary-color-danger-armed-background);
+    --base-color-danger-armed-border: var(--primary-color-danger-armed-border);
     --base-color-accent-glow: var(--primary-color-accent-glow);
     --base-color-warn-tint: var(--primary-color-warn-tint);
     --base-color-ok-tint: var(--primary-color-ok-tint);
@@ -111,12 +133,16 @@
 
 html[data-skin="darkest"] {
     color-scheme: dark;
+    --primary-color-danger-armed-background: #352222;
+    --primary-color-danger-armed-border: #9a4f4f;
     --primary-color-background: #323232;
+    --primary-color-text: #d6d6d6;
+    --primary-color-border: #4a4a4a;
     --primary-color-raised: #2c2c2c;
     --primary-color-input: #262626;
     --primary-color-input-well: #292929;
-    --primary-color-input-focus: #b8b8b8;
-    --primary-color-input-focus-text: #d6d6d6;
+    --primary-color-input-focus: #e1e1e1;
+    --primary-color-input-focus-text: #2f2f2f;
     --primary-color-segment-active: #212121;
     --primary-color-number-spin-buttons-background: #242424;
     --primary-color-hover: #3d3d3d;
@@ -125,27 +151,62 @@ html[data-skin="darkest"] {
     --primary-color-border-strong: #5f5f5f;
     --primary-color-text-default: #d6d6d6;
     --primary-color-text-dim: #a6a6a6;
+    --primary-color-field-hint: #616161;
     --primary-color-text-bright: #f5f5f5;
     --primary-color-accent-dim: #3d6e96;
     --primary-color-accent: #60a6ec;
+    --primary-color-accent-text: #ffffff;
+    --primary-color-accent-hover-text: #96caff;
+    --primary-color-accent-dark-text: #284358;
     --primary-color-accent-glow: rgba(96, 166, 236, 0.28);
+    --primary-color-ok: #6fbf73;
+    --primary-color-warn: #d9a23b;
+    --primary-color-warn-gold: #e6a400;
+    --primary-color-danger: #d96f6f;
     --primary-color-shadow: rgba(0, 0, 0, 0.45);
+    --primary-color-shadow-transparent: rgba(0, 0, 0, 0);
     --primary-color-overlay-strong: rgba(0, 0, 0, 0.6);
     --primary-color-row-pin-fill: rgba(230, 164, 0, 0.45);
     --primary-color-menu-hover: rgba(255, 255, 255, 0.1);
     --primary-color-warn-tint: rgba(217, 162, 59, 0.16);
     --primary-color-ok-tint: rgba(111, 191, 115, 0.16);
     --primary-color-progress-shine: rgba(255, 255, 255, 0.28);
+    --primary-color-hover-alpha-50: color-mix(
+        in srgb,
+        var(--primary-color-hover) 50%,
+        var(--primary-color-transparent)
+    );
+    --primary-color-selected-hover-mix: color-mix(
+        in srgb,
+        var(--primary-color-accent-glow) 60%,
+        var(--primary-color-hover-alpha-50)
+    );
+    --primary-color-format-ai: #ff9a00;
+    --primary-color-format-pdf: #ff4040;
+    --primary-color-format-eps: #ffb800;
+    --primary-color-format-svg: #2196f3;
+    --primary-color-engine-inkscape-border: #6ea86f;
+    --primary-color-engine-ai2svg-border: #4d82c7;
+    --primary-color-engine-illustrator-border: #b98d3f;
+    --primary-color-engine-svg-border: #4d8fbd;
+    --primary-color-timeline-refresh: #838383;
+    --primary-color-transparent: transparent;
+    --primary-color-white: #ffffff;
+    --primary-color-success-contrast: #14320f;
 }
 
 html[data-skin="dark"] {
     color-scheme: dark;
+    --primary-color-danger-armed-background: #3d2626;
+    --primary-color-danger-armed-border: #a05858;
     --primary-color-background: #535353;
+    --primary-color-text: #e0e0e0;
+    --primary-color-border: #6b6b6b;
     --primary-color-raised: #4d4d4d;
     --primary-color-input: #474747;
     --primary-color-input-well: #4a4a4a;
-    --primary-color-input-focus: #bcbcbc;
-    --primary-color-input-focus-text: #e0e0e0;
+    --primary-color-input-focus: #e6e6e6;
+    --primary-color-input-focus-text: #303030;
     --primary-color-segment-active: #424242;
     --primary-color-number-spin-buttons-background: #454545;
     --primary-color-hover: #5e5e5e;
@@ -154,26 +215,61 @@ html[data-skin="dark"] {
     --primary-color-border-strong: #808080;
     --primary-color-text-default: #e0e0e0;
     --primary-color-text-dim: #bfbfbf;
+    --primary-color-field-hint: #8a8a8a;
     --primary-color-text-bright: #f5f5f5;
     --primary-color-accent-dim: #4d7fae;
     --primary-color-accent: #7ab0ee;
+    --primary-color-accent-text: #ffffff;
+    --primary-color-accent-hover-text: #d6eaff;
+    --primary-color-accent-dark-text: #2e4f68;
     --primary-color-accent-glow: rgba(122, 176, 238, 0.28);
+    --primary-color-ok: #6fbf73;
+    --primary-color-warn: #d9a23b;
+    --primary-color-warn-gold: #e6a400;
+    --primary-color-danger: #d96f6f;
     --primary-color-shadow: rgba(0, 0, 0, 0.45);
+    --primary-color-shadow-transparent: rgba(0, 0, 0, 0);
     --primary-color-overlay-strong: rgba(0, 0, 0, 0.6);
     --primary-color-row-pin-fill: rgba(230, 164, 0, 0.45);
     --primary-color-menu-hover: rgba(255, 255, 255, 0.1);
     --primary-color-warn-tint: rgba(217, 162, 59, 0.16);
     --primary-color-ok-tint: rgba(111, 191, 115, 0.16);
     --primary-color-progress-shine: rgba(255, 255, 255, 0.28);
+    --primary-color-hover-alpha-50: color-mix(
+        in srgb,
+        var(--primary-color-hover) 50%,
+        var(--primary-color-transparent)
+    );
+    --primary-color-selected-hover-mix: color-mix(
+        in srgb,
+        var(--primary-color-accent-glow) 60%,
+        var(--primary-color-hover-alpha-50)
+    );
+    --primary-color-format-ai: #ff9a00;
+    --primary-color-format-pdf: #ff4040;
+    --primary-color-format-eps: #ffb800;
+    --primary-color-format-svg: #2196f3;
+    --primary-color-engine-inkscape-border: #6ea86f;
+    --primary-color-engine-ai2svg-border: #4d82c7;
+    --primary-color-engine-illustrator-border: #b98d3f;
+    --primary-color-engine-svg-border: #4d8fbd;
+    --primary-color-timeline-refresh: #838383;
+    --primary-color-transparent: transparent;
+    --primary-color-white: #ffffff;
+    --primary-color-success-contrast: #14320f;
 }
 
 html[data-skin="light"] {
     color-scheme: light;
+    --primary-color-danger-armed-background: #f2dede;
+    --primary-color-danger-armed-border: #c98080;
     --primary-color-background: #b9b9b9;
+    --primary-color-text: #3e3e3e;
+    --primary-color-border: #8e8e8e;
     --primary-color-raised: #c6c6c6;
-    --primary-color-input: #d5d5d5;
+    --primary-color-input: #e6e6e6;
     --primary-color-input-well: #adadad;
-    --primary-color-input-focus: #d0d0d0;
+    --primary-color-input-focus: #e6e6e6;
     --primary-color-input-focus-text: #3e3e3e;
     --primary-color-segment-active: #a8a8a8;
     --primary-color-number-spin-buttons-background: #d0d0d0;
@@ -183,28 +279,62 @@ html[data-skin="light"] {
     --primary-color-border-strong: #7f7f7f;
     --primary-color-text-default: #3e3e3e;
     --primary-color-text-dim: #666666;
+    --primary-color-field-hint: #737373;
     --primary-color-text-bright: #202020;
     --primary-color-accent-dim: #5d7890;
     --primary-color-accent: #104680;
+    --primary-color-accent-text: #ffffff;
+    --primary-color-accent-hover-text: #eaf5ff;
+    --primary-color-accent-dark-text: #163b5f;
     --primary-color-accent-glow: rgba(16, 70, 128, 0.16);
     --primary-color-ok: #36893b;
     --primary-color-warn: #9c6913;
+    --primary-color-warn-gold: #e6a400;
     --primary-color-danger: #a83636;
     --primary-color-shadow: rgba(0, 0, 0, 0.1);
+    --primary-color-shadow-transparent: rgba(0, 0, 0, 0);
     --primary-color-overlay-strong: rgba(0, 0, 0, 0.6);
     --primary-color-row-pin-fill: rgba(230, 164, 0, 0.2);
     --primary-color-menu-hover: rgba(0, 0, 0, 0.08);
     --primary-color-warn-tint: rgba(156, 105, 19, 0.13);
     --primary-color-ok-tint: rgba(54, 137, 59, 0.13);
     --primary-color-progress-shine: rgba(255, 255, 255, 0.35);
+    --primary-color-hover-alpha-50: color-mix(
+        in srgb,
+        var(--primary-color-hover) 50%,
+        var(--primary-color-transparent)
+    );
+    --primary-color-selected-hover-mix: color-mix(
+        in srgb,
+        var(--primary-color-accent-glow) 60%,
+        var(--primary-color-hover-alpha-50)
+    );
+    --primary-color-format-ai: #ff9a00;
+    --primary-color-format-pdf: #ff4040;
+    --primary-color-format-eps: #ffb800;
+    --primary-color-format-svg: #2196f3;
+    --primary-color-engine-inkscape-border: #6ea86f;
+    --primary-color-engine-ai2svg-border: #4d82c7;
+    --primary-color-engine-illustrator-border: #b98d3f;
+    --primary-color-engine-svg-border: #4d8fbd;
+    --primary-color-timeline-refresh: #838383;
+    --primary-color-transparent: transparent;
+    --primary-color-white: #ffffff;
+    --primary-color-success-contrast: #14320f;
 }
 
 html[data-skin="lightest"] {
     color-scheme: light;
+    --primary-color-danger-armed-background: #f5e5e5;
+    --primary-color-danger-armed-border: #d09090;
     --primary-color-background: #f0f0f0;
+    --primary-color-text: #4e4e4e;
+    --primary-color-border: #c8c8c8;
     --primary-color-raised: #e6e6e6;
     --primary-color-input: #ffffff;
     --primary-color-input-well: #d0d0d0;
+    --primary-color-input-focus: #ffffff;
+    --primary-color-input-focus-text: #3f3f3f;
     --primary-color-segment-active: #d0d0d0;
     --primary-color-number-spin-buttons-background: #eeeeee;
     --primary-color-hover: #e0e0e0;
@@ -213,18 +343,46 @@ html[data-skin="lightest"] {
     --primary-color-border-strong: #b8b8b8;
     --primary-color-text-default: #4e4e4e;
     --primary-color-text-dim: #717171;
+    --primary-color-field-hint: #828282;
     --primary-color-text-bright: #202020;
     --primary-color-accent-dim: #6e94bd;
     --primary-color-accent: #1f6fc0;
+    --primary-color-accent-text: #ffffff;
+    --primary-color-accent-hover-text: #eef7ff;
+    --primary-color-accent-dark-text: #174775;
     --primary-color-accent-glow: rgba(31, 111, 192, 0.16);
     --primary-color-ok: #36893b;
     --primary-color-warn: #9c6913;
+    --primary-color-warn-gold: #e6a400;
     --primary-color-danger: #a83636;
     --primary-color-shadow: rgba(0, 0, 0, 0.1);
+    --primary-color-shadow-transparent: rgba(0, 0, 0, 0);
     --primary-color-overlay-strong: rgba(0, 0, 0, 0.6);
     --primary-color-row-pin-fill: rgba(230, 164, 0, 0.2);
     --primary-color-menu-hover: rgba(0, 0, 0, 0.06);
     --primary-color-warn-tint: rgba(156, 105, 19, 0.13);
     --primary-color-ok-tint: rgba(54, 137, 59, 0.13);
     --primary-color-progress-shine: rgba(255, 255, 255, 0.35);
+    --primary-color-hover-alpha-50: color-mix(
+        in srgb,
+        var(--primary-color-hover) 50%,
+        var(--primary-color-transparent)
+    );
+    --primary-color-selected-hover-mix: color-mix(
+        in srgb,
+        var(--primary-color-accent-glow) 60%,
+        var(--primary-color-hover-alpha-50)
+    );
+    --primary-color-format-ai: #ff9a00;
+    --primary-color-format-pdf: #ff4040;
+    --primary-color-format-eps: #ffb800;
+    --primary-color-format-svg: #2196f3;
+    --primary-color-engine-inkscape-border: #6ea86f;
+    --primary-color-engine-ai2svg-border: #4d82c7;
+    --primary-color-engine-illustrator-border: #b98d3f;
+    --primary-color-engine-svg-border: #4d8fbd;
+    --primary-color-timeline-refresh: #838383;
+    --primary-color-transparent: transparent;
+    --primary-color-white: #ffffff;
+    --primary-color-success-contrast: #14320f;
 }

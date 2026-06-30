@@ -229,7 +229,7 @@
 }
 
 .status__label {
-    color: var(--text-dim);
+    color: var(--status__label-color);
     font-weight: var(--status__label-font-weight);
     flex: var(--status__label-flex);
 }
@@ -461,8 +461,6 @@ html.theme-light .mode-seg__btn--on {
 }
 
 .snapshot__name,
-.recovery-item__name,
-.recovery-item__path,
 #folderStatusValue {
     transition: var(--top-transition);
 }

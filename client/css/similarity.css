@@ -19,10 +19,15 @@
     flex-direction: column;
     gap: var(--comparison-settings-group-gap);
     border-bottom: var(--comparison-settings-group-border-bottom);
-    padding: var(--comparison-settings-group-padding);
+    padding-block-end: var(--comparison-settings-group-padding-block-end);
+    padding-inline: var(--comparison-settings-group-padding-inline);
 }
 
-.comparison-settings__group:last-child {
+.panel-view > .comparison-settings__group:last-child {
+    padding-block-end: var(--comparison-settings-group-edge-padding);
+}
+
+.settings__content .comparison-settings__group:last-child {
     border-bottom: var(--border-none);
 }
 
@@ -30,8 +35,9 @@
     font-weight: var(--settings-title-font-weight);
     text-transform: none;
     color: var(--text);
-    margin-bottom: var(--comparison-settings-group-title-margin-bottom);
+    margin-bottom: var(--comparison-settings-group-title-margin-bottom-top);
     margin-left: var(--comparison-settings-group-title-margin-left);
+    margin-top: var(--comparison-settings-group-title-margin-bottom-top);
 }
 
 .comparison-settings__group-hint {
@@ -54,24 +60,25 @@
     align-self: var(--comparison-settings-field-align-self);
 }
 
-#comparisonSettingsPanel .comparison-settings__group-title {
+:is(#comparisonSettingsPanel, #advancedPanel) .comparison-settings__group-title {
     color: var(--comparison-settings-panel-group-title-color);
 }
 
-#comparisonSettingsPanel .settings-field-title {
+:is(#comparisonSettingsPanel, #advancedPanel) .settings-field-title {
     color: var(--comparison-settings-panel-field-title-color);
 }
 
-#comparisonSettingsPanel .comparison-settings__field.field-group--embedded {
+:is(#comparisonSettingsPanel, #advancedPanel)
+    .comparison-settings__field.field-group--embedded {
     padding: var(--comparison-settings-panel-embedded-padding);
     border-bottom: var(--comparison-settings-panel-embedded-border-bottom);
 }
 
-#comparisonSettingsPanel .mini-field {
+:is(#comparisonSettingsPanel, #advancedPanel) .mini-field {
     gap: var(--comparison-settings-panel-field-gap);
 }
 
-#comparisonSettingsPanel .checkbox {
+:is(#comparisonSettingsPanel, #advancedPanel) .checkbox {
     min-height: var(--comparison-settings-panel-checkbox-min-height);
 }
 
@@ -114,6 +121,7 @@
     margin-top: var(
         --comparison-settings-row-hint-margin-top
     );
+    grid-column: 1 / -1;
 }
 
 @media (max-width: var(--wide-menu-width)) {
@@ -336,23 +344,11 @@
     min-width: var(--similar-row__name-min-width);
     width: fit-content;
     max-width: var(--similar-row__name-max-width);
-    overflow: hidden;
-    color: var(--accent);
-    font-family: var(--font-family-code);
-    text-overflow: ellipsis;
-    white-space: var(--text-flow-nowrap);
     vertical-align: bottom;
-    border-bottom: var(--similar-row__name-border-bottom);
 }
 
 .similar-row__name--link {
     cursor: var(--cursor-action);
-}
-
-.similar-row__name--link:hover {
-    color: var(--text-bright);
-    color: var(--accent);
-    text-decoration: var(--text-decoration-none);
 }
 
 .similar-row__score {

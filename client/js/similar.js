@@ -567,6 +567,13 @@
     };
 
     const addHint = () => {};
+    const appendVisibleHint = (parent, text) => {
+        if (!parent || !text) return;
+        const hint = document.createElement("p");
+        hint.className = "field-hint";
+        hint.textContent = text;
+        parent.appendChild(hint);
+    };
 
     // Boolean → an Advanced-style checkbox row with a support hint.
     const makeBoolRow = (path, label, hint, value, tip) => {
@@ -1256,7 +1263,19 @@
                     return;
                 }
                 appendSettingRow(row);
+                if (path === "index.externalConverters.prefer") {
+                    appendVisibleHint(
+                        row,
+                        "Converters are tried from left to right; drag to change fallback priority."
+                    );
+                }
             });
+            if (section.key === "thresholds" && grid) {
+                appendVisibleHint(
+                    grid,
+                    "Higher thresholds make labels stricter; lower thresholds make more results qualify."
+                );
+            }
             if (section.key === "index" && ui.indexSettings) {
                 ui.indexSettings.appendChild(group);
             } else {
@@ -1474,7 +1493,8 @@
         const nm = document.createElement("span");
         nm.className = classNames(
             "similar-row__name",
-            filePath && "similar-row__name--link"
+            filePath && "similar-row__name--link",
+            filePath && "file-link"
         );
         nm.textContent = doc.name || result.filePath || "Untitled";
         if (filePath) {
@@ -1628,11 +1648,23 @@
                 ? "No results match the current filters."
                 : "Pick a folder and click “Find similar”.";
             ui.list.appendChild(empty);
+            if (window.DejaVuTable) {
+                window.DejaVuTable.syncEmptyToggles(
+                    ui.list,
+                    document.getElementById("similarityToggles")
+                );
+            }
             return;
         }
         const frag = document.createDocumentFragment();
         visible.forEach((r) => frag.appendChild(makeRow(r)));
         ui.list.appendChild(frag);
+        if (window.DejaVuTable) {
+            window.DejaVuTable.syncEmptyToggles(
+                ui.list,
+                document.getElementById("similarityToggles")
+            );
+        }
     };
 
     // ---- run --------------------------------------------------------------
@@ -1773,6 +1805,12 @@
             window.dejavuEnhanceSelects(ui.indexSettings);
         }
         setView(window.localStorage.getItem(LS_VIEW) === "extended");
+        if (window.DejaVuTable) {
+            window.DejaVuTable.syncEmptyToggles(
+                ui.list,
+                document.getElementById("similarityToggles")
+            );
+        }
 
         ui.folder.addEventListener("input", () => {
             window.localStorage.setItem(LS_FOLDER, ui.folder.value);

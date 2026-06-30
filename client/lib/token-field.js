@@ -149,6 +149,7 @@
         // with the content. The word-joiner (U+2060) removes the break before the
         // button so it never wraps alone. Both are excluded from the content.
         const WJ = String.fromCharCode(0x2060);
+        const ZWSP = String.fromCharCode(0x200B);
         let buttonEl = null;
         let wjNode = null;
 
@@ -186,6 +187,38 @@
             if (!def.pin && cfg.reorder) chip.classList.add("tf__chip--draggable");
             return chip;
         };
+
+        const isChipNode = (node) =>
+            !!node && node.nodeType === 1 && node.classList &&
+            node.classList.contains("tf__chip");
+
+        const normalizeChipSpacers = (parent) => {
+            if (!parent) return;
+            Array.prototype.slice.call(parent.childNodes).forEach((node) => {
+                if (node.nodeType !== 3 || node === wjNode) return;
+                if (node.nodeValue.indexOf(ZWSP) === -1) return;
+                node.nodeValue = node.nodeValue.split(ZWSP).join("");
+                if (!node.nodeValue) node.parentNode.removeChild(node);
+            });
+            let node = parent.firstChild;
+            while (node) {
+                const next = node.nextSibling;
+                if (isChipNode(node) && isChipNode(next)) {
+                    parent.insertBefore(document.createTextNode(ZWSP), next);
+                    node = next;
+                } else {
+                    node = next;
+                }
+            }
+        };
+
+        const normalizeAllChipSpacers = () => {
+            normalizeChipSpacers(flow);
+            normalizeChipSpacers(field);
+        };
+
+        const stripStructuralChars = (value) =>
+            String(value || "").split(WJ).join("").split(ZWSP).join("");
 
         /** Resolve typed text into a token definition (or null). */
         const tokenFromText = (raw) => {
@@ -273,7 +306,13 @@
         };
 
         const normalizeActionTail = () => {
-            if (!buttonEl || buttonEl.parentNode !== flow) return;
+            Array.prototype.slice.call(flow.querySelectorAll("br")).forEach(
+                (node) => node.parentNode.removeChild(node)
+            );
+            if (!buttonEl || buttonEl.parentNode !== flow) {
+                normalizeAllChipSpacers();
+                return;
+            }
             const moved = [];
             let node = buttonEl.nextSibling;
             while (node) {
@@ -288,6 +327,7 @@
                 node = next;
             }
             moved.forEach(beforeActionTail);
+            normalizeAllChipSpacers();
         };
 
         let clampingActionCaret = false;
@@ -374,6 +414,7 @@
                 r.insertNode(node);
             }
             normalizeActionTail();
+            normalizeAllChipSpacers();
             placeCaretAfter(node);
         };
 
@@ -397,7 +438,7 @@
                     let text = node.nodeType === 3
                         ? node.nodeValue
                         : node.textContent;
-                    text = text ? text.split(WJ).join("") : ""; // drop word-joiner
+                    text = stripStructuralChars(text);
                     if (text) {
                         const last = parts[parts.length - 1];
                         if (last && last.type === "text") last.value += text;
@@ -464,6 +505,7 @@
             // Keep the trailing word-joiner + button as the last flow children.
             if (wjNode) flow.appendChild(wjNode);
             if (buttonEl) flow.appendChild(buttonEl);
+            normalizeAllChipSpacers();
         };
 
         const syncAfterMutation = () => { emitChange(); };
@@ -500,14 +542,14 @@
             if (!node) {
                 for (let i = flow.childNodes.length - 1; i >= 0; i--) {
                     const c = flow.childNodes[i];
-                    if (c.nodeType === 3 && c.nodeValue.split(WJ).join("").trim()) {
+                    if (c.nodeType === 3 && stripStructuralChars(c.nodeValue).trim()) {
                         node = c;
                         break;
                     }
                 }
             }
             if (!node || node.nodeType !== 3) return false;
-            const text = node.nodeValue.split(WJ).join("").trim();
+            const text = stripStructuralChars(node.nodeValue).trim();
             if (!text) {
                 if (force && !cfg.allowFreeText) node.nodeValue = "";
                 return false;
@@ -608,6 +650,7 @@
             const t = dropTarget(x, y);
             if (!t.best) {
                 beforeActionTail(drag.chip);
+                normalizeAllChipSpacers();
                 return;
             }
             if (t.before) flow.insertBefore(drag.chip, t.best);
@@ -791,7 +834,7 @@
                     node.classList.contains("tf__placeholder"))) {
                     return; // button / placeholder aren't content
                 } else {
-                    piece = (node.textContent || "").split(WJ).join("");
+                    piece = stripStructuralChars(node.textContent);
                 }
                 if (!piece) return;
                 // Multiple copied tokens are separated by the configured
@@ -1274,7 +1317,7 @@
                         nxt = n.nextSibling;
                     }
                     if (nxt && ((nxt.nodeType === 3 &&
-                        nxt.nodeValue.split(WJ).join("") === "") ||
+                        stripStructuralChars(nxt.nodeValue) === "") ||
                         (nxt.nodeType === 1 && nxt.classList &&
                             nxt.classList.contains("tf__action")))) {
                         e.preventDefault();
@@ -1322,7 +1365,9 @@
                 const r = caretInFlow();
                 const node = r && r.startContainer;
                 if (node && node.nodeType === 3) {
-                    const t = byKey[node.nodeValue.trim().toLowerCase()];
+                    const t = byKey[
+                        stripStructuralChars(node.nodeValue).trim().toLowerCase()
+                    ];
                     if (t && !t.pin) commitPendingText(false);
                 }
             }
@@ -1340,6 +1385,7 @@
         flow.addEventListener("blur", () => {
             closeMenu();
             commitPendingText(true);
+            normalizeActionTail();
             // Drop the token highlight (a class, plus the native selection) so a
             // selected/arrow-highlighted token doesn't stay highlighted after
             // focus leaves the field.
@@ -1352,6 +1398,7 @@
             // re-check validity and show the placeholder once the text has
             // settled, so the invalid style isn't left on the field/placeholder.
             Promise.resolve().then(() => {
+                normalizeActionTail();
                 runInputValidation();
                 showPlaceholder();
             });
@@ -1518,6 +1565,7 @@
         // ---- pinned chips (outside the flow) + trailing button (inside it) ----
         startPins.forEach((d) => field.insertBefore(tokenChip(d, false), flow));
         endPins.forEach((d) => field.appendChild(tokenChip(d, false)));
+        normalizeAllChipSpacers();
 
         if (cfg.trailingButton) {
             buttonEl = document.createElement("button");

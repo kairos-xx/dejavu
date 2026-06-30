@@ -275,9 +275,18 @@
         return new TableController(options);
     };
 
+    const syncEmptyToggles = (list, toggles) => {
+        if (!list || !toggles) return;
+        const hasContent = !!list.querySelector(
+            ".snapshot, .open-doc, .similar-row"
+        );
+        toggles.classList.toggle("table-empty", !hasContent);
+    };
+
     window.DejaVuTable = {
         TableController,
         create,
-        normalizeText
+        normalizeText,
+        syncEmptyToggles
     };
 })();

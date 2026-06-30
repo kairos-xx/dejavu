@@ -482,7 +482,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="version-list" id="versionList">
+                    <div class="version-list table-list" id="versionList">
                         <div class="empty-state">No snapshots loaded.</div>
                     </div>
                     <div class="timeline-insights" id="timelineInsights">
@@ -632,7 +632,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="version-list" id="recoveryCandidateList">
+                    <div class="version-list table-list" id="recoveryCandidateList">
                         <div class="empty-state">No recovery history yet.</div>
                     </div>
             </section>
@@ -741,7 +741,7 @@
                             ></span>
                         </button>
                     </div>
-                    <div class="open-docs" id="openDocsList">
+                    <div class="open-docs table-list" id="openDocsList">
                         <div class="empty-state">No documents open.</div>
                     </div>
             </section>
@@ -898,7 +898,7 @@
                         </div>
                     </div>
 
-                    <div class="version-list" id="similarityList">
+                    <div class="version-list table-list" id="similarityList">
                         <div class="empty-state">
                             Pick a folder and click "Find similar".
                         </div>
@@ -919,15 +919,6 @@
                     <span>Comparison</span>
                 </button>
                 <button
-                    class="panel-nav__tab is-active"
-                    type="button"
-                    data-panel-tab="cacheHealthPanel"
-                    aria-controls="cacheHealthPanel"
-                    aria-selected="true"
-                >
-                    <span>Cache health</span>
-                </button>
-                <button
                     class="panel-nav__tab"
                     type="button"
                     data-panel-tab="saveIntervalPanel"
@@ -946,11 +937,11 @@
                     <span>Locations</span>
                 </button>
                 <button
-                    class="panel-nav__tab"
+                    class="panel-nav__tab is-active"
                     type="button"
                     data-panel-tab="advancedPanel"
                     aria-controls="advancedPanel"
-                    aria-selected="false"
+                    aria-selected="true"
                 >
                     <span>Advanced</span>
                 </button>
@@ -972,147 +963,6 @@
             <div class="settings__content">
                 <section class="panel-view" id="comparisonSettingsPanel" hidden>
                     <div id="comparisonSettings"></div>
-                </section>
-
-                <section class="panel-view is-active" id="cacheHealthPanel">
-                        <section
-                            class="field-group field-group--embedded cache-health"
-                        >
-                            <div
-                                class="cache-health__warning"
-                                id="cacheHealthWarning"
-                                title="Cache health warnings"
-                                hidden
-                            ></div>
-                            <div class="settings-grid settings-grid--four">
-                                <label
-                                    class="mini-field"
-                                    title="Warn when free disk space drops below this value"
-                                >
-                                    <span class="settings-field-title">Low disk MB</span>
-                                    <div class="number-input-group">
-                                        <div class="number-spin-buttons">
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="diskSpaceWarningInput"
-                                                data-action="up"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
-                                            </div>
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="diskSpaceWarningInput"
-                                                data-action="down"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            id="diskSpaceWarningInput"
-                                            min="0"
-                                            step="256"
-                                            title="0 disables the warning"
-                                        />
-                                    </div>
-                                </label>
-                                <label
-                                    class="mini-field"
-                                    title="Re-check disk space after this many MB have been saved"
-                                >
-                                    <span class="settings-field-title">Refresh MB</span>
-                                    <div class="number-input-group">
-                                        <div class="number-spin-buttons">
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="diskSpaceRefreshInput"
-                                                data-action="up"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
-                                            </div>
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="diskSpaceRefreshInput"
-                                                data-action="down"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            id="diskSpaceRefreshInput"
-                                            min="1"
-                                            step="64"
-                                            title="Minimum 1 MB"
-                                        />
-                                    </div>
-                                </label>
-                                <label
-                                    class="mini-field"
-                                    title="How many recovery versions to keep per unsaved document"
-                                >
-                                    <span class="settings-field-title">Unsaved versions</span>
-                                    <div class="number-input-group">
-                                        <div class="number-spin-buttons">
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="recoveryVersionsInput"
-                                                data-action="up"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
-                                            </div>
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="recoveryVersionsInput"
-                                                data-action="down"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            id="recoveryVersionsInput"
-                                            min="1"
-                                            max="20"
-                                            step="1"
-                                            title="1 to 20 versions"
-                                        />
-                                    </div>
-                                </label>
-                                <label
-                                    class="mini-field"
-                                    title="Maximum recovery candidates tracked across all documents"
-                                >
-                                    <span class="settings-field-title">Recovery cap</span>
-                                    <div class="number-input-group">
-                                        <div class="number-spin-buttons">
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="recoveryMaxEntriesInput"
-                                                data-action="up"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
-                                            </div>
-                                            <div
-                                                class="number-spin-button"
-                                                data-target="recoveryMaxEntriesInput"
-                                                data-action="down"
-                                            >
-                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
-                                            </div>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            id="recoveryMaxEntriesInput"
-                                            min="10"
-                                            max="500"
-                                            step="10"
-                                            title="10 to 500 candidates"
-                                        />
-                                    </div>
-                                </label>
-                            </div>
-                        </section>
                 </section>
 
                 <section class="panel-view" id="saveIntervalPanel" hidden>
@@ -1340,9 +1190,13 @@
                         </section>
                 </section>
 
-                <section class="panel-view" id="advancedPanel" hidden>
+                <section class="panel-view is-active" id="advancedPanel">
+                    <section class="comparison-settings__group">
+                        <h3 class="comparison-settings__group-title settings-title">
+                            Recovery
+                        </h3>
                     <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1358,7 +1212,7 @@
                             </p>
                         </section>
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1377,8 +1231,14 @@
                                 then creates a fresh recovery copy.
                             </p>
                         </section>
+                    </section>
+
+                    <section class="comparison-settings__group">
+                        <h3 class="comparison-settings__group-title settings-title">
+                            Autosave
+                        </h3>
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input type="checkbox" id="backupOriginalToggle" />
@@ -1394,7 +1254,7 @@
                             </p>
                         </section>
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1409,7 +1269,7 @@
                             </p>
                         </section>
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1425,7 +1285,7 @@
                             </p>
                         </section>
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1443,9 +1303,14 @@
                                 rules.
                             </p>
                         </section>
+                    </section>
 
+                    <section class="comparison-settings__group">
+                        <h3 class="comparison-settings__group-title settings-title">
+                            Updates
+                        </h3>
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1460,9 +1325,14 @@
                                 banner when a newer version of DejaVu is available.
                             </p>
                         </section>
+                    </section>
 
+                    <section class="comparison-settings__group">
+                        <h3 class="comparison-settings__group-title settings-title">
+                            Save rules
+                        </h3>
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1483,7 +1353,7 @@
                         </section>
 
                         <section
-                            class="field-group field-group--embedded field-group--row"
+                            class="comparison-settings__field field-group field-group--embedded field-group--row"
                         >
                             <label class="checkbox">
                                 <input
@@ -1502,9 +1372,14 @@
                                 since the last save.
                             </p>
                         </section>
+                    </section>
 
+                    <section class="comparison-settings__group">
+                        <h3 class="comparison-settings__group-title settings-title">
+                            Cleanup
+                        </h3>
                         <section
-                            class="field-group field-group--embedded field-group--compact"
+                            class="comparison-settings__field field-group field-group--embedded field-group--compact"
                         >
                             <div class="settings-grid settings-grid--three">
                                 <label class="mini-field">
@@ -1594,8 +1469,158 @@
                             dejavu or from Timeline.
                         </p>
                     </section>
+                    </section>
 
-                    <section class="field-group field-group--embedded">
+                    <section class="comparison-settings__group">
+                        <h3 class="comparison-settings__group-title settings-title">
+                            Cache health
+                        </h3>
+                        <section
+                            class="comparison-settings__field field-group field-group--embedded cache-health"
+                        >
+                            <div
+                                class="cache-health__warning"
+                                id="cacheHealthWarning"
+                                title="Cache health warnings"
+                                hidden
+                            ></div>
+                            <div class="settings-grid settings-grid--four">
+                                <label
+                                    class="mini-field"
+                                    title="Warn when free disk space drops below this value"
+                                >
+                                    <span class="settings-field-title">Low disk MB</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceWarningInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceWarningInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="diskSpaceWarningInput"
+                                            min="0"
+                                            step="256"
+                                            title="0 disables the warning"
+                                        />
+                                    </div>
+                                </label>
+                                <label
+                                    class="mini-field"
+                                    title="Re-check disk space after this many MB have been saved"
+                                >
+                                    <span class="settings-field-title">Refresh MB</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceRefreshInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="diskSpaceRefreshInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="diskSpaceRefreshInput"
+                                            min="1"
+                                            step="64"
+                                            title="Minimum 1 MB"
+                                        />
+                                    </div>
+                                </label>
+                                <label
+                                    class="mini-field"
+                                    title="How many recovery versions to keep per unsaved document"
+                                >
+                                    <span class="settings-field-title">Unsaved versions</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryVersionsInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryVersionsInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="recoveryVersionsInput"
+                                            min="1"
+                                            max="20"
+                                            step="1"
+                                            title="1 to 20 versions"
+                                        />
+                                    </div>
+                                </label>
+                                <label
+                                    class="mini-field"
+                                    title="Maximum recovery candidates tracked across all documents"
+                                >
+                                    <span class="settings-field-title">Recovery cap</span>
+                                    <div class="number-input-group">
+                                        <div class="number-spin-buttons">
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryMaxEntriesInput"
+                                                data-action="up"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-up" aria-hidden="true"></span>
+                                            </div>
+                                            <div
+                                                class="number-spin-button"
+                                                data-target="recoveryMaxEntriesInput"
+                                                data-action="down"
+                                            >
+                                                <span class="spin-chevron svg-icon" data-icon="chevron-down" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            id="recoveryMaxEntriesInput"
+                                            min="10"
+                                            max="500"
+                                            step="10"
+                                            title="10 to 500 candidates"
+                                        />
+                                    </div>
+                                </label>
+                            </div>
+                            <p class="field-hint">
+                                Disk checks warn before storage gets tight and
+                                recovery limits keep unsaved sessions bounded.
+                            </p>
+                        </section>
+                    </section>
+
+                    <section class="comparison-settings__group">
+                    <section class="comparison-settings__field field-group field-group--embedded">
                         <div class="toolbar toolbar--wrap advanced-actions">
                             <button class="btn" id="revealLogBtn">
                                 Reveal log
@@ -1616,6 +1641,8 @@
                                 accept="application/json,.json"
                             />
                         </div>
+                    </section>
+                    </section>
                     </section>
                 </section>
             </div>
@@ -2179,12 +2206,10 @@
                         }
 
                         if (folderInput) {
-                            // Mock system path for Dejavu folder
                             folderInput.value = mockPath;
                         }
 
                         if (timelineUsageFill) {
-                            // Mock timeline usage fill at 80%
                             timelineUsageFill.style.width = "80%";
                         }
 
@@ -2192,10 +2217,145 @@
                         if (typeof state !== "undefined" && state.settings) {
                             state.settings.folder = mockPath;
                             state.settings.folderValidated = true;
-                            // Trigger folder status update to reflect the new state
                             if (typeof updateFolderStatus === "function") {
                                 updateFolderStatus();
                             }
+                        }
+
+                        // --- Mock Timeline snapshots across multiple dates ---
+                        var now = Date.now();
+                        var day = 86400000;
+                        var mockVersions = [];
+                        var mockFiles = [
+                            { name: "homepage.psd", path: "/projects/web/homepage.psd", size: 4200000 },
+                            { name: "logo-final.ai", path: "/projects/brand/logo-final.ai", size: 890000 },
+                            { name: "banner-v3.psd", path: "/projects/web/banner-v3.psd", size: 2100000 },
+                            { name: "icon-set.svg", path: "/projects/icons/icon-set.svg", size: 54000 },
+                            { name: "product-shot.psd", path: "/projects/photos/product-shot.psd", size: 8700000 },
+                            { name: "typography.ai", path: "/projects/brand/typography.ai", size: 340000 },
+                            { name: "wireframe.psd", path: "/projects/ux/wireframe.psd", size: 1500000 },
+                            { name: "color-palette.ase", path: "/projects/brand/color-palette.ase", size: 12000 },
+                            { name: "hero-image.psd", path: "/projects/web/hero-image.psd", size: 6300000 },
+                            { name: "mockup-screen.psd", path: "/projects/ux/mockup-screen.psd", size: 3100000 },
+                            { name: "social-post.psd", path: "/projects/social/social-post.psd", size: 1800000 },
+                            { name: "email-header.psd", path: "/projects/email/email-header.psd", size: 940000 },
+                        ];
+                        var offsets = [
+                            0.5 * 3600000, 1.2 * 3600000, 2.8 * 3600000, 4.1 * 3600000,
+                            day + 0.3 * 3600000, day + 1.7 * 3600000, day + 3.5 * 3600000,
+                            2 * day + 0.9 * 3600000, 2 * day + 2.4 * 3600000,
+                            5 * day + 1.1 * 3600000, 5 * day + 3.0 * 3600000,
+                            12 * day + 0.6 * 3600000, 12 * day + 2.2 * 3600000,
+                            20 * day + 1.5 * 3600000,
+                            35 * day + 0.8 * 3600000, 35 * day + 2.0 * 3600000,
+                        ];
+                        offsets.forEach(function (offset, i) {
+                            var file = mockFiles[i % mockFiles.length];
+                            mockVersions.push({
+                                name: file.name,
+                                path: file.path + ".dv/" + (now - offset) + ".psd",
+                                size: file.size + Math.floor(Math.random() * 50000),
+                                modified: now - offset,
+                            });
+                        });
+                        if (typeof state !== "undefined") {
+                            if (typeof showShell === "function") {
+                                showShell("mainShell");
+                            }
+                            if (typeof activateMainPanel === "function") {
+                                var previousStopLoops =
+                                    window.__DEJAVU_STOP_LOOPS__;
+                                window.__DEJAVU_STOP_LOOPS__ = true;
+                                activateMainPanel("timelinePanel");
+                                window.__DEJAVU_STOP_LOOPS__ =
+                                    previousStopLoops;
+                            }
+                            state.settings.timelineRange = "all";
+                            state.settings.timelineFilter = "";
+                            state.settings.timelinePinnedOnly = false;
+                            state.settings.timelineSort = "newest";
+                            var rangeSelect = document.getElementById("timelineRangeSelect");
+                            if (rangeSelect) rangeSelect.value = "all";
+                            var filterInput = document.getElementById("timelineFilterInput");
+                            if (filterInput) filterInput.value = "";
+                            var sortSelect = document.getElementById("timelineSortSelect");
+                            if (sortSelect) sortSelect.value = "newest";
+                            var pinnedOnly = document.getElementById("timelinePinnedOnlyToggle");
+                            if (pinnedOnly && typeof setToggleIcon === "function") {
+                                setToggleIcon(pinnedOnly, false);
+                            }
+                            if (typeof renderVersions === "function") {
+                                renderVersions(mockVersions);
+                            }
+                        }
+
+                        // --- Mock Recovery candidates across multiple dates ---
+                        var mockRecovery = [
+                            { name: "Untitled-1", sessionId: "doc-" + (now - 0.5 * 3600000), offset: 0.5 * 3600000, size: 230000 },
+                            { name: "Untitled-2", sessionId: "doc-" + (now - 2 * 3600000), offset: 2 * 3600000, size: 115000 },
+                            { name: "Draft Poster", sessionId: "doc-" + (now - day - 1 * 3600000), offset: day + 1 * 3600000, size: 880000 },
+                            { name: "New Design", sessionId: "doc-" + (now - day - 4 * 3600000), offset: day + 4 * 3600000, size: 420000 },
+                            { name: "Sketch v2", sessionId: "doc-" + (now - 3 * day - 2 * 3600000), offset: 3 * day + 2 * 3600000, size: 640000 },
+                            { name: "Untitled-3", sessionId: "doc-" + (now - 3 * day - 5 * 3600000), offset: 3 * day + 5 * 3600000, size: 190000 },
+                            { name: "Brand Refresh", sessionId: "doc-" + (now - 8 * day), offset: 8 * day, size: 1200000 },
+                            { name: "Ad Banner", sessionId: "doc-" + (now - 15 * day), offset: 15 * day, size: 760000 },
+                        ];
+                        var mockCandidates = mockRecovery.map(function (item) {
+                            return {
+                                sourceKey: "unsaved:" + item.sessionId,
+                                path: mockPath + "/.dejavu/recovery/" + item.sessionId + ".psd",
+                                name: item.name,
+                                displayName: item.name,
+                                isUnsaved: true,
+                                documentSessionId: item.sessionId,
+                                dejavuFolder: mockPath + "/.dejavu",
+                                timestamp: now - item.offset,
+                                size: item.size,
+                            };
+                        });
+                        try {
+                            localStorage.setItem(
+                                "dejavuai.recoveryCandidates.v1",
+                                JSON.stringify(mockCandidates)
+                            );
+                        } catch (e) {}
+                        if (typeof state !== "undefined") {
+                            state.settings.recoveryRange = "all";
+                            state.settings.recoveryFilter = "";
+                            state.settings.recoveryPinnedOnly = false;
+                            state.selectedRecoveryPaths = {};
+                            var recoveryRangeSelect = document.getElementById("recoveryRangeSelect");
+                            if (recoveryRangeSelect) recoveryRangeSelect.value = "all";
+                            var recoveryFilterInput = document.getElementById("recoveryFilterInput");
+                            if (recoveryFilterInput) recoveryFilterInput.value = "";
+                            var recoveryPinnedOnly = document.getElementById("recoveryPinnedOnlyToggle");
+                            if (recoveryPinnedOnly && typeof setToggleIcon === "function") {
+                                setToggleIcon(recoveryPinnedOnly, false);
+                            }
+                        }
+                        if (typeof renderRecoveryCenter === "function") {
+                            renderRecoveryCenter();
+                        }
+
+                        // --- Mock Open Documents across multiple dates ---
+                        var mockOpenDocs = [
+                            { name: "homepage.psd", fullPath: "/projects/web/homepage.psd", hasPath: true, saved: true, documentSessionId: "doc-" + (now - 600000), openedAt: now - 600000 },
+                            { name: "logo-final.ai", fullPath: "/projects/brand/logo-final.ai", hasPath: true, saved: false, documentSessionId: "doc-" + (now - 1800000), openedAt: now - 1800000 },
+                            { name: "Untitled-4", hasPath: false, saved: false, documentSessionId: "doc-" + (now - 3000000), openedAt: now - 3000000 },
+                            { name: "banner-v3.psd", fullPath: "/projects/web/banner-v3.psd", hasPath: true, saved: true, documentSessionId: "doc-" + (now - day - 3600000), openedAt: now - day - 3600000 },
+                            { name: "wireframe.psd", fullPath: "/projects/ux/wireframe.psd", hasPath: true, saved: false, documentSessionId: "doc-" + (now - day - 7200000), openedAt: now - day - 7200000 },
+                            { name: "icon-set.svg", fullPath: "/projects/icons/icon-set.svg", hasPath: true, saved: true, documentSessionId: "doc-" + (now - 3 * day - 3600000), openedAt: now - 3 * day - 3600000 },
+                            { name: "Untitled-5", hasPath: false, saved: false, documentSessionId: "doc-" + (now - 3 * day - 9000000), openedAt: now - 3 * day - 9000000 },
+                            { name: "social-post.psd", fullPath: "/projects/social/social-post.psd", hasPath: true, saved: true, documentSessionId: "doc-" + (now - 7 * day), openedAt: now - 7 * day },
+                        ];
+                        if (typeof state !== "undefined") {
+                            // Set open docs range to "all" so all dates are visible
+                            state.openDocsRange = "all";
+                            var openDocsRangeSelect = document.getElementById("openDocsRangeSelect");
+                            if (openDocsRangeSelect) openDocsRangeSelect.value = "all";
+                        }
+                        if (typeof renderOpenDocuments === "function") {
+                            renderOpenDocuments(mockOpenDocs);
                         }
 
                         console.log("[Debug] Filled mockup values");

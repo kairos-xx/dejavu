@@ -983,6 +983,24 @@ const bindEvents = () => {
                 }
             });
         }
+        const chevron = wrap.querySelector(".select-chevron");
+        if (select && chevron && !chevron.dataset.openTracked) {
+            chevron.dataset.openTracked = "1";
+            chevron.addEventListener("mousedown", (evt) => {
+                evt.preventDefault();
+                evt.stopPropagation();
+                select.dispatchEvent(new MouseEvent("mousedown", {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    button: 0
+                }));
+            });
+            chevron.addEventListener("click", (evt) => {
+                evt.preventDefault();
+                evt.stopPropagation();
+            });
+        }
     });
 
     el.modeSegButtons.forEach((btn) => {
@@ -2110,7 +2128,6 @@ const mainPanelIds = [
 
 const settingsPanelIds = [
     "comparisonSettingsPanel",
-    "cacheHealthPanel",
     "saveIntervalPanel",
     "locationsPanel",
     "advancedPanel"
@@ -2157,8 +2174,10 @@ const activateMainPanel = (panelId) => {
             tab.setAttribute("aria-selected", active ? "true" : "false");
         }
     });
-    if (panelId === "openDocumentsPanel") refreshOpenDocuments();
-    if (panelId === "timelinePanel") refreshVersions(true);
+    if (!window.__DEJAVU_STOP_LOOPS__) {
+        if (panelId === "openDocumentsPanel") refreshOpenDocuments();
+        if (panelId === "timelinePanel") refreshVersions(true);
+    }
     if (panelId === "recoveryPanel") renderRecoveryCenter();
     updateStickyTableScrollbars();
     schedulePanelAutoSize();

@@ -42,6 +42,7 @@
     );
 
     --primary-space-0: 0;
+    --primary-space-0-5: 1;
     --primary-size-neg-1: -1;
     --primary-space-1: 2;
     --primary-space-1-5: 3;
@@ -52,6 +53,7 @@
     --primary-space-4-5: 10;
     --primary-space-5: 12;
     --primary-space-6: 16;
+    --primary-space-6-5: 18;
     --primary-space-7: 20;
     --primary-space-8: 24;
     --primary-space-9: 32;
@@ -189,6 +191,9 @@
     --base-space-0: calc(
         var(--primary-space-0) * 1px * var(--base-effective-ui-scale)
     );
+    --base-space-0-5: calc(
+        var(--primary-space-0-5) * 1px * var(--base-effective-ui-scale)
+    );
     --base-space-1: calc(
         var(--primary-space-1) * 1px * var(--base-effective-ui-scale)
     );
@@ -215,6 +220,9 @@
     );
     --base-space-6: calc(
         var(--primary-space-6) * 1px * var(--base-effective-ui-scale)
+    );
+    --base-space-6-5: calc(
+        var(--primary-space-6-5) * 1px * var(--base-effective-ui-scale)
     );
     --base-space-7: calc(
         var(--primary-space-7) * 1px * var(--base-effective-ui-scale)

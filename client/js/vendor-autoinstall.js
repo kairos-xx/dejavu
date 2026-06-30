@@ -256,10 +256,10 @@
         }
     };
 
-    const getLatestRelease = async (owner, repo) => {
+    const fetchReleases = async (owner, repo) => {
         const https = require("https");
         return new Promise((resolve, reject) => {
-            const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/releases/latest`;
+            const url = `${GITHUB_API_BASE}/repos/${owner}/${repo}/releases?per_page=30`;
             https.get(url, {
                 headers: {
                     "User-Agent": "DejaVuAI",
@@ -271,10 +271,10 @@
                 res.on("end", () => {
                     if (res.statusCode >= 200 && res.statusCode < 300) {
                         try {
-                            const release = JSON.parse(data);
-                            resolve(release);
+                            const releases = JSON.parse(data);
+                            resolve(Array.isArray(releases) ? releases : []);
                         } catch (e) {
-                            reject(new Error("Failed to parse release data"));
+                            reject(new Error("Failed to parse releases data"));
                         }
                     } else {
                         reject(new Error(`GitHub API returned ${res.statusCode}`));
@@ -284,6 +284,27 @@
                 reject(new Error("GitHub API request timed out"));
             });
         });
+    };
+
+    const getLatestRelease = async (owner, repo, target) => {
+        // The /releases/latest endpoint excludes prereleases, but vendor
+        // assets may only be published on prerelease tags. Fetch the full
+        // list (sorted newest-first) and pick the newest non-draft release
+        // that actually contains a vendor asset for this platform.
+        const releases = await fetchReleases(owner, repo);
+        if (!releases.length) {
+            throw new Error("No releases found");
+        }
+        if (target && target !== "unknown") {
+            for (const release of releases) {
+                if (release.draft) continue;
+                if (findVendorAsset(release, target)) {
+                    return release;
+                }
+            }
+        }
+        const nonDraft = releases.find((r) => !r.draft);
+        return nonDraft || releases[0];
     };
 
     const findVendorAsset = (release, target) => {
@@ -434,7 +455,7 @@
 
             showProgress("Checking for Inkscape update...");
             console.log(`Fetching latest release for ${owner}/${repo}...`);
-            const release = await getLatestRelease(owner, repo);
+            const release = await getLatestRelease(owner, repo, target);
             const version = release.tag_name || release.name || "unknown";
 
             console.log(`Latest release: ${version}`);
@@ -571,7 +592,7 @@
             } else {
                 // Fallback to version-based check if hash not available
                 console.log("No hash found for platform, falling back to version check");
-                const release = await getLatestRelease(owner, repo);
+                const release = await getLatestRelease(owner, repo, target);
                 const latestVersion = release.tag_name || release.name || "unknown";
 
                 if (currentVersion !== latestVersion) {

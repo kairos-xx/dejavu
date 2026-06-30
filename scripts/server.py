@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from argparse import ArgumentParser, Namespace
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import partial
 from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
@@ -12,6 +12,7 @@ from socketserver import TCPServer
 from subprocess import CompletedProcess
 from subprocess import run as subprocess_run
 from sys import stdout
+from time import sleep
 from typing import Final
 
 # HTTP status code ranges
@@ -33,10 +34,13 @@ class LoggingRequestHandler(SimpleHTTPRequestHandler):
     ) -> None:
         """Log the request with ANSI colors and alignment."""
         _ = size
-        timestamp: str = datetime.now().strftime(format="%H:%M:%S")
+        timestamp: str = datetime.now(tz=UTC).strftime(
+            format="%H:%M:%S",
+        )
         method: str = self.command
         path: str = self.path
         status_code: str = str(code)
+
         # ANSI color codes
         reset: str = "\033[0m"
         gray: str = "\033[90m"
@@ -45,6 +49,7 @@ class LoggingRequestHandler(SimpleHTTPRequestHandler):
         red: str = "\033[91m"
         blue: str = "\033[94m"
         cyan: str = "\033[96m"
+
         # Color status code based on range
         if isinstance(code, int):
             if HTTP_OK_MIN <= code < HTTP_OK_MAX:
@@ -57,12 +62,21 @@ class LoggingRequestHandler(SimpleHTTPRequestHandler):
                 status_color = cyan
         else:
             status_color = gray
+
+        # Column widths
+        path_width: int = 60  # Fixed width for path column
+
+        # Truncate path with ellipsis if too long
+        if len(path) > path_width:
+            path = path[: path_width - 3] + "..."
+
         timestamp_str: str = f"{gray}{timestamp}{reset}"
         method_str: str = f"{blue}{method}{reset}"
         path_str: str = f"{gray}{path}{reset}"
         status_str: str = f"{status_color}{status_code}{reset}"
+
         line: str = (
-            f"{timestamp_str} | {method_str:6} | {path_str:50} | "
+            f"{timestamp_str} | {method_str:6} | {path_str:{path_width}} | "
             f"{status_str}\n"
         )
         stdout.write(line)
@@ -70,7 +84,7 @@ class LoggingRequestHandler(SimpleHTTPRequestHandler):
 
     def log_error(
         self,
-        format: str,
+        format: str,  # noqa: A002
         *args: object,
     ) -> None:
         """Suppress default error logging."""
@@ -91,7 +105,7 @@ class Server:
         """Kill any process using the server's port."""
         try:
             result: CompletedProcess[str] = subprocess_run(
-                args=["lsof", "-ti", f"tcp:{self.port}"],
+                args=["lsof", "-ti", f":{self.port}"],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -108,6 +122,9 @@ class Server:
                         capture_output=True,
                         check=False,
                     )
+                    stdout.write(f"Killed process {pid} on port {self.port}\n")
+                    stdout.flush()
+                    sleep(0.1)  # Allow socket to be released
         except (OSError, FileNotFoundError):
             pass
 
@@ -118,6 +135,7 @@ class Server:
             LoggingRequestHandler,
             directory=str(self.folder),
         )
+        TCPServer.allow_reuse_address = True
         with TCPServer(
             server_address=(self.host, self.port),
             RequestHandlerClass=handler,

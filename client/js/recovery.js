@@ -282,6 +282,12 @@ const renderRecoveryCenter = () => {
         empty.className = "empty-state";
         empty.textContent = "No recovery history yet.";
         el.recoveryCandidateList.appendChild(empty);
+        if (window.DejaVuTable) {
+            window.DejaVuTable.syncEmptyToggles(
+                el.recoveryCandidateList,
+                document.getElementById("recoveryToggles")
+            );
+        }
         return;
     }
 
@@ -290,6 +296,12 @@ const renderRecoveryCenter = () => {
         noMatch.className = "empty-state";
         noMatch.textContent = "No recovery entries match the current filter.";
         el.recoveryCandidateList.appendChild(noMatch);
+        if (window.DejaVuTable) {
+            window.DejaVuTable.syncEmptyToggles(
+                el.recoveryCandidateList,
+                document.getElementById("recoveryToggles")
+            );
+        }
         return;
     }
 
@@ -375,7 +387,7 @@ const renderRecoveryCenter = () => {
 
             const name = document.createElement("button");
             name.type = "button";
-            name.className = "snapshot__time snapshot__filename";
+            name.className = "snapshot__time snapshot__filename file-link";
             name.textContent = recoveryCandidateDisplayName(candidate);
             name.title = `Open this recovery file  ·  Shift-click to reveal in Finder`;
             if (candidate.exists === false) {
@@ -485,6 +497,12 @@ const renderRecoveryCenter = () => {
     });
     
     el.recoveryCandidateList.appendChild(fragment);
+    if (window.DejaVuTable) {
+        window.DejaVuTable.syncEmptyToggles(
+            el.recoveryCandidateList,
+            document.getElementById("recoveryToggles")
+        );
+    }
     
     // Check file existence asynchronously after rendering for strikethrough styling
     checkMissingFilesInRecoveryCenter();
